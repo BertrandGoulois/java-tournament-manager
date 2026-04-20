@@ -1,4 +1,4 @@
-package com.tournament.tournament_manager.domain.model;
+package com.tournament.tournament_manager.domain.model.entities;
 
 import jakarta.persistence.*;
 import lombok.Getter;

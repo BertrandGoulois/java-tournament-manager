@@ -1,6 +1,6 @@
 package com.tournament.tournament_manager.repository;
 
-import com.tournament.tournament_manager.domain.model.EloHistory;
+import com.tournament.tournament_manager.domain.model.entities.EloHistory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

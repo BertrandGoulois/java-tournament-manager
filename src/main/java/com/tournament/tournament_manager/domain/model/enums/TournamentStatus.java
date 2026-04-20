@@ -1,4 +1,4 @@
-package com.tournament.tournament_manager.domain.model;
+package com.tournament.tournament_manager.domain.model.enums;
 
 public enum TournamentStatus {
     OPEN,

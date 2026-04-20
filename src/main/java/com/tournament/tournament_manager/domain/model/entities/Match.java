@@ -1,5 +1,6 @@
-package com.tournament.tournament_manager.domain.model;
+package com.tournament.tournament_manager.domain.model.entities;
 
+import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

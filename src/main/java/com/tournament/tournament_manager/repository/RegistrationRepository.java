@@ -1,6 +1,6 @@
 package com.tournament.tournament_manager.repository;
 
-import com.tournament.tournament_manager.domain.model.Registration;
+import com.tournament.tournament_manager.domain.model.entities.Registration;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
