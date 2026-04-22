@@ -10,4 +10,5 @@ import java.util.List;
 public interface RegistrationRepository extends JpaRepository<Registration, Long> {
     boolean existsByPlayerIdAndTournamentId(Long playerId, Long tournamentId);
     List<Registration> findByTournamentId(Long tournamentId);
+    long countByTournamentId(Long tournamentId);
 }
