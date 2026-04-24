@@ -13,11 +13,13 @@ import com.tournament.tournament_manager.repository.PlayerRepository;
 import com.tournament.tournament_manager.repository.RegistrationRepository;
 import com.tournament.tournament_manager.repository.TournamentRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class RegistrationService {
 
     private final PlayerRepository playerRepository;
@@ -30,6 +32,7 @@ public class RegistrationService {
         this.registrationRepository = registrationRepository;
     }
 
+    @Transactional
     public RegistrationResponse registerPlayer(CreateRegistrationRequest request) {
         Player player = playerRepository.findById(request.playerId())
                 .orElseThrow(() -> new PlayerNotFoundException(request.playerId()));

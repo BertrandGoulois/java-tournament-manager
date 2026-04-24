@@ -8,11 +8,13 @@ import com.tournament.tournament_manager.exception.TournamentAlreadyExistsExcept
 import com.tournament.tournament_manager.exception.TournamentNotFoundException;
 import com.tournament.tournament_manager.repository.TournamentRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class TournamentService {
 
     private final TournamentRepository tournamentRepository;
@@ -21,6 +23,7 @@ public class TournamentService {
         this.tournamentRepository = tournamentRepository;
     }
 
+    @Transactional
     public TournamentResponse createTournament(CreateTournamentRequest request){
         if(tournamentRepository.existsByName(request.name())){
             throw new TournamentAlreadyExistsException(request.name());

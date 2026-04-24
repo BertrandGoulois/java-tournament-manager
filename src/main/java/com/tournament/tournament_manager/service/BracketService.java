@@ -12,12 +12,15 @@ import com.tournament.tournament_manager.repository.MatchRepository;
 import com.tournament.tournament_manager.repository.RegistrationRepository;
 import com.tournament.tournament_manager.repository.TournamentRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class BracketService {
 
     private final TournamentRepository tournamentRepository;
@@ -32,6 +35,7 @@ public class BracketService {
         this.matchRepository = matchRepository;
     }
 
+    @Transactional
     public void startTournament(Long tournamentId) {
         Tournament tournament = tournamentRepository.findById(tournamentId)
                 .orElseThrow(() -> new TournamentNotFoundException(tournamentId));
@@ -53,9 +57,17 @@ public class BracketService {
             Match match = new Match();
             match.setTournament(tournament);
             match.setRound(calculateFirstRound(players.size()));
-            match.setStatus(MatchStatus.PENDING);
             match.setPlayer1(player1);
             match.setPlayer2(player2);
+
+            if (player2 == null) {
+                match.setStatus(MatchStatus.FINISHED);
+                match.setWinner(player1);
+                match.setPlayedAt(LocalDateTime.now());
+            } else {
+                match.setStatus(MatchStatus.PENDING);
+            }
+
             matchRepository.save(match);
         }
 

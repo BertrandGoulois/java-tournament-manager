@@ -7,11 +7,13 @@ import com.tournament.tournament_manager.exception.PlayerAlreadyExistsException;
 import com.tournament.tournament_manager.exception.PlayerNotFoundException;
 import com.tournament.tournament_manager.repository.PlayerRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class PlayerService {
     private final PlayerRepository playerRepository;
 
@@ -19,6 +21,7 @@ public class PlayerService {
         this.playerRepository = playerRepository;
     }
 
+    @Transactional()
     public PlayerResponse createPlayer(CreatePlayerRequest request) {
         if (playerRepository.existsByUsername(request.username())) {
             throw new PlayerAlreadyExistsException("username", request.username());
