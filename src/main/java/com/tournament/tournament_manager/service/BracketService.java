@@ -54,25 +54,53 @@ public class BracketService {
         for (int i = 0; i < players.size(); i += 2) {
             Player player1 = players.get(i);
             Player player2 = (i + 1 < players.size()) ? players.get(i + 1) : null;
-            Match match = new Match();
-            match.setTournament(tournament);
-            match.setRound(calculateFirstRound(players.size()));
-            match.setPlayer1(player1);
-            match.setPlayer2(player2);
-
-            if (player2 == null) {
-                match.setStatus(MatchStatus.FINISHED);
-                match.setWinner(player1);
-                match.setPlayedAt(LocalDateTime.now());
-            } else {
-                match.setStatus(MatchStatus.PENDING);
-            }
-
-            matchRepository.save(match);
+            createMatch(tournament, player1, player2, calculateFirstRound(players.size()));
         }
 
         tournament.setStatus(TournamentStatus.IN_PROGRESS);
         tournamentRepository.save(tournament);
+    }
+
+    @Transactional
+    public void advanceToNextRound(Tournament tournament, int currentRound) {
+        List<Match> currentMatches = matchRepository.findByTournamentIdAndRound(
+                tournament.getId(), currentRound
+        );
+        boolean allFinished = currentMatches.stream()
+                .allMatch(m -> m.getStatus() == MatchStatus.FINISHED);
+        if (!allFinished) return;
+
+        int nextRound = currentRound / 2;
+        if (nextRound < 2) {
+            tournament.setStatus(TournamentStatus.FINISHED);
+            tournamentRepository.save(tournament);
+            return;
+        }
+        List<Player> winners = currentMatches.stream()
+                .map(Match::getWinner)
+                .collect(Collectors.toList());
+        Collections.shuffle(winners);
+        for (int i = 0; i < winners.size(); i += 2) {
+            Player player1 = winners.get(i);
+            Player player2 = (i + 1 < winners.size()) ? winners.get(i + 1) : null;
+            createMatch(tournament, player1, player2, nextRound);
+        }
+    }
+
+    private void createMatch(Tournament tournament, Player player1, Player player2, int round) {
+        Match match = new Match();
+        match.setTournament(tournament);
+        match.setRound(round);
+        match.setPlayer1(player1);
+        match.setPlayer2(player2);
+        if (player2 == null) {
+            match.setStatus(MatchStatus.FINISHED);
+            match.setWinner(player1);
+            match.setPlayedAt(LocalDateTime.now());
+        } else {
+            match.setStatus(MatchStatus.PENDING);
+        }
+        matchRepository.save(match);
     }
 
     private int calculateFirstRound(int playerCount) {

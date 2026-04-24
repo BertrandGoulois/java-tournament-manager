@@ -19,9 +19,11 @@ import java.util.Set;
 public class MatchService {
 
     private final MatchRepository matchRepository;
+    private final BracketService bracketService;
 
-    public MatchService(MatchRepository matchRepository) {
+    public MatchService(MatchRepository matchRepository, BracketService bracketService) {
         this.matchRepository = matchRepository;
+        this.bracketService = bracketService;
     }
 
     @Transactional
@@ -41,7 +43,15 @@ public class MatchService {
         match.setStatus(MatchStatus.FINISHED);
         match.setWinner(winner);
         match.setPlayedAt(LocalDateTime.now());
-        return toResponse(matchRepository.save(match));
+        Match saved = matchRepository.save(match);
+        bracketService.advanceToNextRound(saved.getTournament(), saved.getRound());
+        return toResponse(saved);
+    }
+
+    public MatchResponse getMatchById(Long id) {
+        Match match = matchRepository.findById(id)
+                .orElseThrow(() -> new MatchNotFoundException(id));
+        return toResponse(match);
     }
 
     private MatchResponse toResponse(Match match) {
