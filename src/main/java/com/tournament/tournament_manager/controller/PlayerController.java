@@ -2,6 +2,7 @@ package com.tournament.tournament_manager.controller;
 
 import com.tournament.tournament_manager.dto.request.CreatePlayerRequest;
 import com.tournament.tournament_manager.dto.response.PlayerResponse;
+import com.tournament.tournament_manager.dto.response.PlayerStatsResponse;
 import com.tournament.tournament_manager.service.PlayerService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -37,7 +38,7 @@ public class PlayerController {
     }
 
     @GetMapping("/{id}/stats")
-    public ResponseEntity<PlayerResponse> getPlayerStats(@PathVariable Long id) {
+    public ResponseEntity<PlayerStatsResponse> getPlayerStats(@PathVariable Long id) {
         return ResponseEntity.ok(playerService.getPlayerStats(id));
     }
 }

@@ -10,4 +10,6 @@ import java.util.List;
 public interface MatchRepository extends JpaRepository<Match, Long> {
     List<Match> findByTournamentId(Long tournamentId);
     List<Match> findByTournamentIdAndRound(Long tournamentId, int round);
+    long countByPlayer1IdOrPlayer2Id(Long player1Id, Long player2Id);
+    long countByWinnerId(Long winnerId);
 }
