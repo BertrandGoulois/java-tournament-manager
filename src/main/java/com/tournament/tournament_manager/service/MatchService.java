@@ -1,5 +1,6 @@
 package com.tournament.tournament_manager.service;
 
+import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
 import com.tournament.tournament_manager.domain.model.entities.Match;
 import com.tournament.tournament_manager.domain.model.entities.Player;
 import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
@@ -8,6 +9,7 @@ import com.tournament.tournament_manager.dto.response.MatchResponse;
 import com.tournament.tournament_manager.exception.InvalidException;
 import com.tournament.tournament_manager.exception.MatchNotFoundException;
 import com.tournament.tournament_manager.repository.MatchRepository;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,12 +20,13 @@ import java.util.Set;
 @Transactional(readOnly = true)
 public class MatchService {
 
-    private final MatchRepository matchRepository;
-    private final BracketService bracketService;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public MatchService(MatchRepository matchRepository, BracketService bracketService) {
+    private final MatchRepository matchRepository;
+
+    public MatchService(MatchRepository matchRepository, ApplicationEventPublisher eventPublisher) {
         this.matchRepository = matchRepository;
-        this.bracketService = bracketService;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -44,7 +47,7 @@ public class MatchService {
         match.setWinner(winner);
         match.setPlayedAt(LocalDateTime.now());
         Match saved = matchRepository.save(match);
-        bracketService.advanceToNextRound(saved.getTournament(), saved.getRound());
+        eventPublisher.publishEvent(new MatchFinishedEvent(saved));
         return toResponse(saved);
     }
 
