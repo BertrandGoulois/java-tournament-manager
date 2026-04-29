@@ -1,5 +1,6 @@
 package com.tournament.tournament_manager.domain.model.entities;
 
+import com.tournament.tournament_manager.domain.model.valueobjects.EloRating;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -31,8 +32,9 @@ public class Player {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
-    private int eloRating = 1000;
+    @Embedded
+    @AttributeOverride(name = "value", column = @Column(name = "elo_rating", nullable = false))
+    private EloRating eloRating = EloRating.defaultRating();
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

@@ -73,7 +73,7 @@ public class PlayerService {
         return new PlayerStatsResponse(
                 player.getId(),
                 player.getUsername(),
-                player.getEloRating(),
+                player.getEloRating().value(),
                 (int) matchesPlayed,
                 (int) wins,
                 (int) losses,
@@ -83,6 +83,6 @@ public class PlayerService {
     }
 
     private PlayerResponse toResponse(Player player) {
-        return new PlayerResponse(player.getId(), player.getUsername(), player.getEmail(), player.getEloRating(), player.getCreatedAt());
+        return new PlayerResponse(player.getId(), player.getUsername(), player.getEmail(), player.getEloRating().value(), player.getCreatedAt());
     }
 }
