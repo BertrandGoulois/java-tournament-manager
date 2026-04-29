@@ -1,5 +1,6 @@
 package com.tournament.tournament_manager.dto.response;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 public record EloHistoryResponse(
@@ -7,4 +8,4 @@ public record EloHistoryResponse(
         int eloAfter,
         LocalDateTime createdAt,
         Long matchId
-) {}
+) implements Serializable {}

@@ -10,6 +10,8 @@ import com.tournament.tournament_manager.exception.PlayerNotFoundException;
 import com.tournament.tournament_manager.repository.EloHistoryRepository;
 import com.tournament.tournament_manager.repository.MatchRepository;
 import com.tournament.tournament_manager.repository.PlayerRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,6 +58,7 @@ public class PlayerService {
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(value = "playerStats", key = "#id")
     public PlayerStatsResponse getPlayerStats(Long id) {
         Player player = playerRepository.findById(id)
                 .orElseThrow(() -> new PlayerNotFoundException(id));

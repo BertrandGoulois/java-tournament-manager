@@ -1,5 +1,6 @@
 package com.tournament.tournament_manager.dto.response;
 
+import java.io.Serializable;
 import java.util.List;
 
 public record PlayerStatsResponse (
@@ -11,4 +12,4 @@ public record PlayerStatsResponse (
        int losses,
        double winRate,
        List<EloHistoryResponse> eloHistory
-) {}
+) implements Serializable {}

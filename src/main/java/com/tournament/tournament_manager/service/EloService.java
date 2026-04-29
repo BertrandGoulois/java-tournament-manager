@@ -3,9 +3,10 @@ package com.tournament.tournament_manager.service;
 import com.tournament.tournament_manager.domain.model.entities.EloHistory;
 import com.tournament.tournament_manager.domain.model.entities.Match;
 import com.tournament.tournament_manager.domain.model.entities.Player;
-import com.tournament.tournament_manager.domain.model.valueobjects.EloRating;
 import com.tournament.tournament_manager.repository.EloHistoryRepository;
 import com.tournament.tournament_manager.repository.PlayerRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +24,10 @@ public class EloService {
         this.eloHistoryRepository = eloHistoryRepository;
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "playerStats", key = "#match.player1.id"),
+            @CacheEvict(value = "playerStats", key = "#match.player2.id")
+    })
     @Transactional
     public void updateElo(Match match){
         Player winner = match.getWinner();
