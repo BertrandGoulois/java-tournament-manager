@@ -1,4 +1,4 @@
-package com.tournament.tournament_manager.config;
+package com.tournament.tournament_manager.config.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

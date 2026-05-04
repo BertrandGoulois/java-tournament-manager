@@ -1,6 +1,6 @@
 package com.tournament.tournament_manager.service;
 
-import com.tournament.tournament_manager.config.JwtService;
+import com.tournament.tournament_manager.config.security.JwtService;
 import com.tournament.tournament_manager.dto.request.LoginRequest;
 import com.tournament.tournament_manager.dto.response.AuthResponse;
 import org.springframework.security.authentication.AuthenticationManager;

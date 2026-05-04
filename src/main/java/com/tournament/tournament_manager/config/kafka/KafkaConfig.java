@@ -1,4 +1,4 @@
-package com.tournament.tournament_manager.config;
+package com.tournament.tournament_manager.config.kafka;
 
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.ProducerConfig;

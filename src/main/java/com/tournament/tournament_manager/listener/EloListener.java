@@ -6,7 +6,6 @@ import com.tournament.tournament_manager.exception.MatchNotFoundException;
 import com.tournament.tournament_manager.repository.MatchRepository;
 import com.tournament.tournament_manager.service.EloService;
 import org.springframework.context.annotation.Bean;
-import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
@@ -19,7 +18,7 @@ import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.tournament.tournament_manager.config.KafkaConfig.MATCH_FINISHED_TOPIC;
+import static com.tournament.tournament_manager.config.kafka.KafkaConfig.MATCH_FINISHED_TOPIC;
 
 @Component
 public class EloListener {

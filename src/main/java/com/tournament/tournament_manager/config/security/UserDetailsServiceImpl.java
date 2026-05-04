@@ -1,4 +1,4 @@
-package com.tournament.tournament_manager.config;
+package com.tournament.tournament_manager.config.security;
 
 import com.tournament.tournament_manager.repository.UserRepository;
 import org.springframework.lang.NonNull;

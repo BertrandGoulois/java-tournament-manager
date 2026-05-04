@@ -1,4 +1,4 @@
-package com.tournament.tournament_manager.config;
+package com.tournament.tournament_manager.config.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,7 +38,9 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**",
                                 "/v3/api-docs",
-                                "/webjars/**"
+                                "/webjars/**",
+                                "/ws/**",
+                                "/ws-test.html"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

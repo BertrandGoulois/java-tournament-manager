@@ -5,11 +5,10 @@ import com.tournament.tournament_manager.domain.model.entities.Match;
 import com.tournament.tournament_manager.exception.MatchNotFoundException;
 import com.tournament.tournament_manager.repository.MatchRepository;
 import com.tournament.tournament_manager.service.BracketService;
-import org.springframework.context.event.EventListener;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
-import static com.tournament.tournament_manager.config.KafkaConfig.MATCH_FINISHED_TOPIC;
+import static com.tournament.tournament_manager.config.kafka.KafkaConfig.MATCH_FINISHED_TOPIC;
 
 @Component
 public class BracketListener {

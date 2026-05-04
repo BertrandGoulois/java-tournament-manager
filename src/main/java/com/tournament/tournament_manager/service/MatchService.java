@@ -1,6 +1,6 @@
 package com.tournament.tournament_manager.service;
 
-import com.tournament.tournament_manager.config.KafkaConfig;
+import com.tournament.tournament_manager.config.kafka.KafkaConfig;
 import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
 import com.tournament.tournament_manager.domain.model.entities.Match;
 import com.tournament.tournament_manager.domain.model.entities.Player;
@@ -47,7 +47,6 @@ public class MatchService {
         match.setWinner(winner);
         match.setPlayedAt(LocalDateTime.now());
         Match saved = matchRepository.save(match);
-        System.out.println(">>> Envoi Kafka pour match " + saved.getId());
         kafkaTemplate.send(KafkaConfig.MATCH_FINISHED_TOPIC, new MatchFinishedEvent(saved.getId()));
         return toResponse(saved);
     }
