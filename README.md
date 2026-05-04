@@ -1,5 +1,7 @@
 # java-tournament-manager
 
+![CI](https://github.com/BertrandGoulois/java-tournament-manager/actions/workflows/ci.yml/badge.svg)
+
 API REST de gestion de tournois sportifs en élimination directe, développée en Java 21 / Spring Boot.
 
 Le projet suit une architecture en couches (controller → service → repository), avec un découplage des side effects via **Apache Kafka**. Les tests couvrent les cas nominaux et les cas d'erreur, avec des tests d'intégration sur une vraie base PostgreSQL via Testcontainers.
