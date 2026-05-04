@@ -13,7 +13,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.kafka.core.KafkaTemplate;
 
 import java.util.Optional;
 
@@ -27,7 +27,7 @@ class MatchServiceTest {
     @Mock
     private MatchRepository matchRepository;
     @Mock
-    private ApplicationEventPublisher eventPublisher;
+    private KafkaTemplate<String, Object> kafkaTemplate;
 
     @InjectMocks
     private MatchService matchService;
@@ -85,6 +85,6 @@ class MatchServiceTest {
 
         matchService.recordMatchResult(1L, new RecordMatchResultRequest(1L));
 
-        verify(eventPublisher, times(1)).publishEvent(any(Object.class));
+        verify(kafkaTemplate, times(1)).send(anyString(), any());
     }
 }
