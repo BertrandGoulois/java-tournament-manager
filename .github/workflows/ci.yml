@@ -20,5 +20,8 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
+      - name: Grant execute permission for mvnw
+        run: chmod +x mvnw
+
       - name: Build and test
         run: ./mvnw verify
