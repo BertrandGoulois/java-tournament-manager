@@ -16,6 +16,7 @@ Le projet suit une architecture en couches (controller → service → repositor
 - **Liquibase** (migrations versionnées)
 - **Apache Kafka** (messaging distribué, remplacement des Spring Events)
 - **Redis** (cache des statistiques joueur)
+- **WebSocket** / **STOMP** (notifications temps réel)
 - **JUnit 5** + **Mockito** (tests unitaires)
 - **Testcontainers** (tests d'intégration)
 - **Springdoc / Swagger UI** (documentation API)
@@ -25,9 +26,15 @@ Le projet suit une architecture en couches (controller → service → repositor
 
 ## Architecture & Design
 
-Les side effects métier (mise à jour ELO, avancement du bracket) sont découplés du service principal via Kafka. Lorsqu'un résultat de match est enregistré, un événement `MatchFinishedEvent` est publié sur le topic `match-finished`. Deux consumers indépendants (`elo-group`, `bracket-group`) traitent cet événement de façon asynchrone.
+Les side effects métier (mise à jour ELO, avancement du bracket, notifications temps réel) sont découplés du service principal via Kafka. Lorsqu'un résultat de match est enregistré, un événement `MatchFinishedEvent` est publié sur le topic `match-finished`. Trois consumers indépendants traitent cet événement de façon asynchrone :
+
+- `elo-group` → met à jour les ratings ELO des deux joueurs
+- `bracket-group` → avance le bracket au tour suivant
+- `websocket-group` → broadcast une notification temps réel à tous les clients connectés via WebSocket
 
 > Cette approche remplace une première implémentation basée sur les Spring Events synchrones, afin de se rapprocher d'une architecture orientée événements distribuée.
+
+**Test WebSocket** : une page de démonstration est disponible sur `http://localhost:8080/ws-test.html`. Elle permet de visualiser en temps réel les événements de fin de match sans authentification.
 
 ---
 
@@ -48,9 +55,9 @@ spring.datasource.username=postgres
 spring.datasource.password=tonmotdepasse
 ```
 
-> Les tables sont créées automatiquement par Liquibase au démarrage. Aucun script SQL manuel requis.
+> Les tables et le user admin sont créés automatiquement par Liquibase au démarrage. Aucun script SQL manuel requis.
 
-3. Démarrer les services (PostgreSQL, Kafka, Zookeeper, Redis) :
+3. Démarrer les services (Kafka, Zookeeper, Redis) :
 
 ```bash
 docker-compose up -d
@@ -77,6 +84,10 @@ docker-compose up -d
 **Documentation API :**
 
 Swagger UI disponible sur : `http://localhost:8080/swagger-ui/index.html`
+
+**Test WebSocket :**
+
+Page de démonstration disponible sur : `http://localhost:8080/ws-test.html`
 
 ---
 
@@ -254,7 +265,7 @@ Authorization: Bearer <JWT token>
 }
 ```
 
-> Après enregistrement du résultat : publication d'un événement Kafka `match-finished`, mise à jour ELO des deux joueurs, avancement automatique au tour suivant, fin du tournoi si c'était la finale.
+> Après enregistrement du résultat : publication d'un événement Kafka `match-finished`, mise à jour ELO des deux joueurs, avancement automatique au tour suivant, notification WebSocket temps réel, fin du tournoi si c'était la finale.
 
 - **Errors** :
   - `400` → match déjà terminé
@@ -267,6 +278,7 @@ Authorization: Bearer <JWT token>
 - Génération de bracket en élimination directe avec support des byes
 - Calcul ELO après chaque match (K=32, formule standard)
 - Avancement automatique au tour suivant via événements Kafka
+- Notifications temps réel via WebSocket à chaque fin de match
 - Cache Redis sur les statistiques joueur (`GET /players/{id}/stats`)
 - Statistiques joueur (win rate, historique ELO)
 - Authentification JWT avec rôles ADMIN / PLAYER
@@ -278,4 +290,3 @@ Authorization: Bearer <JWT token>
 ## Évolutions possibles
 
 - Format round-robin / phase de groupes
-- Notifications temps réel (WebSocket)
