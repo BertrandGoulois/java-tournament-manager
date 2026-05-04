@@ -2,7 +2,7 @@
 
 API REST de gestion de tournois sportifs en élimination directe, développée en Java 21 / Spring Boot.
 
-Le projet suit une architecture en couches (controller → service → repository), avec un découplage des side effects via Spring Events. Les tests couvrent les cas nominaux et les cas d'erreur, avec des tests d'intégration sur une vraie base PostgreSQL via Testcontainers.
+Le projet suit une architecture en couches (controller → service → repository), avec un découplage des side effects via **Apache Kafka**. Les tests couvrent les cas nominaux et les cas d'erreur, avec des tests d'intégration sur une vraie base PostgreSQL via Testcontainers.
 
 ---
 
@@ -14,11 +14,20 @@ Le projet suit une architecture en couches (controller → service → repositor
 - **Spring Data JPA** / **Hibernate**
 - **PostgreSQL** (production)
 - **Liquibase** (migrations versionnées)
-- **Spring Events** (découplage des side effects)
+- **Apache Kafka** (messaging distribué, remplacement des Spring Events)
+- **Redis** (cache des statistiques joueur)
 - **JUnit 5** + **Mockito** (tests unitaires)
 - **Testcontainers** (tests d'intégration)
 - **Springdoc / Swagger UI** (documentation API)
 - **Lombok**
+
+---
+
+## Architecture & Design
+
+Les side effects métier (mise à jour ELO, avancement du bracket) sont découplés du service principal via Kafka. Lorsqu'un résultat de match est enregistré, un événement `MatchFinishedEvent` est publié sur le topic `match-finished`. Deux consumers indépendants (`elo-group`, `bracket-group`) traitent cet événement de façon asynchrone.
+
+> Cette approche remplace une première implémentation basée sur les Spring Events synchrones, afin de se rapprocher d'une architecture orientée événements distribuée.
 
 ---
 
@@ -40,6 +49,12 @@ spring.datasource.password=tonmotdepasse
 ```
 
 > Les tables sont créées automatiquement par Liquibase au démarrage. Aucun script SQL manuel requis.
+
+3. Démarrer les services (PostgreSQL, Kafka, Zookeeper, Redis) :
+
+```bash
+docker-compose up -d
+```
 
 ---
 
@@ -239,7 +254,7 @@ Authorization: Bearer <JWT token>
 }
 ```
 
-> Après enregistrement du résultat : mise à jour ELO des deux joueurs, avancement automatique au tour suivant, fin du tournoi si c'était la finale.
+> Après enregistrement du résultat : publication d'un événement Kafka `match-finished`, mise à jour ELO des deux joueurs, avancement automatique au tour suivant, fin du tournoi si c'était la finale.
 
 - **Errors** :
   - `400` → match déjà terminé
@@ -251,7 +266,8 @@ Authorization: Bearer <JWT token>
 
 - Génération de bracket en élimination directe avec support des byes
 - Calcul ELO après chaque match (K=32, formule standard)
-- Avancement automatique au tour suivant via Spring Events
+- Avancement automatique au tour suivant via événements Kafka
+- Cache Redis sur les statistiques joueur (`GET /players/{id}/stats`)
 - Statistiques joueur (win rate, historique ELO)
 - Authentification JWT avec rôles ADMIN / PLAYER
 - Migrations versionnées avec Liquibase
@@ -261,7 +277,5 @@ Authorization: Bearer <JWT token>
 
 ## Évolutions possibles
 
-- Docker + Docker Compose
-- Messaging distribué avec Kafka (remplacement des Spring Events)
 - Format round-robin / phase de groupes
 - Notifications temps réel (WebSocket)

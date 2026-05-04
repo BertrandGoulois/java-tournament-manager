@@ -1,5 +1,6 @@
 package com.tournament.tournament_manager.service;
 
+import com.tournament.tournament_manager.config.KafkaConfig;
 import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
 import com.tournament.tournament_manager.domain.model.entities.Match;
 import com.tournament.tournament_manager.domain.model.entities.Player;
@@ -9,7 +10,7 @@ import com.tournament.tournament_manager.dto.response.MatchResponse;
 import com.tournament.tournament_manager.exception.InvalidException;
 import com.tournament.tournament_manager.exception.MatchNotFoundException;
 import com.tournament.tournament_manager.repository.MatchRepository;
-import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,13 +21,12 @@ import java.util.Set;
 @Transactional(readOnly = true)
 public class MatchService {
 
-    private final ApplicationEventPublisher eventPublisher;
-
+    private final KafkaTemplate<String, Object> kafkaTemplate;
     private final MatchRepository matchRepository;
 
-    public MatchService(MatchRepository matchRepository, ApplicationEventPublisher eventPublisher) {
+    public MatchService(MatchRepository matchRepository, KafkaTemplate<String, Object> kafkaTemplate) {
         this.matchRepository = matchRepository;
-        this.eventPublisher = eventPublisher;
+        this.kafkaTemplate = kafkaTemplate;
     }
 
     @Transactional
@@ -47,7 +47,8 @@ public class MatchService {
         match.setWinner(winner);
         match.setPlayedAt(LocalDateTime.now());
         Match saved = matchRepository.save(match);
-        eventPublisher.publishEvent(new MatchFinishedEvent(saved));
+        System.out.println(">>> Envoi Kafka pour match " + saved.getId());
+        kafkaTemplate.send(KafkaConfig.MATCH_FINISHED_TOPIC, new MatchFinishedEvent(saved.getId()));
         return toResponse(saved);
     }
 
