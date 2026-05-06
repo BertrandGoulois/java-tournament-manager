@@ -1,6 +1,8 @@
 # java-tournament-manager
 
 ![CI](https://github.com/BertrandGoulois/java-tournament-manager/actions/workflows/ci.yml/badge.svg)
+![Coverage](.github/badges/jacoco.svg)
+![Branches](.github/badges/branches.svg)
 
 API REST de gestion de tournois sportifs en élimination directe, développée en Java 21 / Spring Boot.
 
