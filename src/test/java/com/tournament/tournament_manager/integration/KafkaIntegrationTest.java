@@ -11,9 +11,9 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
 import java.util.concurrent.TimeUnit;
@@ -34,7 +34,7 @@ class KafkaIntegrationTest {
 
     @Container
     static KafkaContainer kafkaContainer = new KafkaContainer(
-            DockerImageName.parse("apache/kafka-native:latest")
+            DockerImageName.parse("confluentinc/cp-kafka:7.6.0")
     );
 
     @Test
