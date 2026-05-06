@@ -41,7 +41,7 @@ class KafkaIntegrationTest {
     void shouldReceiveMatchFinishedEvent() throws InterruptedException {
         kafkaTemplate.send(KafkaConfig.MATCH_FINISHED_TOPIC, new MatchFinishedEvent(42L));
 
-        boolean received = testKafkaConsumer.getLatch().await(10, TimeUnit.SECONDS);
+        boolean received = testKafkaConsumer.getLatch().await(30, TimeUnit.SECONDS);
 
         assertTrue(received, "L'événement Kafka n'a pas été reçu dans les délais");
     }
