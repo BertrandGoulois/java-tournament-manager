@@ -1,11 +1,14 @@
 package com.tournament.tournament_manager.service;
 
 import com.tournament.tournament_manager.domain.model.entities.Tournament;
+import com.tournament.tournament_manager.domain.port.out.ExistsTournamentPort;
+import com.tournament.tournament_manager.domain.port.out.LoadAllTournamentsPort;
+import com.tournament.tournament_manager.domain.port.out.LoadTournamentPort;
+import com.tournament.tournament_manager.domain.port.out.SaveTournamentPort;
 import com.tournament.tournament_manager.dto.request.CreateTournamentRequest;
 import com.tournament.tournament_manager.exception.InvalidTournamentException;
 import com.tournament.tournament_manager.exception.TournamentAlreadyExistsException;
 import com.tournament.tournament_manager.exception.TournamentNotFoundException;
-import com.tournament.tournament_manager.repository.TournamentRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -13,10 +16,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
-import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -24,21 +25,27 @@ import static org.mockito.Mockito.when;
 class TournamentServiceTest {
 
     @Mock
-    private TournamentRepository tournamentRepository;
+    private LoadTournamentPort loadTournamentPort;
+    @Mock
+    private SaveTournamentPort saveTournamentPort;
+    @Mock
+    private ExistsTournamentPort existsTournamentPort;
+    @Mock
+    private LoadAllTournamentsPort loadAllTournamentsPort;
 
     @InjectMocks
     private TournamentService tournamentService;
 
     @Test
     void createTournament_shouldThrow_whenNameAlreadyExists() {
-        when(tournamentRepository.existsByName("Test")).thenReturn(true);
+        when(existsTournamentPort.existsByName("Test")).thenReturn(true);
         assertThrows(TournamentAlreadyExistsException.class,
                 () -> tournamentService.createTournament(new CreateTournamentRequest("Test", 4)));
     }
 
     @Test
     void createTournament_shouldThrow_whenMaxPlayersNotPowerOfTwo() {
-        when(tournamentRepository.existsByName("Test")).thenReturn(false);
+        when(existsTournamentPort.existsByName("Test")).thenReturn(false);
         assertThrows(InvalidTournamentException.class,
                 () -> tournamentService.createTournament(new CreateTournamentRequest("Test", 3)));
     }
@@ -49,8 +56,8 @@ class TournamentServiceTest {
         saved.setName("Test");
         saved.setMaxPlayers(4);
 
-        when(tournamentRepository.existsByName("Test")).thenReturn(false);
-        when(tournamentRepository.save(any())).thenReturn(saved);
+        when(existsTournamentPort.existsByName("Test")).thenReturn(false);
+        when(saveTournamentPort.saveTournament(any())).thenReturn(saved);
 
         var response = tournamentService.createTournament(new CreateTournamentRequest("Test", 4));
         assertEquals("Test", response.name());
@@ -58,7 +65,7 @@ class TournamentServiceTest {
 
     @Test
     void getTournamentById_shouldThrow_whenNotFound() {
-        when(tournamentRepository.findById(1L)).thenReturn(Optional.empty());
+        when(loadTournamentPort.loadTournament(1L)).thenThrow(new TournamentNotFoundException(1L));
         assertThrows(TournamentNotFoundException.class, () -> tournamentService.getTournamentById(1L));
     }
 
@@ -69,10 +76,9 @@ class TournamentServiceTest {
         tournament.setName("Test");
         tournament.setMaxPlayers(4);
 
-        when(tournamentRepository.findById(1L)).thenReturn(Optional.of(tournament));
+        when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
 
         var response = tournamentService.getTournamentById(1L);
-
         assertEquals("Test", response.name());
     }
 
@@ -82,17 +88,16 @@ class TournamentServiceTest {
         tournament.setName("Test");
         tournament.setMaxPlayers(4);
 
-        when(tournamentRepository.findAll()).thenReturn(List.of(tournament));
+        when(loadAllTournamentsPort.loadAllTournaments()).thenReturn(List.of(tournament));
 
         var responses = tournamentService.getAllTournaments();
-
         assertEquals(1, responses.size());
         assertEquals("Test", responses.get(0).name());
     }
 
     @Test
     void createTournament_shouldThrow_whenMaxPlayersIsZeroOrNegative() {
-        when(tournamentRepository.existsByName("Test")).thenReturn(false);
+        when(existsTournamentPort.existsByName("Test")).thenReturn(false);
         assertThrows(InvalidTournamentException.class,
                 () -> tournamentService.createTournament(new CreateTournamentRequest("Test", 0)));
     }

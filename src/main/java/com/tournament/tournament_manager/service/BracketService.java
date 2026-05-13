@@ -6,11 +6,13 @@ import com.tournament.tournament_manager.domain.model.entities.Registration;
 import com.tournament.tournament_manager.domain.model.entities.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+import com.tournament.tournament_manager.domain.port.in.StartTournamentUseCase;
+import com.tournament.tournament_manager.domain.port.out.LoadMatchByTournamentPort;
+import com.tournament.tournament_manager.domain.port.out.LoadRegistrationPort;
+import com.tournament.tournament_manager.domain.port.out.LoadTournamentPort;
+import com.tournament.tournament_manager.domain.port.out.SaveMatchPort;
+import com.tournament.tournament_manager.domain.port.out.SaveTournamentPort;
 import com.tournament.tournament_manager.exception.InvalidException;
-import com.tournament.tournament_manager.exception.TournamentNotFoundException;
-import com.tournament.tournament_manager.repository.MatchRepository;
-import com.tournament.tournament_manager.repository.RegistrationRepository;
-import com.tournament.tournament_manager.repository.TournamentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,43 +32,39 @@ import java.util.stream.Collectors;
  * <p>Les joueurs sans adversaire (byes) reçoivent un match {@code FINISHED}
  * immédiatement, avec eux-mêmes déclarés vainqueurs, afin d'homogénéiser
  * le traitement dans {@link #advanceToNextRound}.
+ *
+ * <p>Dépend uniquement de ports (interfaces) - aucune dépendance directe vers JPA.
  */
 @Service
 @Transactional(readOnly = true)
-public class BracketService {
+public class BracketService implements StartTournamentUseCase {
 
-    private final TournamentRepository tournamentRepository;
-    private final RegistrationRepository registrationRepository;
-    private final MatchRepository matchRepository;
+    private final LoadTournamentPort loadTournamentPort;
+    private final SaveTournamentPort saveTournamentPort;
+    private final LoadRegistrationPort loadRegistrationPort;
+    private final SaveMatchPort saveMatchPort;
+    private final LoadMatchByTournamentPort loadMatchByTournamentPort;
 
-    public BracketService(TournamentRepository tournamentRepository,
-                          RegistrationRepository registrationRepository,
-                          MatchRepository matchRepository) {
-        this.tournamentRepository = tournamentRepository;
-        this.registrationRepository = registrationRepository;
-        this.matchRepository = matchRepository;
+    public BracketService(LoadTournamentPort loadTournamentPort,
+                          SaveTournamentPort saveTournamentPort,
+                          LoadRegistrationPort loadRegistrationPort,
+                          SaveMatchPort saveMatchPort,
+                          LoadMatchByTournamentPort loadMatchByTournamentPort) {
+        this.loadTournamentPort = loadTournamentPort;
+        this.saveTournamentPort = saveTournamentPort;
+        this.loadRegistrationPort = loadRegistrationPort;
+        this.saveMatchPort = saveMatchPort;
+        this.loadMatchByTournamentPort = loadMatchByTournamentPort;
     }
 
-    /**
-     * Démarre le tournoi et génère le bracket du premier tour.
-     *
-     * <p>Les joueurs inscrits sont mélangés aléatoirement avant la création
-     * des matchs. Si le nombre de joueurs est impair, le dernier joueur
-     * de la liste reçoit un bye (victoire automatique sans adversaire).
-     *
-     * @param tournamentId identifiant du tournoi à démarrer
-     * @throws TournamentNotFoundException si le tournoi n'existe pas
-     * @throws InvalidException si le tournoi n'est pas au statut {@code OPEN}
-     * @throws InvalidException si moins de 2 joueurs sont inscrits
-     */
+    @Override
     @Transactional
     public void startTournament(Long tournamentId) {
-        Tournament tournament = tournamentRepository.findById(tournamentId)
-                .orElseThrow(() -> new TournamentNotFoundException(tournamentId));
+        Tournament tournament = loadTournamentPort.loadTournament(tournamentId);
         if (tournament.getStatus() != TournamentStatus.OPEN) {
             throw new InvalidException("Tournament is not open");
         }
-        List<Registration> registrations = registrationRepository.findByTournamentId(tournamentId);
+        List<Registration> registrations = loadRegistrationPort.loadByTournamentId(tournamentId);
         if (registrations.size() < 2) {
             throw new InvalidException("Tournament needs at least 2 players");
         }
@@ -82,24 +80,13 @@ public class BracketService {
         }
 
         tournament.setStatus(TournamentStatus.IN_PROGRESS);
-        tournamentRepository.save(tournament);
+        saveTournamentPort.saveTournament(tournament);
     }
 
-    /**
-     * Tente de faire progresser le bracket au tour suivant.
-     *
-     * <p>N'effectue aucune action si tous les matchs du {@code currentRound}
-     * ne sont pas encore terminés. Quand le round suivant calculé est inférieur
-     * à 2, le tournoi est marqué {@code FINISHED} (la finale vient d'être jouée).
-     *
-     * @param tournament   le tournoi concerné
-     * @param currentRound le numéro du round qui vient de se terminer
-     */
     @Transactional
     public void advanceToNextRound(Tournament tournament, int currentRound) {
-        List<Match> currentMatches = matchRepository.findByTournamentIdAndRound(
-                tournament.getId(), currentRound
-        );
+        List<Match> currentMatches = loadMatchByTournamentPort
+                .loadByTournamentIdAndRound(tournament.getId(), currentRound);
         boolean allFinished = currentMatches.stream()
                 .allMatch(m -> m.getStatus() == MatchStatus.FINISHED);
         if (!allFinished) return;
@@ -107,7 +94,7 @@ public class BracketService {
         int nextRound = currentRound / 2;
         if (nextRound < 2) {
             tournament.setStatus(TournamentStatus.FINISHED);
-            tournamentRepository.save(tournament);
+            saveTournamentPort.saveTournament(tournament);
             return;
         }
         List<Player> winners = currentMatches.stream()
@@ -121,17 +108,6 @@ public class BracketService {
         }
     }
 
-    /**
-     * Crée et persiste un match entre deux joueurs pour un round donné.
-     *
-     * <p>Si {@code player2} est {@code null} (bye), le match est immédiatement
-     * marqué {@code FINISHED} avec {@code player1} comme vainqueur.
-     *
-     * @param tournament le tournoi auquel appartient le match
-     * @param player1    premier joueur
-     * @param player2    second joueur, ou {@code null} en cas de bye
-     * @param round      numéro du round
-     */
     private void createMatch(Tournament tournament, Player player1, Player player2, int round) {
         Match match = new Match();
         match.setTournament(tournament);
@@ -145,18 +121,9 @@ public class BracketService {
         } else {
             match.setStatus(MatchStatus.PENDING);
         }
-        matchRepository.save(match);
+        saveMatchPort.saveMatch(match);
     }
 
-    /**
-     * Calcule le numéro du premier round, soit la plus petite puissance de 2
-     * supérieure ou égale à {@code playerCount}.
-     *
-     * <p>Exemples : 4 joueurs → 4, 5 joueurs → 8, 8 joueurs → 8.
-     *
-     * @param playerCount nombre de joueurs participants
-     * @return numéro du premier round
-     */
     private int calculateFirstRound(int playerCount) {
         int round = 1;
         while (round < playerCount) {

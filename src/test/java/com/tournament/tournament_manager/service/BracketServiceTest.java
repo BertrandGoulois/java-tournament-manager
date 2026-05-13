@@ -6,11 +6,14 @@ import com.tournament.tournament_manager.domain.model.entities.Registration;
 import com.tournament.tournament_manager.domain.model.entities.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+import com.tournament.tournament_manager.domain.port.out.LoadMatchByTournamentPort;
+import com.tournament.tournament_manager.domain.port.out.LoadRegistrationPort;
+import com.tournament.tournament_manager.domain.port.out.LoadTournamentPort;
+import com.tournament.tournament_manager.domain.port.out.SaveMatchPort;
+import com.tournament.tournament_manager.domain.port.out.SaveTournamentPort;
 import com.tournament.tournament_manager.exception.InvalidException;
 import com.tournament.tournament_manager.exception.NotFoundException;
-import com.tournament.tournament_manager.repository.MatchRepository;
-import com.tournament.tournament_manager.repository.RegistrationRepository;
-import com.tournament.tournament_manager.repository.TournamentRepository;
+import com.tournament.tournament_manager.exception.TournamentNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -19,7 +22,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -29,11 +31,15 @@ import static org.mockito.Mockito.*;
 class BracketServiceTest {
 
     @Mock
-    private TournamentRepository tournamentRepository;
+    private LoadTournamentPort loadTournamentPort;
     @Mock
-    private RegistrationRepository registrationRepository;
+    private SaveTournamentPort saveTournamentPort;
     @Mock
-    private MatchRepository matchRepository;
+    private LoadRegistrationPort loadRegistrationPort;
+    @Mock
+    private SaveMatchPort saveMatchPort;
+    @Mock
+    private LoadMatchByTournamentPort loadMatchByTournamentPort;
 
     @InjectMocks
     private BracketService bracketService;
@@ -43,7 +49,7 @@ class BracketServiceTest {
         Tournament tournament = new Tournament();
         tournament.setStatus(TournamentStatus.IN_PROGRESS);
 
-        when(tournamentRepository.findById(1L)).thenReturn(Optional.of(tournament));
+        when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
 
         assertThrows(InvalidException.class, () -> bracketService.startTournament(1L));
     }
@@ -53,19 +59,19 @@ class BracketServiceTest {
         Tournament tournament = new Tournament();
         tournament.setStatus(TournamentStatus.OPEN);
 
-        when(tournamentRepository.findById(1L)).thenReturn(Optional.of(tournament));
+        when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
 
         Registration registration = new Registration();
         registration.setPlayer(new Player());
 
-        when(registrationRepository.findByTournamentId(1L)).thenReturn(List.of(registration));
+        when(loadRegistrationPort.loadByTournamentId(1L)).thenReturn(List.of(registration));
 
         assertThrows(InvalidException.class, () -> bracketService.startTournament(1L));
     }
 
     @Test
     void startTournament_shouldThrowException_whenTournamentDoesntExist() {
-        when(tournamentRepository.findById(1L)).thenReturn(Optional.empty());
+        when(loadTournamentPort.loadTournament(1L)).thenThrow(new TournamentNotFoundException(1L));
         assertThrows(NotFoundException.class, () -> bracketService.startTournament(1L));
     }
 
@@ -80,12 +86,12 @@ class BracketServiceTest {
         Registration reg2 = new Registration();
         reg2.setPlayer(new Player());
 
-        when(tournamentRepository.findById(1L)).thenReturn(Optional.of(tournament));
-        when(registrationRepository.findByTournamentId(1L)).thenReturn(List.of(reg1, reg2));
+        when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
+        when(loadRegistrationPort.loadByTournamentId(1L)).thenReturn(List.of(reg1, reg2));
 
         bracketService.startTournament(1L);
 
-        verify(matchRepository, times(1)).save(any(Match.class));
+        verify(saveMatchPort, times(1)).saveMatch(any(Match.class));
     }
 
     @Test
@@ -99,12 +105,12 @@ class BracketServiceTest {
                 registrationWithPlayer(), registrationWithPlayer()
         );
 
-        when(tournamentRepository.findById(1L)).thenReturn(Optional.of(tournament));
-        when(registrationRepository.findByTournamentId(1L)).thenReturn(registrations);
+        when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
+        when(loadRegistrationPort.loadByTournamentId(1L)).thenReturn(registrations);
 
         bracketService.startTournament(1L);
 
-        verify(matchRepository, times(2)).save(any(Match.class));
+        verify(saveMatchPort, times(2)).saveMatch(any(Match.class));
     }
 
     @Test
@@ -118,13 +124,13 @@ class BracketServiceTest {
         Registration reg2 = new Registration();
         reg2.setPlayer(new Player());
 
-        when(tournamentRepository.findById(1L)).thenReturn(Optional.of(tournament));
-        when(registrationRepository.findByTournamentId(1L)).thenReturn(List.of(reg1, reg2));
+        when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
+        when(loadRegistrationPort.loadByTournamentId(1L)).thenReturn(List.of(reg1, reg2));
 
         bracketService.startTournament(1L);
 
         assertEquals(TournamentStatus.IN_PROGRESS, tournament.getStatus());
-        verify(tournamentRepository, times(1)).save(tournament);
+        verify(saveTournamentPort, times(1)).saveTournament(tournament);
     }
 
     @Test
@@ -137,16 +143,15 @@ class BracketServiceTest {
                 registrationWithPlayer(), registrationWithPlayer(), registrationWithPlayer()
         );
 
-        when(tournamentRepository.findById(1L)).thenReturn(Optional.of(tournament));
-        when(registrationRepository.findByTournamentId(1L)).thenReturn(registrations);
+        when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
+        when(loadRegistrationPort.loadByTournamentId(1L)).thenReturn(registrations);
 
         bracketService.startTournament(1L);
 
         ArgumentCaptor<Match> captor = ArgumentCaptor.forClass(Match.class);
-        verify(matchRepository, times(2)).save(captor.capture());
+        verify(saveMatchPort, times(2)).saveMatch(captor.capture());
 
-        List<Match> savedMatches = captor.getAllValues();
-        boolean hasByeMatch = savedMatches.stream().anyMatch(m -> m.getPlayer2() == null);
+        boolean hasByeMatch = captor.getAllValues().stream().anyMatch(m -> m.getPlayer2() == null);
         assertTrue(hasByeMatch);
     }
 
@@ -158,12 +163,13 @@ class BracketServiceTest {
         Match pendingMatch = new Match();
         pendingMatch.setStatus(MatchStatus.PENDING);
 
-        when(matchRepository.findByTournamentIdAndRound(1L, 4)).thenReturn(List.of(pendingMatch));
+        when(loadMatchByTournamentPort.loadByTournamentIdAndRound(1L, 4))
+                .thenReturn(List.of(pendingMatch));
 
         bracketService.advanceToNextRound(tournament, 4);
 
-        verify(matchRepository, never()).save(any());
-        verify(tournamentRepository, never()).save(any());
+        verify(saveMatchPort, never()).saveMatch(any());
+        verify(saveTournamentPort, never()).saveTournament(any());
     }
 
     @Test
@@ -177,12 +183,13 @@ class BracketServiceTest {
         finishedMatch.setStatus(MatchStatus.FINISHED);
         finishedMatch.setWinner(winner);
 
-        when(matchRepository.findByTournamentIdAndRound(1L, 2)).thenReturn(List.of(finishedMatch));
+        when(loadMatchByTournamentPort.loadByTournamentIdAndRound(1L, 2))
+                .thenReturn(List.of(finishedMatch));
 
         bracketService.advanceToNextRound(tournament, 2);
 
         assertEquals(TournamentStatus.FINISHED, tournament.getStatus());
-        verify(tournamentRepository, times(1)).save(tournament);
+        verify(saveTournamentPort, times(1)).saveTournament(tournament);
     }
 
     @Test
@@ -201,11 +208,12 @@ class BracketServiceTest {
         match2.setStatus(MatchStatus.FINISHED);
         match2.setWinner(winner2);
 
-        when(matchRepository.findByTournamentIdAndRound(1L, 4)).thenReturn(List.of(match1, match2));
+        when(loadMatchByTournamentPort.loadByTournamentIdAndRound(1L, 4))
+                .thenReturn(List.of(match1, match2));
 
         bracketService.advanceToNextRound(tournament, 4);
 
-        verify(matchRepository, times(1)).save(any(Match.class));
+        verify(saveMatchPort, times(1)).saveMatch(any(Match.class));
     }
 
     @Test
@@ -229,12 +237,13 @@ class BracketServiceTest {
         match3.setStatus(MatchStatus.FINISHED);
         match3.setWinner(winner3);
 
-        when(matchRepository.findByTournamentIdAndRound(1L, 8)).thenReturn(List.of(match1, match2, match3));
+        when(loadMatchByTournamentPort.loadByTournamentIdAndRound(1L, 8))
+                .thenReturn(List.of(match1, match2, match3));
 
         bracketService.advanceToNextRound(tournament, 8);
 
         ArgumentCaptor<Match> captor = ArgumentCaptor.forClass(Match.class);
-        verify(matchRepository, atLeast(1)).save(captor.capture());
+        verify(saveMatchPort, atLeast(1)).saveMatch(captor.capture());
 
         boolean hasByeMatch = captor.getAllValues().stream().anyMatch(m -> m.getPlayer2() == null);
         assertTrue(hasByeMatch);
