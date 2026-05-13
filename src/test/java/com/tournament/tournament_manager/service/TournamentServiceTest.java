@@ -12,6 +12,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -58,5 +59,40 @@ class TournamentServiceTest {
     void getTournamentById_shouldThrow_whenNotFound() {
         when(tournamentRepository.findById(1L)).thenReturn(Optional.empty());
         assertThrows(TournamentNotFoundException.class, () -> tournamentService.getTournamentById(1L));
+    }
+
+    @Test
+    void getTournamentById_shouldReturnTournament_whenFound() {
+        Tournament tournament = new Tournament();
+        tournament.setId(1L);
+        tournament.setName("Test");
+        tournament.setMaxPlayers(4);
+
+        when(tournamentRepository.findById(1L)).thenReturn(Optional.of(tournament));
+
+        var response = tournamentService.getTournamentById(1L);
+
+        assertEquals("Test", response.name());
+    }
+
+    @Test
+    void getAllTournaments_shouldReturnList() {
+        Tournament tournament = new Tournament();
+        tournament.setName("Test");
+        tournament.setMaxPlayers(4);
+
+        when(tournamentRepository.findAll()).thenReturn(List.of(tournament));
+
+        var responses = tournamentService.getAllTournaments();
+
+        assertEquals(1, responses.size());
+        assertEquals("Test", responses.get(0).name());
+    }
+
+    @Test
+    void createTournament_shouldThrow_whenMaxPlayersIsZeroOrNegative() {
+        when(tournamentRepository.existsByName("Test")).thenReturn(false);
+        assertThrows(InvalidTournamentException.class,
+                () -> tournamentService.createTournament(new CreateTournamentRequest("Test", 0)));
     }
 }

@@ -4,6 +4,7 @@ import com.tournament.tournament_manager.domain.model.entities.Match;
 import com.tournament.tournament_manager.domain.model.entities.Player;
 import com.tournament.tournament_manager.domain.model.entities.Registration;
 import com.tournament.tournament_manager.domain.model.entities.Tournament;
+import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
 import com.tournament.tournament_manager.exception.InvalidException;
 import com.tournament.tournament_manager.exception.NotFoundException;
@@ -146,6 +147,96 @@ class BracketServiceTest {
 
         List<Match> savedMatches = captor.getAllValues();
         boolean hasByeMatch = savedMatches.stream().anyMatch(m -> m.getPlayer2() == null);
+        assertTrue(hasByeMatch);
+    }
+
+    @Test
+    void advanceToNextRound_shouldDoNothing_whenNotAllMatchesFinished() {
+        Tournament tournament = new Tournament();
+        tournament.setId(1L);
+
+        Match pendingMatch = new Match();
+        pendingMatch.setStatus(MatchStatus.PENDING);
+
+        when(matchRepository.findByTournamentIdAndRound(1L, 4)).thenReturn(List.of(pendingMatch));
+
+        bracketService.advanceToNextRound(tournament, 4);
+
+        verify(matchRepository, never()).save(any());
+        verify(tournamentRepository, never()).save(any());
+    }
+
+    @Test
+    void advanceToNextRound_shouldFinishTournament_whenNextRoundLessThan2() {
+        Tournament tournament = new Tournament();
+        tournament.setId(1L);
+        tournament.setStatus(TournamentStatus.IN_PROGRESS);
+
+        Player winner = new Player();
+        Match finishedMatch = new Match();
+        finishedMatch.setStatus(MatchStatus.FINISHED);
+        finishedMatch.setWinner(winner);
+
+        when(matchRepository.findByTournamentIdAndRound(1L, 2)).thenReturn(List.of(finishedMatch));
+
+        bracketService.advanceToNextRound(tournament, 2);
+
+        assertEquals(TournamentStatus.FINISHED, tournament.getStatus());
+        verify(tournamentRepository, times(1)).save(tournament);
+    }
+
+    @Test
+    void advanceToNextRound_shouldCreateNextRoundMatches_whenAllMatchesFinished() {
+        Tournament tournament = new Tournament();
+        tournament.setId(1L);
+
+        Player winner1 = new Player();
+        Player winner2 = new Player();
+
+        Match match1 = new Match();
+        match1.setStatus(MatchStatus.FINISHED);
+        match1.setWinner(winner1);
+
+        Match match2 = new Match();
+        match2.setStatus(MatchStatus.FINISHED);
+        match2.setWinner(winner2);
+
+        when(matchRepository.findByTournamentIdAndRound(1L, 4)).thenReturn(List.of(match1, match2));
+
+        bracketService.advanceToNextRound(tournament, 4);
+
+        verify(matchRepository, times(1)).save(any(Match.class));
+    }
+
+    @Test
+    void advanceToNextRound_shouldCreateByeMatch_whenOddNumberOfWinners() {
+        Tournament tournament = new Tournament();
+        tournament.setId(1L);
+
+        Player winner1 = new Player();
+        Player winner2 = new Player();
+        Player winner3 = new Player();
+
+        Match match1 = new Match();
+        match1.setStatus(MatchStatus.FINISHED);
+        match1.setWinner(winner1);
+
+        Match match2 = new Match();
+        match2.setStatus(MatchStatus.FINISHED);
+        match2.setWinner(winner2);
+
+        Match match3 = new Match();
+        match3.setStatus(MatchStatus.FINISHED);
+        match3.setWinner(winner3);
+
+        when(matchRepository.findByTournamentIdAndRound(1L, 8)).thenReturn(List.of(match1, match2, match3));
+
+        bracketService.advanceToNextRound(tournament, 8);
+
+        ArgumentCaptor<Match> captor = ArgumentCaptor.forClass(Match.class);
+        verify(matchRepository, atLeast(1)).save(captor.capture());
+
+        boolean hasByeMatch = captor.getAllValues().stream().anyMatch(m -> m.getPlayer2() == null);
         assertTrue(hasByeMatch);
     }
 

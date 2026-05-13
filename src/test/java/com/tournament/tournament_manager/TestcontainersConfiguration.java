@@ -15,10 +15,4 @@ public class TestcontainersConfiguration {
 	PostgreSQLContainer postgresContainer() {
 		return new PostgreSQLContainer(DockerImageName.parse("postgres:latest"));
 	}
-
-	@Bean
-	KafkaContainer kafkaContainer() {
-		return new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.6.0"));
-	}
-
 }

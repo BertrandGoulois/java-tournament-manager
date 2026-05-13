@@ -1,9 +1,11 @@
 package com.tournament.tournament_manager.service;
 
 import com.tournament.tournament_manager.domain.model.entities.Player;
+import com.tournament.tournament_manager.domain.model.entities.Registration;
 import com.tournament.tournament_manager.domain.model.entities.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
 import com.tournament.tournament_manager.dto.request.CreateRegistrationRequest;
+import com.tournament.tournament_manager.dto.response.RegistrationResponse;
 import com.tournament.tournament_manager.exception.InvalidException;
 import com.tournament.tournament_manager.exception.PlayerNotFoundException;
 import com.tournament.tournament_manager.exception.TournamentNotFoundException;
@@ -16,6 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -91,5 +94,50 @@ class RegistrationServiceTest {
 
         assertThrows(InvalidException.class,
                 () -> registrationService.registerPlayer(new CreateRegistrationRequest(1L, 1L)));
+    }
+
+    @Test
+    void registerPlayer_shouldReturnRegistration_whenValid() {
+        Player player = new Player();
+        player.setId(1L);
+        Tournament tournament = new Tournament();
+        tournament.setId(1L);
+        tournament.setStatus(TournamentStatus.OPEN);
+        tournament.setMaxPlayers(4);
+
+        Registration registration = new Registration();
+        registration.setId(1L);
+        registration.setPlayer(player);
+        registration.setTournament(tournament);
+
+        when(playerRepository.findById(1L)).thenReturn(Optional.of(player));
+        when(tournamentRepository.findById(1L)).thenReturn(Optional.of(tournament));
+        when(registrationRepository.existsByPlayerIdAndTournamentId(1L, 1L)).thenReturn(false);
+        when(registrationRepository.countByTournamentId(1L)).thenReturn(0L);
+        when(registrationRepository.save(any())).thenReturn(registration);
+
+        RegistrationResponse response = registrationService.registerPlayer(new CreateRegistrationRequest(1L, 1L));
+
+        assertEquals(1L, response.id());
+    }
+
+    @Test
+    void getTournamentRegistrations_shouldReturnList() {
+        Player player = new Player();
+        player.setId(1L);
+        Tournament tournament = new Tournament();
+        tournament.setId(1L);
+
+        Registration registration = new Registration();
+        registration.setId(1L);
+        registration.setPlayer(player);
+        registration.setTournament(tournament);
+
+        when(registrationRepository.findByTournamentId(1L)).thenReturn(List.of(registration));
+
+        List<RegistrationResponse> responses = registrationService.getTournamentRegistrations(1L);
+
+        assertEquals(1, responses.size());
+        assertEquals(1L, responses.get(0).id());
     }
 }

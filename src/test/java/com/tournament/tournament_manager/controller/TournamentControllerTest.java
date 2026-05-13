@@ -1,0 +1,117 @@
+package com.tournament.tournament_manager.controller;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.tournament.tournament_manager.config.security.JwtAuthenticationFilter;
+import com.tournament.tournament_manager.config.security.SecurityConfig;
+import com.tournament.tournament_manager.config.security.UserDetailsServiceImpl;
+import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+import com.tournament.tournament_manager.dto.request.CreateTournamentRequest;
+import com.tournament.tournament_manager.dto.response.TournamentResponse;
+import com.tournament.tournament_manager.service.BracketService;
+import com.tournament.tournament_manager.service.TournamentService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@WebMvcTest(TournamentController.class)
+@Import(SecurityConfig.class)
+class TournamentControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockitoBean
+    private TournamentService tournamentService;
+
+    @MockitoBean
+    private BracketService bracketService;
+
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @MockitoBean
+    private UserDetailsServiceImpl userDetailsService;
+
+    @MockitoBean
+    private org.springframework.cache.CacheManager cacheManager;
+
+    private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+
+    @BeforeEach
+    void setUp() throws Exception {
+        doAnswer(invocation -> {
+            jakarta.servlet.FilterChain chain = invocation.getArgument(2);
+            chain.doFilter(invocation.getArgument(0), invocation.getArgument(1));
+            return null;
+        }).when(jwtAuthenticationFilter).doFilter(any(), any(), any());
+    }
+
+    private TournamentResponse sampleTournament() {
+        return new TournamentResponse(1L, "Spring Championship", TournamentStatus.OPEN, 8, null);
+    }
+
+    @Test
+    void createTournament_shouldReturn201() throws Exception {
+        when(tournamentService.createTournament(any())).thenReturn(sampleTournament());
+
+        mockMvc.perform(post("/api/tournaments")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new CreateTournamentRequest("Spring Championship", 8))))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.name").value("Spring Championship"));
+    }
+
+    @Test
+    void createTournament_shouldReturn400_whenInvalidBody() throws Exception {
+        mockMvc.perform(post("/api/tournaments")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new CreateTournamentRequest("", 2))))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getAllTournaments_shouldReturn200() throws Exception {
+        when(tournamentService.getAllTournaments()).thenReturn(List.of(sampleTournament()));
+
+        mockMvc.perform(get("/api/tournaments").with(user("admin").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("Spring Championship"));
+    }
+
+    @Test
+    void getTournamentById_shouldReturn200() throws Exception {
+        when(tournamentService.getTournamentById(1L)).thenReturn(sampleTournament());
+
+        mockMvc.perform(get("/api/tournaments/1").with(user("admin").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1));
+    }
+
+    @Test
+    void startTournament_shouldReturn200() throws Exception {
+        mockMvc.perform(post("/api/tournaments/1/start")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isOk());
+    }
+}

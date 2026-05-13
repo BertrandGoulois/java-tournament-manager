@@ -95,4 +95,22 @@ class EloServiceTest {
 
         assert winner.getEloRating().value() > 1016;
     }
+
+    @Test
+    void updateElo_shouldUpdateElo_whenPlayer2IsWinner() {
+        Player player1 = new Player();
+        player1.setEloRating(new EloRating(1000));
+        Player player2 = new Player();
+        player2.setEloRating(new EloRating(1000));
+
+        Match match = new Match();
+        match.setPlayer1(player1);
+        match.setPlayer2(player2);
+        match.setWinner(player2);
+
+        eloService.updateElo(match);
+
+        assert player2.getEloRating().value() > 1000;
+        assert player1.getEloRating().value() < 1000;
+    }
 }

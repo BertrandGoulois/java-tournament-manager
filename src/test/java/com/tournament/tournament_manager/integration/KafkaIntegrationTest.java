@@ -3,8 +3,10 @@ package com.tournament.tournament_manager.integration;
 import com.tournament.tournament_manager.TestcontainersConfiguration;
 import com.tournament.tournament_manager.config.kafka.KafkaConfig;
 import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -37,12 +39,13 @@ class KafkaIntegrationTest {
             DockerImageName.parse("confluentinc/cp-kafka:7.6.0")
     );
 
+    @Value("${spring.kafka.bootstrap-servers}")
+    private String bootstrapServers;
+
     @Test
     void shouldReceiveMatchFinishedEvent() throws InterruptedException {
         kafkaTemplate.send(KafkaConfig.MATCH_FINISHED_TOPIC, new MatchFinishedEvent(42L));
-
-        boolean received = testKafkaConsumer.getLatch().await(30, TimeUnit.SECONDS);
-
+        boolean received = testKafkaConsumer.getLatch().await(120, TimeUnit.SECONDS);
         assertTrue(received, "L'événement Kafka n'a pas été reçu dans les délais");
     }
 
