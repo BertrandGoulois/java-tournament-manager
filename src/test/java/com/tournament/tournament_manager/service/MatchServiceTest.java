@@ -4,19 +4,18 @@ import com.tournament.tournament_manager.domain.model.entities.Match;
 import com.tournament.tournament_manager.domain.model.entities.Player;
 import com.tournament.tournament_manager.domain.model.entities.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
+import com.tournament.tournament_manager.domain.port.out.LoadMatchPort;
+import com.tournament.tournament_manager.domain.port.out.PublishMatchEventPort;
+import com.tournament.tournament_manager.domain.port.out.SaveMatchPort;
 import com.tournament.tournament_manager.dto.request.RecordMatchResultRequest;
 import com.tournament.tournament_manager.dto.response.MatchResponse;
 import com.tournament.tournament_manager.exception.InvalidException;
 import com.tournament.tournament_manager.exception.MatchNotFoundException;
-import com.tournament.tournament_manager.repository.MatchRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.kafka.core.KafkaTemplate;
-
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -26,16 +25,18 @@ import static org.mockito.Mockito.*;
 class MatchServiceTest {
 
     @Mock
-    private MatchRepository matchRepository;
+    private LoadMatchPort loadMatchPort;
     @Mock
-    private KafkaTemplate<String, Object> kafkaTemplate;
+    private SaveMatchPort saveMatchPort;
+    @Mock
+    private PublishMatchEventPort publishMatchEventPort;
 
     @InjectMocks
     private MatchService matchService;
 
     @Test
     void recordMatchResult_shouldThrow_whenMatchNotFound() {
-        when(matchRepository.findById(1L)).thenReturn(Optional.empty());
+        when(loadMatchPort.loadMatch(1L)).thenThrow(new MatchNotFoundException(1L));
         assertThrows(MatchNotFoundException.class,
                 () -> matchService.recordMatchResult(1L, new RecordMatchResultRequest(1L)));
     }
@@ -45,7 +46,7 @@ class MatchServiceTest {
         Match match = new Match();
         match.setStatus(MatchStatus.FINISHED);
 
-        when(matchRepository.findById(1L)).thenReturn(Optional.of(match));
+        when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         assertThrows(InvalidException.class,
                 () -> matchService.recordMatchResult(1L, new RecordMatchResultRequest(1L)));
     }
@@ -62,7 +63,7 @@ class MatchServiceTest {
         match.setPlayer1(player1);
         match.setPlayer2(player2);
 
-        when(matchRepository.findById(1L)).thenReturn(Optional.of(match));
+        when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         assertThrows(InvalidException.class,
                 () -> matchService.recordMatchResult(1L, new RecordMatchResultRequest(99L)));
     }
@@ -81,12 +82,12 @@ class MatchServiceTest {
         match.setPlayer1(player1);
         match.setPlayer2(player2);
 
-        when(matchRepository.findById(1L)).thenReturn(Optional.of(match));
-        when(matchRepository.save(any())).thenReturn(match);
+        when(loadMatchPort.loadMatch(1L)).thenReturn(match);
+        when(saveMatchPort.saveMatch(any())).thenReturn(match);
 
         matchService.recordMatchResult(1L, new RecordMatchResultRequest(1L));
 
-        verify(kafkaTemplate, times(1)).send(anyString(), any());
+        verify(publishMatchEventPort, times(1)).publishMatchFinished(any());
     }
 
     @Test
@@ -106,7 +107,7 @@ class MatchServiceTest {
         match.setPlayer2(player2);
         match.setTournament(tournament);
 
-        when(matchRepository.findById(1L)).thenReturn(Optional.of(match));
+        when(loadMatchPort.loadMatch(1L)).thenReturn(match);
 
         MatchResponse response = matchService.getMatchById(1L);
 
@@ -115,7 +116,7 @@ class MatchServiceTest {
 
     @Test
     void getMatchById_shouldThrow_whenNotFound() {
-        when(matchRepository.findById(99L)).thenReturn(Optional.empty());
+        when(loadMatchPort.loadMatch(99L)).thenThrow(new MatchNotFoundException(99L));
         assertThrows(MatchNotFoundException.class, () -> matchService.getMatchById(99L));
     }
 
@@ -133,8 +134,8 @@ class MatchServiceTest {
         match.setPlayer1(player1);
         match.setPlayer2(player2);
 
-        when(matchRepository.findById(1L)).thenReturn(Optional.of(match));
-        when(matchRepository.save(any())).thenReturn(match);
+        when(loadMatchPort.loadMatch(1L)).thenReturn(match);
+        when(saveMatchPort.saveMatch(any())).thenReturn(match);
 
         matchService.recordMatchResult(1L, new RecordMatchResultRequest(2L));
 
@@ -157,7 +158,7 @@ class MatchServiceTest {
         match.setWinner(null);
         match.setTournament(tournament);
 
-        when(matchRepository.findById(1L)).thenReturn(Optional.of(match));
+        when(loadMatchPort.loadMatch(1L)).thenReturn(match);
 
         MatchResponse response = matchService.getMatchById(1L);
 
