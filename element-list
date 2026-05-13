@@ -1,0 +1,16 @@
+com.tournament.tournament_manager
+com.tournament.tournament_manager.config
+com.tournament.tournament_manager.config.kafka
+com.tournament.tournament_manager.config.security
+com.tournament.tournament_manager.config.websocket
+com.tournament.tournament_manager.controller
+com.tournament.tournament_manager.domain.event
+com.tournament.tournament_manager.domain.model.entities
+com.tournament.tournament_manager.domain.model.enums
+com.tournament.tournament_manager.domain.model.valueobjects
+com.tournament.tournament_manager.dto.request
+com.tournament.tournament_manager.dto.response
+com.tournament.tournament_manager.exception
+com.tournament.tournament_manager.listener
+com.tournament.tournament_manager.repository
+com.tournament.tournament_manager.service
