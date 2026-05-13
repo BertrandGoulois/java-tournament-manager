@@ -6,6 +6,10 @@ import com.tournament.tournament_manager.domain.port.out.PublishMatchEventPort;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
+/**
+ * Adapter Kafka implémentant la publication des événements de fin de match.
+ * Publie sur le topic {@code match-finished} via {@link KafkaTemplate}.
+ */
 @Component
 public class MatchKafkaAdapter implements PublishMatchEventPort {
 

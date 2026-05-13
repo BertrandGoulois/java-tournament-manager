@@ -15,6 +15,12 @@ import com.tournament.tournament_manager.exception.MatchNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Implémentation des cas d'utilisation liés aux matchs.
+ *
+ * <p>Dépend uniquement de ports (interfaces) - aucune dépendance directe
+ * vers JPA ou Kafka. Les détails techniques sont délégués aux adapters.
+ */
 @Service
 @Transactional(readOnly = true)
 public class MatchService implements RecordMatchResultUseCase, GetMatchUseCase {
@@ -31,6 +37,18 @@ public class MatchService implements RecordMatchResultUseCase, GetMatchUseCase {
         this.publishMatchEventPort = publishMatchEventPort;
     }
 
+    /**
+     * Enregistre le résultat d'un match et publie l'événement de fin de match.
+     *
+     * <p>Le vainqueur doit obligatoirement être l'un des deux joueurs du match.
+     *
+     * @param matchId identifiant du match
+     * @param request contient l'identifiant du vainqueur
+     * @return la représentation du match mis à jour
+     * @throws MatchNotFoundException si le match n'existe pas
+     * @throws InvalidException       si le match est déjà terminé
+     * @throws InvalidException       si le vainqueur déclaré n'est pas un joueur du match
+     */
     @Override
     @Transactional
     public MatchResponse recordMatchResult(Long matchId, RecordMatchResultRequest request) {
@@ -56,11 +74,25 @@ public class MatchService implements RecordMatchResultUseCase, GetMatchUseCase {
         return toResponse(saved);
     }
 
+    /**
+     * Retourne un match par son identifiant.
+     *
+     * @param id identifiant du match
+     * @return la représentation du match
+     * @throws MatchNotFoundException si le match n'existe pas
+     */
     @Override
     public MatchResponse getMatchById(Long id) {
         return toResponse(loadMatchPort.loadMatch(id));
     }
 
+    /**
+     * Convertit une entité {@link Match} en DTO de réponse.
+     * {@code player2} et {@code winner} peuvent être null (bye).
+     *
+     * @param match l'entité à convertir
+     * @return le DTO correspondant
+     */
     private MatchResponse toResponse(Match match) {
         return new MatchResponse(
                 match.getId(),

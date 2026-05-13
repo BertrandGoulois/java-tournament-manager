@@ -7,6 +7,10 @@ import com.tournament.tournament_manager.exception.MatchNotFoundException;
 import com.tournament.tournament_manager.repository.MatchRepository;
 import org.springframework.stereotype.Component;
 
+/**
+ * Adapter JPA implémentant les ports de chargement et sauvegarde des matchs.
+ * Fait le lien entre le domaine et la couche de persistance Spring Data.
+ */
 @Component
 public class MatchJpaAdapter implements LoadMatchPort, SaveMatchPort {
 
