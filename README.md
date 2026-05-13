@@ -80,10 +80,11 @@ docker-compose up -d
 **Tests unitaires :**
 
 ```bash
-./mvnw test
+./mvnw verify
 ```
 
-> Les tests d'intégration nécessitent Docker (Testcontainers).
+> Tests unitaires uniquement (sans Docker) : `./mvnw test`
+> Les tests d'intégration (Testcontainers, Kafka embarqué) nécessitent Docker.
 
 **Documentation API :**
 
@@ -287,7 +288,7 @@ Authorization: Bearer <JWT token>
 - Statistiques joueur (win rate, historique ELO)
 - Authentification JWT avec rôles ADMIN / PLAYER
 - Migrations versionnées avec Liquibase
-- Tests unitaires (JUnit 5 / Mockito) et tests d'intégration (Testcontainers)
+- Couverture de tests élevée : tests unitaires (JUnit 5 / Mockito), tests controller (MockMvc) et tests d'intégration (Testcontainers + Kafka embarqué)
 
 ---
 
