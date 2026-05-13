@@ -20,7 +20,9 @@ jobs:
           distribution: 'temurin'
 
       - name: Generate Javadoc
-        run: ./mvnw javadoc:javadoc -q
+        run: |
+          chmod +x mvnw
+          ./mvnw javadoc:javadoc -q
 
       - name: Publish to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
