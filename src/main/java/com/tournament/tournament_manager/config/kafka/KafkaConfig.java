@@ -19,15 +19,36 @@ import org.springframework.kafka.support.serializer.JacksonJsonSerializer;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Configuration Kafka de l'application.
+ *
+ * <p>Déclare un seul topic : {@code match-finished}, consommé par trois
+ * consumer groups indépendants ({@code elo-group}, {@code bracket-group},
+ * {@code websocket-group}), ce qui garantit que chaque listener reçoit
+ * tous les messages indépendamment des autres.
+ *
+ * <p>Sérialisation : clé en {@code String}, valeur en JSON via Jackson.
+ * Le type de désérialisation par défaut est {@code MatchFinishedEvent} —
+ * tous les packages sont marqués comme trusted ({@code TRUSTED_PACKAGES = "*"}).
+ */
 @EnableKafka
 @Configuration
 public class KafkaConfig {
 
+    /**
+     * Nom du topic Kafka publié par {@code MatchService}
+     * et consommé par les trois listeners.
+     */
     public static final String MATCH_FINISHED_TOPIC = "match-finished";
 
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
 
+    /**
+     * Crée et configure le {@code KafkaAdmin} avec auto-création des topics activée.
+     * Les topics déclarés comme beans {@code NewTopic} sont créés automatiquement
+     * au démarrage si absents.
+     */
     @Bean
     public KafkaAdmin kafkaAdmin() {
         Map<String, Object> config = new HashMap<>();
@@ -37,6 +58,10 @@ public class KafkaConfig {
         return admin;
     }
 
+    /**
+     * Déclare le topic {@code match-finished} avec 1 partition et 1 réplica.
+     * Convient pour un environnement de développement — à augmenter en production.
+     */
     @Bean
     public NewTopic matchFinishedTopic() {
         return TopicBuilder.name(MATCH_FINISHED_TOPIC)
@@ -45,6 +70,10 @@ public class KafkaConfig {
                 .build();
     }
 
+    /**
+     * Configure le producteur Kafka.
+     * Clé : {@code StringSerializer}, valeur : {@code JacksonJsonSerializer}.
+     */
     @Bean
     public ProducerFactory<String, Object> producerFactory() {
         Map<String, Object> config = new HashMap<>();
@@ -54,11 +83,23 @@ public class KafkaConfig {
         return new DefaultKafkaProducerFactory<>(config);
     }
 
+    /**
+     * Fournit le {@code KafkaTemplate} utilisé par {@code MatchService}
+     * pour publier les événements.
+     */
     @Bean
     public KafkaTemplate<String, Object> kafkaTemplate(ProducerFactory<String, Object> producerFactory) {
         return new KafkaTemplate<>(producerFactory);
     }
 
+    /**
+     * Configure le consommateur Kafka.
+     * Clé : {@code StringDeserializer}, valeur : {@code JacksonJsonDeserializer}
+     * avec {@code MatchFinishedEvent} comme type cible par défaut.
+     *
+     * <p>Le {@code GROUP_ID_CONFIG} ici ({@code "elo-group"}) sert de valeur par défaut
+     * — chaque listener surcharge son propre {@code groupId} via {@code @KafkaListener}.
+     */
     @Bean
     public ConsumerFactory<String, Object> consumerFactory() {
         Map<String, Object> config = new HashMap<>();
@@ -71,6 +112,9 @@ public class KafkaConfig {
         return new DefaultKafkaConsumerFactory<>(config);
     }
 
+    /**
+     * Fournit la factory de containers utilisée par les annotations {@code @KafkaListener}.
+     */
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory(
             ConsumerFactory<String, Object> consumerFactory) {

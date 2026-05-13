@@ -14,6 +14,15 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+/**
+ * Filtre HTTP exécuté une seule fois par requête.
+ *
+ * <p>Intercepte le header {@code Authorization: Bearer <token>},
+ * valide le token JWT et injecte l'authentification dans le
+ * {@code SecurityContextHolder} si le token est valide.
+ * Les requêtes sans header valide sont simplement transmises
+ * au filtre suivant sans authentification.
+ */
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -25,6 +34,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.userDetailsService = userDetailsService;
     }
 
+    /**
+     * Extrait le token JWT du header {@code Authorization}, le valide,
+     * et positionne l'authentification dans le contexte de sécurité Spring.
+     *
+     * <p>Si le header est absent ou ne commence pas par {@code "Bearer "},
+     * la requête est transmise sans authentification.
+     */
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request,
                                     @NonNull HttpServletResponse response,

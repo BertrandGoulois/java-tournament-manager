@@ -19,6 +19,18 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Gère la génération et la progression du bracket en élimination directe.
+ *
+ * <p>Le numéro de round suit une convention décroissante : la valeur de départ est
+ * la première puissance de 2 supérieure ou égale au nombre de joueurs inscrits
+ * (ex. 8 pour 6 joueurs), et chaque tour suivant divise ce numéro par 2.
+ * Le tournoi se termine quand {@code nextRound < 2}.
+ *
+ * <p>Les joueurs sans adversaire (byes) reçoivent un match {@code FINISHED}
+ * immédiatement, avec eux-mêmes déclarés vainqueurs, afin d'homogénéiser
+ * le traitement dans {@link #advanceToNextRound}.
+ */
 @Service
 @Transactional(readOnly = true)
 public class BracketService {
@@ -35,6 +47,18 @@ public class BracketService {
         this.matchRepository = matchRepository;
     }
 
+    /**
+     * Démarre le tournoi et génère le bracket du premier tour.
+     *
+     * <p>Les joueurs inscrits sont mélangés aléatoirement avant la création
+     * des matchs. Si le nombre de joueurs est impair, le dernier joueur
+     * de la liste reçoit un bye (victoire automatique sans adversaire).
+     *
+     * @param tournamentId identifiant du tournoi à démarrer
+     * @throws TournamentNotFoundException si le tournoi n'existe pas
+     * @throws InvalidException si le tournoi n'est pas au statut {@code OPEN}
+     * @throws InvalidException si moins de 2 joueurs sont inscrits
+     */
     @Transactional
     public void startTournament(Long tournamentId) {
         Tournament tournament = tournamentRepository.findById(tournamentId)
@@ -61,6 +85,16 @@ public class BracketService {
         tournamentRepository.save(tournament);
     }
 
+    /**
+     * Tente de faire progresser le bracket au tour suivant.
+     *
+     * <p>N'effectue aucune action si tous les matchs du {@code currentRound}
+     * ne sont pas encore terminés. Quand le round suivant calculé est inférieur
+     * à 2, le tournoi est marqué {@code FINISHED} (la finale vient d'être jouée).
+     *
+     * @param tournament   le tournoi concerné
+     * @param currentRound le numéro du round qui vient de se terminer
+     */
     @Transactional
     public void advanceToNextRound(Tournament tournament, int currentRound) {
         List<Match> currentMatches = matchRepository.findByTournamentIdAndRound(
@@ -87,6 +121,17 @@ public class BracketService {
         }
     }
 
+    /**
+     * Crée et persiste un match entre deux joueurs pour un round donné.
+     *
+     * <p>Si {@code player2} est {@code null} (bye), le match est immédiatement
+     * marqué {@code FINISHED} avec {@code player1} comme vainqueur.
+     *
+     * @param tournament le tournoi auquel appartient le match
+     * @param player1    premier joueur
+     * @param player2    second joueur, ou {@code null} en cas de bye
+     * @param round      numéro du round
+     */
     private void createMatch(Tournament tournament, Player player1, Player player2, int round) {
         Match match = new Match();
         match.setTournament(tournament);
@@ -103,6 +148,15 @@ public class BracketService {
         matchRepository.save(match);
     }
 
+    /**
+     * Calcule le numéro du premier round, soit la plus petite puissance de 2
+     * supérieure ou égale à {@code playerCount}.
+     *
+     * <p>Exemples : 4 joueurs → 4, 5 joueurs → 8, 8 joueurs → 8.
+     *
+     * @param playerCount nombre de joueurs participants
+     * @return numéro du premier round
+     */
     private int calculateFirstRound(int playerCount) {
         int round = 1;
         while (round < playerCount) {

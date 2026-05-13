@@ -11,6 +11,14 @@ import org.springframework.data.redis.serializer.RedisSerializer;
 
 import java.time.Duration;
 
+/**
+ * Configuration du cache Redis.
+ *
+ * <p>TTL par défaut : 10 minutes pour toutes les entrées.
+ * Sérialisation : Java native ({@code RedisSerializer.java()}).
+ * Les DTOs mis en cache doivent implémenter {@code Serializable}
+ * (ex. {@code PlayerStatsResponse}, {@code EloHistoryResponse}).
+ */
 @Configuration
 public class CacheConfig {
 

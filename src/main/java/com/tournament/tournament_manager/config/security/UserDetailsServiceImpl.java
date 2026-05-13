@@ -11,6 +11,13 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * Implémentation de {@code UserDetailsService} qui charge les utilisateurs
+ * depuis la table {@code users} via {@code UserRepository}.
+ *
+ * <p>Le rôle est préfixé par {@code ROLE_} pour respecter la convention Spring Security
+ * (ex. {@code Role.ADMIN} → {@code "ROLE_ADMIN"}).
+ */
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
 
@@ -20,6 +27,13 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         this.userRepository = userRepository;
     }
 
+    /**
+     * Charge un utilisateur par son username.
+     *
+     * @param username le username recherché
+     * @return les détails de l'utilisateur
+     * @throws UsernameNotFoundException si aucun utilisateur ne correspond
+     */
     @Override
     public UserDetails loadUserByUsername(@NonNull String username) throws UsernameNotFoundException {
         return userRepository.findByUsername(username)

@@ -17,6 +17,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Set;
 
+/**
+ * Gère l'enregistrement des résultats de matchs et la consultation des matchs.
+ *
+ * <p>Après enregistrement d'un résultat, publie un {@link MatchFinishedEvent}
+ * sur le topic Kafka {@code match-finished}. Les listeners abonnés
+ * ({@code EloListener}, {@code BracketListener}, {@code WebSocketListener})
+ * réagissent ensuite de façon indépendante et asynchrone.
+ */
 @Service
 @Transactional(readOnly = true)
 public class MatchService {
@@ -29,6 +37,20 @@ public class MatchService {
         this.kafkaTemplate = kafkaTemplate;
     }
 
+    /**
+     * Enregistre le résultat d'un match et publie l'événement de fin de match.
+     *
+     * <p>Le vainqueur doit obligatoirement être l'un des deux joueurs du match.
+     * Un match de bye (sans {@code player2}) ne peut pas être soumis via cet endpoint
+     * car il est résolu automatiquement à la création du bracket.
+     *
+     * @param matchId identifiant du match
+     * @param request contient l'identifiant du vainqueur
+     * @return la représentation du match mis à jour
+     * @throws MatchNotFoundException si le match n'existe pas
+     * @throws InvalidException       si le match est déjà terminé
+     * @throws InvalidException       si le vainqueur déclaré n'est pas un joueur du match
+     */
     @Transactional
     public MatchResponse recordMatchResult(Long matchId, RecordMatchResultRequest request) {
         Match match = matchRepository.findById(matchId)
@@ -51,12 +73,26 @@ public class MatchService {
         return toResponse(saved);
     }
 
+    /**
+     * Retourne un match par son identifiant.
+     *
+     * @param id identifiant du match
+     * @return la représentation du match
+     * @throws MatchNotFoundException si le match n'existe pas
+     */
     public MatchResponse getMatchById(Long id) {
         Match match = matchRepository.findById(id)
                 .orElseThrow(() -> new MatchNotFoundException(id));
         return toResponse(match);
     }
 
+    /**
+     * Convertit une entité {@link Match} en DTO de réponse.
+     * {@code player2} et {@code winner} peuvent être null (bye).
+     *
+     * @param match l'entité à convertir
+     * @return le DTO correspondant
+     */
     private MatchResponse toResponse(Match match) {
         return new MatchResponse(
                 match.getId(),

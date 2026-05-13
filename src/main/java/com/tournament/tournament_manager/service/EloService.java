@@ -12,6 +12,15 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+/**
+ * Calcule et applique les variations de classement ELO après un match.
+ *
+ * <p>Utilise la formule ELO standard avec K=32 :
+ * le gain/perte de points dépend de l'écart de classement entre les deux joueurs.
+ * Battre un adversaire mieux classé rapporte plus de points que battre un outsider.
+ *
+ * <p>Invalide le cache Redis {@code playerStats} pour les deux joueurs après mise à jour.
+ */
 @Service
 @Transactional(readOnly = true)
 public class EloService {
@@ -24,6 +33,16 @@ public class EloService {
         this.eloHistoryRepository = eloHistoryRepository;
     }
 
+    /**
+     * Met à jour le classement ELO des deux joueurs d'un match terminé
+     * et persiste l'historique correspondant.
+     *
+     * <p>Le perdant est déduit par élimination : c'est le joueur parmi
+     * {@code player1} et {@code player2} qui n'est pas le vainqueur.
+     * Le résultat ELO est plafonné à {@code 0} (un ELO ne peut pas être négatif).
+     *
+     * @param match le match terminé, avec {@code winner} renseigné et {@code player2} non null
+     */
     @Caching(evict = {
             @CacheEvict(value = "playerStats", key = "#match.player1.id"),
             @CacheEvict(value = "playerStats", key = "#match.player2.id")
@@ -55,6 +74,15 @@ public class EloService {
 
     }
 
+    /**
+     * Crée et persiste une entrée d'historique ELO pour un joueur.
+     *
+     * @param player    le joueur concerné
+     * @param match     le match à l'origine de la variation
+     * @param eloChange la variation de classement (positive pour le vainqueur,
+     *                  négative pour le perdant)
+     * @param eloAfter  le classement du joueur après application de la variation
+     */
     private void saveEloHistory(Player player, Match match, int eloChange, int eloAfter) {
         EloHistory history = new EloHistory();
         history.setPlayer(player);

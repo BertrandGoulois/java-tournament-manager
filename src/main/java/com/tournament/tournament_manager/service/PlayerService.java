@@ -10,7 +10,6 @@ import com.tournament.tournament_manager.exception.PlayerNotFoundException;
 import com.tournament.tournament_manager.repository.EloHistoryRepository;
 import com.tournament.tournament_manager.repository.MatchRepository;
 import com.tournament.tournament_manager.repository.PlayerRepository;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +17,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Gère la création et la consultation des joueurs.
+ *
+ * <p>Les statistiques joueur ({@link #getPlayerStats}) sont mises en cache Redis
+ * sous la clé {@code playerStats::<id>} et invalidées automatiquement
+ * par {@code EloService} après chaque match.
+ */
 @Service
 @Transactional(readOnly = true)
 public class PlayerService {
@@ -31,6 +37,13 @@ public class PlayerService {
         this.eloHistoryRepository = eloHistoryRepository;
     }
 
+    /**
+     * Crée un nouveau joueur avec un classement ELO par défaut.
+     *
+     * @param request contient le username et l'email du joueur
+     * @return la représentation du joueur créé
+     * @throws PlayerAlreadyExistsException si le username ou l'email est déjà utilisé
+     */
     @Transactional()
     public PlayerResponse createPlayer(CreatePlayerRequest request) {
         if (playerRepository.existsByUsername(request.username())) {
@@ -45,12 +58,24 @@ public class PlayerService {
         return toResponse(playerRepository.save(player));
     }
 
+    /**
+     * Retourne un joueur par son identifiant.
+     *
+     * @param id identifiant du joueur
+     * @return la représentation du joueur
+     * @throws PlayerNotFoundException si le joueur n'existe pas
+     */
     public PlayerResponse getPlayerById(Long id) {
         Player player = playerRepository.findById(id)
                 .orElseThrow(() -> new PlayerNotFoundException(id));
         return toResponse(player);
     }
 
+    /**
+     * Retourne la liste de tous les joueurs.
+     *
+     * @return liste des joueurs, vide si aucun joueur enregistré
+     */
     public List<PlayerResponse> getAllPlayers() {
         return playerRepository.findAll()
                 .stream()
@@ -58,6 +83,18 @@ public class PlayerService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Retourne les statistiques complètes d'un joueur : nombre de matchs joués,
+     * victoires, défaites, win rate et historique ELO trié du plus récent au plus ancien.
+     *
+     * <p>Le résultat est mis en cache Redis ({@code playerStats}) par identifiant joueur.
+     * Le win rate est exprimé en pourcentage (0.0 à 100.0), arrondi à deux décimales.
+     * Les matchs de bye sont comptabilisés dans {@code matchesPlayed} et {@code wins}.
+     *
+     * @param id identifiant du joueur
+     * @return les statistiques du joueur
+     * @throws PlayerNotFoundException si le joueur n'existe pas
+     */
     @Cacheable(value = "playerStats", key = "#id")
     public PlayerStatsResponse getPlayerStats(Long id) {
         Player player = playerRepository.findById(id)

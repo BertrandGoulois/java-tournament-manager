@@ -10,6 +10,13 @@ import org.springframework.stereotype.Component;
 
 import static com.tournament.tournament_manager.config.kafka.KafkaConfig.MATCH_FINISHED_TOPIC;
 
+/**
+ * Consomme les événements {@link MatchFinishedEvent} depuis le topic Kafka
+ * {@code match-finished} et tente de faire progresser le bracket au tour suivant.
+ *
+ * <p>L'avancement n'a lieu que si tous les matchs du round en cours sont terminés —
+ * la logique de vérification est déléguée à {@link BracketService#advanceToNextRound}.
+ */
 @Component
 public class BracketListener {
 
@@ -21,6 +28,13 @@ public class BracketListener {
         this.matchRepository = matchRepository;
     }
 
+    /**
+     * Récupère le match correspondant à l'événement et délègue
+     * l'avancement du bracket à {@link BracketService}.
+     *
+     * @param event l'événement contenant l'identifiant du match terminé
+     * @throws MatchNotFoundException si le match n'existe pas
+     */
     @KafkaListener(topics = MATCH_FINISHED_TOPIC, groupId = "bracket-group")
     public void onMatchFinished(MatchFinishedEvent event) {
         Match match = matchRepository.findById(event.matchId())

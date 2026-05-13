@@ -15,6 +15,18 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+/**
+ * Configuration Spring Security de l'application.
+ *
+ * <p>Endpoints publics (sans JWT) :
+ * <ul>
+ *   <li>{@code /api/auth/**} — authentification</li>
+ *   <li>{@code /swagger-ui/**}, {@code /v3/api-docs/**} — documentation API</li>
+ *   <li>{@code /ws/**}, {@code /ws-test.html} — WebSocket</li>
+ * </ul>
+ * Tous les autres endpoints nécessitent un token JWT valide.
+ * Les sessions HTTP sont désactivées (stateless).
+ */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {

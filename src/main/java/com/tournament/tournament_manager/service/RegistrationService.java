@@ -18,6 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Gère les inscriptions des joueurs aux tournois.
+ */
 @Service
 @Transactional(readOnly = true)
 public class RegistrationService {
@@ -32,6 +35,24 @@ public class RegistrationService {
         this.registrationRepository = registrationRepository;
     }
 
+    /**
+     * Inscrit un joueur à un tournoi.
+     *
+     * <p>Trois conditions sont vérifiées dans l'ordre :
+     * <ol>
+     *   <li>Le tournoi doit être au statut {@code OPEN}</li>
+     *   <li>Le joueur ne doit pas être déjà inscrit à ce tournoi</li>
+     *   <li>Le nombre d'inscrits ne doit pas avoir atteint {@code maxPlayers}</li>
+     * </ol>
+     *
+     * @param request contient l'identifiant du joueur et du tournoi
+     * @return la représentation de l'inscription créée
+     * @throws PlayerNotFoundException     si le joueur n'existe pas
+     * @throws TournamentNotFoundException si le tournoi n'existe pas
+     * @throws InvalidException            si le tournoi n'est pas ouvert aux inscriptions
+     * @throws InvalidException            si le joueur est déjà inscrit
+     * @throws InvalidException            si le tournoi est complet
+     */
     @Transactional
     public RegistrationResponse registerPlayer(CreateRegistrationRequest request) {
         Player player = playerRepository.findById(request.playerId())
@@ -53,6 +74,12 @@ public class RegistrationService {
         return toResponse(registrationRepository.save(registration));
     }
 
+    /**
+     * Retourne la liste des inscriptions d'un tournoi.
+     *
+     * @param tournamentId identifiant du tournoi
+     * @return liste des inscriptions, vide si aucun joueur inscrit
+     */
     public List<RegistrationResponse> getTournamentRegistrations(Long tournamentId){
         return registrationRepository.findByTournamentId(tournamentId)
                 .stream()
@@ -60,6 +87,12 @@ public class RegistrationService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Convertit une entité {@link Registration} en DTO de réponse.
+     *
+     * @param registration l'entité à convertir
+     * @return le DTO correspondant
+     */
     private RegistrationResponse toResponse(Registration registration) {
         return new RegistrationResponse(
                 registration.getId(),

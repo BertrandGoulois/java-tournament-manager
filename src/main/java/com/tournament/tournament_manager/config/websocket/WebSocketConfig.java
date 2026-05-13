@@ -6,6 +6,13 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
+/**
+ * Configuration du broker WebSocket STOMP.
+ *
+ * <p>Endpoint de connexion : {@code /ws} (avec fallback SockJS).
+ * Topics de diffusion : préfixe {@code /topic} (ex. {@code /topic/matches}).
+ * Préfixe des destinations applicatives : {@code /app}.
+ */
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {

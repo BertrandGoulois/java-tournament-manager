@@ -5,8 +5,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-import java.io.IOException;
-
+/**
+ * Intercepte les exceptions métier et les traduit en réponses HTTP appropriées.
+ *
+ * <ul>
+ *   <li>{@link NotFoundException} → {@code 404 Not Found}</li>
+ *   <li>{@link AlreadyExistsException} → {@code 409 Conflict}</li>
+ *   <li>{@link InvalidException} → {@code 400 Bad Request}</li>
+ * </ul>
+ */
 @ControllerAdvice
 public class GlobalExceptionHandler {
 

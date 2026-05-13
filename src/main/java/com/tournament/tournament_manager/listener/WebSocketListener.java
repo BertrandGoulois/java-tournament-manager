@@ -7,6 +7,13 @@ import org.springframework.stereotype.Component;
 
 import static com.tournament.tournament_manager.config.kafka.KafkaConfig.MATCH_FINISHED_TOPIC;
 
+/**
+ * Consomme les événements {@link MatchFinishedEvent} depuis le topic Kafka
+ * {@code match-finished} et notifie les clients WebSocket connectés.
+ *
+ * <p>Publie l'événement sur le topic STOMP {@code /topic/matches},
+ * auquel les clients peuvent s'abonner pour recevoir les mises à jour en temps réel.
+ */
 @Component
 public class WebSocketListener {
 
@@ -16,6 +23,11 @@ public class WebSocketListener {
         this.messagingTemplate = messagingTemplate;
     }
 
+    /**
+     * Retransmet l'événement de fin de match aux clients WebSocket abonnés.
+     *
+     * @param event l'événement contenant l'identifiant du match terminé
+     */
     @KafkaListener(topics = MATCH_FINISHED_TOPIC, groupId = "websocket-group")
     public void onMatchFinished(MatchFinishedEvent event) {
         messagingTemplate.convertAndSend("/topic/matches", event);

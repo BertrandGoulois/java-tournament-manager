@@ -1,12 +1,11 @@
 package com.tournament.tournament_manager.integration;
 
 import com.tournament.tournament_manager.TestcontainersConfiguration;
-import com.tournament.tournament_manager.domain.model.entities.Player;
-import com.tournament.tournament_manager.repository.PlayerRepository;
-import com.tournament.tournament_manager.service.PlayerService;
 import com.tournament.tournament_manager.dto.request.CreatePlayerRequest;
 import com.tournament.tournament_manager.dto.response.PlayerResponse;
 import com.tournament.tournament_manager.exception.PlayerNotFoundException;
+import com.tournament.tournament_manager.repository.PlayerRepository;
+import com.tournament.tournament_manager.service.PlayerService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

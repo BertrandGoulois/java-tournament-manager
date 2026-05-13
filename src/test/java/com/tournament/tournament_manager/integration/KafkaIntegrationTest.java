@@ -3,7 +3,6 @@ package com.tournament.tournament_manager.integration;
 import com.tournament.tournament_manager.TestcontainersConfiguration;
 import com.tournament.tournament_manager.config.kafka.KafkaConfig;
 import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
