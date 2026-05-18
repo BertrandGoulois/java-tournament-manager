@@ -6,7 +6,6 @@ import com.tournament.tournament_manager.domain.model.entities.Match;
 import com.tournament.tournament_manager.domain.port.in.UpdateEloUseCase;
 import com.tournament.tournament_manager.domain.port.out.LoadMatchPort;
 import com.tournament.tournament_manager.exception.MatchNotFoundException;
-import com.tournament.tournament_manager.repository.MatchRepository;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 

@@ -3,12 +3,7 @@ package com.tournament.tournament_manager.service;
 import com.tournament.tournament_manager.domain.model.entities.EloHistory;
 import com.tournament.tournament_manager.domain.model.entities.Match;
 import com.tournament.tournament_manager.domain.model.entities.Player;
-import com.tournament.tournament_manager.domain.port.out.CountMatchesByPlayerPort;
-import com.tournament.tournament_manager.domain.port.out.ExistsPlayerPort;
-import com.tournament.tournament_manager.domain.port.out.LoadAllPlayersPort;
-import com.tournament.tournament_manager.domain.port.out.LoadEloHistoryPort;
-import com.tournament.tournament_manager.domain.port.out.LoadPlayerPort;
-import com.tournament.tournament_manager.domain.port.out.SavePlayerPort;
+import com.tournament.tournament_manager.domain.port.out.*;
 import com.tournament.tournament_manager.dto.request.CreatePlayerRequest;
 import com.tournament.tournament_manager.dto.response.PlayerResponse;
 import com.tournament.tournament_manager.dto.response.PlayerStatsResponse;
@@ -22,7 +17,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 

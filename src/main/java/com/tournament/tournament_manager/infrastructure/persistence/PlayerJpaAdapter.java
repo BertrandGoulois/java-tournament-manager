@@ -2,12 +2,7 @@ package com.tournament.tournament_manager.infrastructure.persistence;
 
 import com.tournament.tournament_manager.domain.model.entities.EloHistory;
 import com.tournament.tournament_manager.domain.model.entities.Player;
-import com.tournament.tournament_manager.domain.port.out.CountMatchesByPlayerPort;
-import com.tournament.tournament_manager.domain.port.out.ExistsPlayerPort;
-import com.tournament.tournament_manager.domain.port.out.LoadAllPlayersPort;
-import com.tournament.tournament_manager.domain.port.out.LoadEloHistoryPort;
-import com.tournament.tournament_manager.domain.port.out.LoadPlayerPort;
-import com.tournament.tournament_manager.domain.port.out.SavePlayerPort;
+import com.tournament.tournament_manager.domain.port.out.*;
 import com.tournament.tournament_manager.exception.PlayerNotFoundException;
 import com.tournament.tournament_manager.repository.EloHistoryRepository;
 import com.tournament.tournament_manager.repository.MatchRepository;

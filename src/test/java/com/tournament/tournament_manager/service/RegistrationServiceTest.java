@@ -4,12 +4,7 @@ import com.tournament.tournament_manager.domain.model.entities.Player;
 import com.tournament.tournament_manager.domain.model.entities.Registration;
 import com.tournament.tournament_manager.domain.model.entities.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
-import com.tournament.tournament_manager.domain.port.out.CountRegistrationPort;
-import com.tournament.tournament_manager.domain.port.out.ExistsRegistrationPort;
-import com.tournament.tournament_manager.domain.port.out.LoadPlayerPort;
-import com.tournament.tournament_manager.domain.port.out.LoadRegistrationPort;
-import com.tournament.tournament_manager.domain.port.out.LoadTournamentPort;
-import com.tournament.tournament_manager.domain.port.out.SaveRegistrationPort;
+import com.tournament.tournament_manager.domain.port.out.*;
 import com.tournament.tournament_manager.dto.request.CreateRegistrationRequest;
 import com.tournament.tournament_manager.dto.response.RegistrationResponse;
 import com.tournament.tournament_manager.exception.InvalidException;
@@ -23,7 +18,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 

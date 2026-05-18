@@ -7,8 +7,6 @@
 
 API REST de gestion de tournois sportifs en élimination directe, développée en Java 21 / Spring Boot.
 
-Le projet suit une architecture en couches (controller → service → repository), avec un découplage des side effects via **Apache Kafka**. Les tests couvrent les cas nominaux et les cas d'erreur, avec des tests d'intégration sur une vraie base PostgreSQL via Testcontainers.
-
 ---
 
 ## Technical Stack
@@ -30,6 +28,21 @@ Le projet suit une architecture en couches (controller → service → repositor
 ---
 
 ## Architecture & Design
+
+Le projet suit une **architecture hexagonale** (ports & adapters) : le domaine métier est isolé de toute dépendance technique (JPA, Kafka, Redis). Les services implémentent des ports entrants (use cases) et dépendent de ports sortants (interfaces) implémentés par des adapters dans `infrastructure/`.
+
+```
+domain/
+  model/        → entités, enums, value objects
+  port/
+    in/         → interfaces use cases (ex. RecordMatchResultUseCase)
+    out/        → interfaces infra (ex. SaveMatchPort, LoadMatchPort)
+  service/      → logique métier, implémente les ports entrants
+
+infrastructure/
+  persistence/  → adapters JPA (implémentent les ports sortants)
+  messaging/    → adapter Kafka
+```
 
 Les side effects métier (mise à jour ELO, avancement du bracket, notifications temps réel) sont découplés du service principal via Kafka. Lorsqu'un résultat de match est enregistré, un événement `MatchFinishedEvent` est publié sur le topic `match-finished`. Trois consumers indépendants traitent cet événement de façon asynchrone :
 
@@ -281,6 +294,7 @@ Authorization: Bearer <JWT token>
 
 ## Key Features
 
+- Architecture hexagonale (ports & adapters) - domaine métier isolé de l'infra
 - Génération de bracket en élimination directe avec support des byes
 - Calcul ELO après chaque match (K=32, formule standard)
 - Avancement automatique au tour suivant via événements Kafka
