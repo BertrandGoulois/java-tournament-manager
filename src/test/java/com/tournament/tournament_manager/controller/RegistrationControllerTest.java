@@ -4,9 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tournament.tournament_manager.config.security.JwtAuthenticationFilter;
 import com.tournament.tournament_manager.config.security.SecurityConfig;
 import com.tournament.tournament_manager.config.security.UserDetailsServiceImpl;
+import com.tournament.tournament_manager.domain.port.in.GetRegistrationsUseCase;
+import com.tournament.tournament_manager.domain.port.in.RegisterPlayerUseCase;
 import com.tournament.tournament_manager.dto.request.CreateRegistrationRequest;
 import com.tournament.tournament_manager.dto.response.RegistrationResponse;
-import com.tournament.tournament_manager.service.RegistrationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,14 +37,13 @@ class RegistrationControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private RegistrationService registrationService;
-
+    private RegisterPlayerUseCase registerPlayerUseCase;
+    @MockitoBean
+    private GetRegistrationsUseCase getRegistrationsUseCase;
     @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
-
     @MockitoBean
     private UserDetailsServiceImpl userDetailsService;
-
     @MockitoBean
     private org.springframework.cache.CacheManager cacheManager;
 
@@ -64,7 +64,7 @@ class RegistrationControllerTest {
 
     @Test
     void createRegistration_shouldReturn201() throws Exception {
-        when(registrationService.registerPlayer(any())).thenReturn(sampleRegistration());
+        when(registerPlayerUseCase.registerPlayer(any())).thenReturn(sampleRegistration());
 
         mockMvc.perform(post("/api/registrations")
                         .with(user("admin").roles("ADMIN"))
@@ -87,7 +87,7 @@ class RegistrationControllerTest {
 
     @Test
     void getTournamentRegistrations_shouldReturn200() throws Exception {
-        when(registrationService.getTournamentRegistrations(1L)).thenReturn(List.of(sampleRegistration()));
+        when(getRegistrationsUseCase.getTournamentRegistrations(1L)).thenReturn(List.of(sampleRegistration()));
 
         mockMvc.perform(get("/api/registrations/1").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())

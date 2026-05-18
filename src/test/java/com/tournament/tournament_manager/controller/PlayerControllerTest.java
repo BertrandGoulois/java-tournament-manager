@@ -3,11 +3,13 @@ package com.tournament.tournament_manager.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.tournament.tournament_manager.config.security.JwtAuthenticationFilter;
+import com.tournament.tournament_manager.domain.port.in.CreatePlayerUseCase;
+import com.tournament.tournament_manager.domain.port.in.GetPlayerStatsUseCase;
+import com.tournament.tournament_manager.domain.port.in.GetPlayerUseCase;
 import com.tournament.tournament_manager.dto.request.CreatePlayerRequest;
 import com.tournament.tournament_manager.dto.response.PlayerResponse;
 import com.tournament.tournament_manager.dto.response.PlayerStatsResponse;
 import com.tournament.tournament_manager.exception.PlayerNotFoundException;
-import com.tournament.tournament_manager.service.PlayerService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -38,8 +40,11 @@ class PlayerControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private PlayerService playerService;
-
+    private CreatePlayerUseCase createPlayerUseCase;
+    @MockitoBean
+    private GetPlayerUseCase getPlayerUseCase;
+    @MockitoBean
+    private GetPlayerStatsUseCase getPlayerStatsUseCase;
     @MockitoBean
     private org.springframework.cache.CacheManager cacheManager;
 
@@ -52,7 +57,7 @@ class PlayerControllerTest {
 
     @Test
     void createPlayer_shouldReturn201() throws Exception {
-        when(playerService.createPlayer(any())).thenReturn(samplePlayer());
+        when(createPlayerUseCase.createPlayer(any())).thenReturn(samplePlayer());
 
         mockMvc.perform(post("/api/players")
                         .with(user("admin").roles("ADMIN"))
@@ -75,7 +80,7 @@ class PlayerControllerTest {
 
     @Test
     void getAllPlayers_shouldReturn200() throws Exception {
-        when(playerService.getAllPlayers()).thenReturn(List.of(samplePlayer()));
+        when(getPlayerUseCase.getAllPlayers()).thenReturn(List.of(samplePlayer()));
 
         mockMvc.perform(get("/api/players").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
@@ -84,7 +89,7 @@ class PlayerControllerTest {
 
     @Test
     void getPlayerById_shouldReturn200() throws Exception {
-        when(playerService.getPlayerById(1L)).thenReturn(samplePlayer());
+        when(getPlayerUseCase.getPlayerById(1L)).thenReturn(samplePlayer());
 
         mockMvc.perform(get("/api/players/1").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
@@ -93,7 +98,7 @@ class PlayerControllerTest {
 
     @Test
     void getPlayerById_shouldReturn404_whenNotFound() throws Exception {
-        when(playerService.getPlayerById(99L)).thenThrow(new PlayerNotFoundException(99L));
+        when(getPlayerUseCase.getPlayerById(99L)).thenThrow(new PlayerNotFoundException(99L));
 
         mockMvc.perform(get("/api/players/99").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isNotFound());
@@ -102,7 +107,7 @@ class PlayerControllerTest {
     @Test
     void getPlayerStats_shouldReturn200() throws Exception {
         PlayerStatsResponse stats = new PlayerStatsResponse(1L, "player1", 1000, 3, 2, 1, 66.67, List.of());
-        when(playerService.getPlayerStats(1L)).thenReturn(stats);
+        when(getPlayerStatsUseCase.getPlayerStats(1L)).thenReturn(stats);
 
         mockMvc.perform(get("/api/players/1/stats").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
@@ -111,7 +116,7 @@ class PlayerControllerTest {
 
     @Test
     void getPlayerStats_shouldReturn404_whenNotFound() throws Exception {
-        when(playerService.getPlayerStats(99L)).thenThrow(new PlayerNotFoundException(99L));
+        when(getPlayerStatsUseCase.getPlayerStats(99L)).thenThrow(new PlayerNotFoundException(99L));
 
         mockMvc.perform(get("/api/players/99/stats").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isNotFound());

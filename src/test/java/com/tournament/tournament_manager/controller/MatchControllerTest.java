@@ -6,10 +6,11 @@ import com.tournament.tournament_manager.config.security.JwtAuthenticationFilter
 import com.tournament.tournament_manager.config.security.SecurityConfig;
 import com.tournament.tournament_manager.config.security.UserDetailsServiceImpl;
 import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
+import com.tournament.tournament_manager.domain.port.in.GetMatchUseCase;
+import com.tournament.tournament_manager.domain.port.in.RecordMatchResultUseCase;
 import com.tournament.tournament_manager.dto.request.RecordMatchResultRequest;
 import com.tournament.tournament_manager.dto.response.MatchResponse;
 import com.tournament.tournament_manager.exception.MatchNotFoundException;
-import com.tournament.tournament_manager.service.MatchService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,14 +39,13 @@ class MatchControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private MatchService matchService;
-
+    private RecordMatchResultUseCase recordMatchResultUseCase;
+    @MockitoBean
+    private GetMatchUseCase getMatchUseCase;
     @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
-
     @MockitoBean
     private UserDetailsServiceImpl userDetailsService;
-
     @MockitoBean
     private org.springframework.cache.CacheManager cacheManager;
 
@@ -66,7 +66,7 @@ class MatchControllerTest {
 
     @Test
     void getMatchById_shouldReturn200() throws Exception {
-        when(matchService.getMatchById(1L)).thenReturn(sampleMatch());
+        when(getMatchUseCase.getMatchById(1L)).thenReturn(sampleMatch());
 
         mockMvc.perform(get("/api/matches/1").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
@@ -75,7 +75,7 @@ class MatchControllerTest {
 
     @Test
     void getMatchById_shouldReturn404_whenNotFound() throws Exception {
-        when(matchService.getMatchById(99L)).thenThrow(new MatchNotFoundException(99L));
+        when(getMatchUseCase.getMatchById(99L)).thenThrow(new MatchNotFoundException(99L));
 
         mockMvc.perform(get("/api/matches/99").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isNotFound());
@@ -84,7 +84,7 @@ class MatchControllerTest {
     @Test
     void recordMatchResult_shouldReturn200() throws Exception {
         MatchResponse finished = new MatchResponse(1L, 1, MatchStatus.FINISHED, null, 1L, 1L, 2L, 1L);
-        when(matchService.recordMatchResult(eq(1L), any())).thenReturn(finished);
+        when(recordMatchResultUseCase.recordMatchResult(eq(1L), any())).thenReturn(finished);
 
         mockMvc.perform(put("/api/matches/1/result")
                         .with(user("admin").roles("ADMIN"))

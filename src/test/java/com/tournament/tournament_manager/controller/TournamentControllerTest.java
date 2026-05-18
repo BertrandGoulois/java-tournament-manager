@@ -6,10 +6,11 @@ import com.tournament.tournament_manager.config.security.JwtAuthenticationFilter
 import com.tournament.tournament_manager.config.security.SecurityConfig;
 import com.tournament.tournament_manager.config.security.UserDetailsServiceImpl;
 import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+import com.tournament.tournament_manager.domain.port.in.CreateTournamentUseCase;
+import com.tournament.tournament_manager.domain.port.in.GetTournamentUseCase;
+import com.tournament.tournament_manager.domain.port.in.StartTournamentUseCase;
 import com.tournament.tournament_manager.dto.request.CreateTournamentRequest;
 import com.tournament.tournament_manager.dto.response.TournamentResponse;
-import com.tournament.tournament_manager.service.BracketService;
-import com.tournament.tournament_manager.service.TournamentService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,17 +40,15 @@ class TournamentControllerTest {
     private MockMvc mockMvc;
 
     @MockitoBean
-    private TournamentService tournamentService;
-
+    private CreateTournamentUseCase createTournamentUseCase;
     @MockitoBean
-    private BracketService bracketService;
-
+    private GetTournamentUseCase getTournamentUseCase;
+    @MockitoBean
+    private StartTournamentUseCase startTournamentUseCase;
     @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
-
     @MockitoBean
     private UserDetailsServiceImpl userDetailsService;
-
     @MockitoBean
     private org.springframework.cache.CacheManager cacheManager;
 
@@ -70,7 +69,7 @@ class TournamentControllerTest {
 
     @Test
     void createTournament_shouldReturn201() throws Exception {
-        when(tournamentService.createTournament(any())).thenReturn(sampleTournament());
+        when(createTournamentUseCase.createTournament(any())).thenReturn(sampleTournament());
 
         mockMvc.perform(post("/api/tournaments")
                         .with(user("admin").roles("ADMIN"))
@@ -93,7 +92,7 @@ class TournamentControllerTest {
 
     @Test
     void getAllTournaments_shouldReturn200() throws Exception {
-        when(tournamentService.getAllTournaments()).thenReturn(List.of(sampleTournament()));
+        when(getTournamentUseCase.getAllTournaments()).thenReturn(List.of(sampleTournament()));
 
         mockMvc.perform(get("/api/tournaments").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
@@ -102,7 +101,7 @@ class TournamentControllerTest {
 
     @Test
     void getTournamentById_shouldReturn200() throws Exception {
-        when(tournamentService.getTournamentById(1L)).thenReturn(sampleTournament());
+        when(getTournamentUseCase.getTournamentById(1L)).thenReturn(sampleTournament());
 
         mockMvc.perform(get("/api/tournaments/1").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
