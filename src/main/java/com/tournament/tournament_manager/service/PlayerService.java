@@ -1,15 +1,20 @@
 package com.tournament.tournament_manager.service;
 
 import com.tournament.tournament_manager.domain.model.entities.Player;
+import com.tournament.tournament_manager.domain.port.in.CreatePlayerUseCase;
+import com.tournament.tournament_manager.domain.port.in.GetPlayerStatsUseCase;
+import com.tournament.tournament_manager.domain.port.in.GetPlayerUseCase;
+import com.tournament.tournament_manager.domain.port.out.CountMatchesByPlayerPort;
+import com.tournament.tournament_manager.domain.port.out.ExistsPlayerPort;
+import com.tournament.tournament_manager.domain.port.out.LoadAllPlayersPort;
+import com.tournament.tournament_manager.domain.port.out.LoadEloHistoryPort;
+import com.tournament.tournament_manager.domain.port.out.LoadPlayerPort;
+import com.tournament.tournament_manager.domain.port.out.SavePlayerPort;
 import com.tournament.tournament_manager.dto.request.CreatePlayerRequest;
 import com.tournament.tournament_manager.dto.response.EloHistoryResponse;
 import com.tournament.tournament_manager.dto.response.PlayerResponse;
 import com.tournament.tournament_manager.dto.response.PlayerStatsResponse;
 import com.tournament.tournament_manager.exception.PlayerAlreadyExistsException;
-import com.tournament.tournament_manager.exception.PlayerNotFoundException;
-import com.tournament.tournament_manager.repository.EloHistoryRepository;
-import com.tournament.tournament_manager.repository.MatchRepository;
-import com.tournament.tournament_manager.repository.PlayerRepository;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,23 +23,34 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Gère la création et la consultation des joueurs.
+ * Implémentation des cas d'utilisation liés aux joueurs.
  *
- * <p>Les statistiques joueur ({@link #getPlayerStats}) sont mises en cache Redis
- * sous la clé {@code playerStats::<id>} et invalidées automatiquement
- * par {@code EloService} après chaque match.
+ * <p>Dépend uniquement de ports (interfaces) — aucune dépendance directe vers JPA.
+ * Les détails techniques sont délégués aux adapters.
  */
 @Service
 @Transactional(readOnly = true)
-public class PlayerService {
-    private final PlayerRepository playerRepository;
-    private final MatchRepository matchRepository;
-    private final EloHistoryRepository eloHistoryRepository;
+public class PlayerService implements CreatePlayerUseCase, GetPlayerUseCase, GetPlayerStatsUseCase {
 
-    public PlayerService(PlayerRepository playerRepository, MatchRepository matchRepository, EloHistoryRepository eloHistoryRepository) {
-        this.playerRepository = playerRepository;
-        this.matchRepository = matchRepository;
-        this.eloHistoryRepository = eloHistoryRepository;
+    private final LoadPlayerPort loadPlayerPort;
+    private final SavePlayerPort savePlayerPort;
+    private final ExistsPlayerPort existsPlayerPort;
+    private final LoadAllPlayersPort loadAllPlayersPort;
+    private final CountMatchesByPlayerPort countMatchesByPlayerPort;
+    private final LoadEloHistoryPort loadEloHistoryPort;
+
+    public PlayerService(LoadPlayerPort loadPlayerPort,
+                         SavePlayerPort savePlayerPort,
+                         ExistsPlayerPort existsPlayerPort,
+                         LoadAllPlayersPort loadAllPlayersPort,
+                         CountMatchesByPlayerPort countMatchesByPlayerPort,
+                         LoadEloHistoryPort loadEloHistoryPort) {
+        this.loadPlayerPort = loadPlayerPort;
+        this.savePlayerPort = savePlayerPort;
+        this.existsPlayerPort = existsPlayerPort;
+        this.loadAllPlayersPort = loadAllPlayersPort;
+        this.countMatchesByPlayerPort = countMatchesByPlayerPort;
+        this.loadEloHistoryPort = loadEloHistoryPort;
     }
 
     /**
@@ -44,18 +60,19 @@ public class PlayerService {
      * @return la représentation du joueur créé
      * @throws PlayerAlreadyExistsException si le username ou l'email est déjà utilisé
      */
-    @Transactional()
+    @Override
+    @Transactional
     public PlayerResponse createPlayer(CreatePlayerRequest request) {
-        if (playerRepository.existsByUsername(request.username())) {
+        if (existsPlayerPort.existsByUsername(request.username())) {
             throw new PlayerAlreadyExistsException("username", request.username());
         }
-        if (playerRepository.existsByEmail(request.email())) {
+        if (existsPlayerPort.existsByEmail(request.email())) {
             throw new PlayerAlreadyExistsException("email", request.email());
         }
         Player player = new Player();
         player.setUsername(request.username());
         player.setEmail(request.email());
-        return toResponse(playerRepository.save(player));
+        return toResponse(savePlayerPort.savePlayer(player));
     }
 
     /**
@@ -63,12 +80,10 @@ public class PlayerService {
      *
      * @param id identifiant du joueur
      * @return la représentation du joueur
-     * @throws PlayerNotFoundException si le joueur n'existe pas
      */
+    @Override
     public PlayerResponse getPlayerById(Long id) {
-        Player player = playerRepository.findById(id)
-                .orElseThrow(() -> new PlayerNotFoundException(id));
-        return toResponse(player);
+        return toResponse(loadPlayerPort.loadPlayer(id));
     }
 
     /**
@@ -76,16 +91,17 @@ public class PlayerService {
      *
      * @return liste des joueurs, vide si aucun joueur enregistré
      */
+    @Override
     public List<PlayerResponse> getAllPlayers() {
-        return playerRepository.findAll()
+        return loadAllPlayersPort.loadAllPlayers()
                 .stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
     /**
-     * Retourne les statistiques complètes d'un joueur : nombre de matchs joués,
-     * victoires, défaites, win rate et historique ELO trié du plus récent au plus ancien.
+     * Retourne les statistiques complètes d'un joueur : matchs joués,
+     * victoires, défaites, win rate et historique ELO.
      *
      * <p>Le résultat est mis en cache Redis ({@code playerStats}) par identifiant joueur.
      * Le win rate est exprimé en pourcentage (0.0 à 100.0), arrondi à deux décimales.
@@ -93,21 +109,24 @@ public class PlayerService {
      *
      * @param id identifiant du joueur
      * @return les statistiques du joueur
-     * @throws PlayerNotFoundException si le joueur n'existe pas
      */
+    @Override
     @Cacheable(value = "playerStats", key = "#id")
     public PlayerStatsResponse getPlayerStats(Long id) {
-        Player player = playerRepository.findById(id)
-                .orElseThrow(() -> new PlayerNotFoundException(id));
+        Player player = loadPlayerPort.loadPlayer(id);
 
-        long matchesPlayed = matchRepository.countByPlayer1IdOrPlayer2Id(id, id);
-        long wins = matchRepository.countByWinnerId(id);
+        long matchesPlayed = countMatchesByPlayerPort.countByPlayer(id);
+        long wins = countMatchesByPlayerPort.countWinsByPlayer(id);
         long losses = matchesPlayed - wins;
         double winRate = matchesPlayed == 0 ? 0 : (double) wins / matchesPlayed * 100;
 
-        List<EloHistoryResponse> history = eloHistoryRepository.findByPlayerIdOrderByCreatedAtDesc(id)
+        List<EloHistoryResponse> history = loadEloHistoryPort.loadByPlayerIdOrderByDateDesc(id)
                 .stream()
-                .map(e -> new EloHistoryResponse(e.getEloChange(), e.getEloAfter(), e.getCreatedAt(), e.getMatch().getId()))
+                .map(e -> new EloHistoryResponse(
+                        e.getEloChange(),
+                        e.getEloAfter(),
+                        e.getCreatedAt(),
+                        e.getMatch().getId()))
                 .collect(Collectors.toList());
 
         return new PlayerStatsResponse(
@@ -117,12 +136,24 @@ public class PlayerService {
                 (int) matchesPlayed,
                 (int) wins,
                 (int) losses,
-                winRate,
+                Math.round(winRate * 100.0) / 100.0,
                 history
         );
     }
 
+    /**
+     * Convertit une entité {@link Player} en DTO de réponse.
+     *
+     * @param player l'entité à convertir
+     * @return le DTO correspondant
+     */
     private PlayerResponse toResponse(Player player) {
-        return new PlayerResponse(player.getId(), player.getUsername(), player.getEmail(), player.getEloRating().value(), player.getCreatedAt());
+        return new PlayerResponse(
+                player.getId(),
+                player.getUsername(),
+                player.getEmail(),
+                player.getEloRating().value(),
+                player.getCreatedAt()
+        );
     }
 }

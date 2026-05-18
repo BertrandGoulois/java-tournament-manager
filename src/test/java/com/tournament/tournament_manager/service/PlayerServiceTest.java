@@ -3,14 +3,17 @@ package com.tournament.tournament_manager.service;
 import com.tournament.tournament_manager.domain.model.entities.EloHistory;
 import com.tournament.tournament_manager.domain.model.entities.Match;
 import com.tournament.tournament_manager.domain.model.entities.Player;
+import com.tournament.tournament_manager.domain.port.out.CountMatchesByPlayerPort;
+import com.tournament.tournament_manager.domain.port.out.ExistsPlayerPort;
+import com.tournament.tournament_manager.domain.port.out.LoadAllPlayersPort;
+import com.tournament.tournament_manager.domain.port.out.LoadEloHistoryPort;
+import com.tournament.tournament_manager.domain.port.out.LoadPlayerPort;
+import com.tournament.tournament_manager.domain.port.out.SavePlayerPort;
 import com.tournament.tournament_manager.dto.request.CreatePlayerRequest;
 import com.tournament.tournament_manager.dto.response.PlayerResponse;
 import com.tournament.tournament_manager.dto.response.PlayerStatsResponse;
 import com.tournament.tournament_manager.exception.PlayerAlreadyExistsException;
 import com.tournament.tournament_manager.exception.PlayerNotFoundException;
-import com.tournament.tournament_manager.repository.EloHistoryRepository;
-import com.tournament.tournament_manager.repository.MatchRepository;
-import com.tournament.tournament_manager.repository.PlayerRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -18,10 +21,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
-import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -29,11 +30,17 @@ import static org.mockito.Mockito.when;
 class PlayerServiceTest {
 
     @Mock
-    private PlayerRepository playerRepository;
+    private LoadPlayerPort loadPlayerPort;
     @Mock
-    private MatchRepository matchRepository;
+    private SavePlayerPort savePlayerPort;
     @Mock
-    private EloHistoryRepository eloHistoryRepository;
+    private ExistsPlayerPort existsPlayerPort;
+    @Mock
+    private LoadAllPlayersPort loadAllPlayersPort;
+    @Mock
+    private CountMatchesByPlayerPort countMatchesByPlayerPort;
+    @Mock
+    private LoadEloHistoryPort loadEloHistoryPort;
 
     @InjectMocks
     private PlayerService playerService;
@@ -45,19 +52,18 @@ class PlayerServiceTest {
         saved.setUsername("toto");
         saved.setEmail("toto@mail.com");
 
-        when(playerRepository.existsByUsername("toto")).thenReturn(false);
-        when(playerRepository.existsByEmail("toto@mail.com")).thenReturn(false);
-        when(playerRepository.save(any())).thenReturn(saved);
+        when(existsPlayerPort.existsByUsername("toto")).thenReturn(false);
+        when(existsPlayerPort.existsByEmail("toto@mail.com")).thenReturn(false);
+        when(savePlayerPort.savePlayer(any())).thenReturn(saved);
 
         PlayerResponse response = playerService.createPlayer(request);
-
         assertEquals("toto", response.username());
     }
 
     @Test
     void createPlayer_shouldThrow_whenUsernameAlreadyExists() {
         CreatePlayerRequest request = new CreatePlayerRequest("toto", "toto@mail.com");
-        when(playerRepository.existsByUsername("toto")).thenReturn(true);
+        when(existsPlayerPort.existsByUsername("toto")).thenReturn(true);
 
         assertThrows(PlayerAlreadyExistsException.class, () -> playerService.createPlayer(request));
     }
@@ -65,15 +71,15 @@ class PlayerServiceTest {
     @Test
     void createPlayer_shouldThrow_whenEmailAlreadyExists() {
         CreatePlayerRequest request = new CreatePlayerRequest("toto", "toto@mail.com");
-        when(playerRepository.existsByUsername("toto")).thenReturn(false);
-        when(playerRepository.existsByEmail("toto@mail.com")).thenReturn(true);
+        when(existsPlayerPort.existsByUsername("toto")).thenReturn(false);
+        when(existsPlayerPort.existsByEmail("toto@mail.com")).thenReturn(true);
 
         assertThrows(PlayerAlreadyExistsException.class, () -> playerService.createPlayer(request));
     }
 
     @Test
     void getPlayerById_shouldThrow_whenNotFound() {
-        when(playerRepository.findById(1L)).thenReturn(Optional.empty());
+        when(loadPlayerPort.loadPlayer(1L)).thenThrow(new PlayerNotFoundException(1L));
         assertThrows(PlayerNotFoundException.class, () -> playerService.getPlayerById(1L));
     }
 
@@ -83,7 +89,7 @@ class PlayerServiceTest {
         player.setUsername("toto");
         player.setEmail("toto@mail.com");
 
-        when(playerRepository.findById(1L)).thenReturn(Optional.of(player));
+        when(loadPlayerPort.loadPlayer(1L)).thenReturn(player);
 
         PlayerResponse response = playerService.getPlayerById(1L);
         assertEquals("toto", response.username());
@@ -95,10 +101,9 @@ class PlayerServiceTest {
         player.setUsername("toto");
         player.setEmail("toto@mail.com");
 
-        when(playerRepository.findAll()).thenReturn(List.of(player));
+        when(loadAllPlayersPort.loadAllPlayers()).thenReturn(List.of(player));
 
         List<PlayerResponse> responses = playerService.getAllPlayers();
-
         assertEquals(1, responses.size());
         assertEquals("toto", responses.get(0).username());
     }
@@ -118,10 +123,10 @@ class PlayerServiceTest {
         history.setEloAfter(1024);
         history.setMatch(match);
 
-        when(playerRepository.findById(1L)).thenReturn(Optional.of(player));
-        when(matchRepository.countByPlayer1IdOrPlayer2Id(1L, 1L)).thenReturn(3L);
-        when(matchRepository.countByWinnerId(1L)).thenReturn(2L);
-        when(eloHistoryRepository.findByPlayerIdOrderByCreatedAtDesc(1L)).thenReturn(List.of(history));
+        when(loadPlayerPort.loadPlayer(1L)).thenReturn(player);
+        when(countMatchesByPlayerPort.countByPlayer(1L)).thenReturn(3L);
+        when(countMatchesByPlayerPort.countWinsByPlayer(1L)).thenReturn(2L);
+        when(loadEloHistoryPort.loadByPlayerIdOrderByDateDesc(1L)).thenReturn(List.of(history));
 
         PlayerStatsResponse stats = playerService.getPlayerStats(1L);
 
@@ -138,10 +143,10 @@ class PlayerServiceTest {
         player.setUsername("toto");
         player.setEmail("toto@mail.com");
 
-        when(playerRepository.findById(1L)).thenReturn(Optional.of(player));
-        when(matchRepository.countByPlayer1IdOrPlayer2Id(1L, 1L)).thenReturn(0L);
-        when(matchRepository.countByWinnerId(1L)).thenReturn(0L);
-        when(eloHistoryRepository.findByPlayerIdOrderByCreatedAtDesc(1L)).thenReturn(List.of());
+        when(loadPlayerPort.loadPlayer(1L)).thenReturn(player);
+        when(countMatchesByPlayerPort.countByPlayer(1L)).thenReturn(0L);
+        when(countMatchesByPlayerPort.countWinsByPlayer(1L)).thenReturn(0L);
+        when(loadEloHistoryPort.loadByPlayerIdOrderByDateDesc(1L)).thenReturn(List.of());
 
         PlayerStatsResponse stats = playerService.getPlayerStats(1L);
 
@@ -151,7 +156,7 @@ class PlayerServiceTest {
 
     @Test
     void getPlayerStats_shouldThrow_whenNotFound() {
-        when(playerRepository.findById(99L)).thenReturn(Optional.empty());
+        when(loadPlayerPort.loadPlayer(99L)).thenThrow(new PlayerNotFoundException(99L));
         assertThrows(PlayerNotFoundException.class, () -> playerService.getPlayerStats(99L));
     }
 }
