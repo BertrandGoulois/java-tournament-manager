@@ -3,8 +3,9 @@ package com.tournament.tournament_manager.service;
 import com.tournament.tournament_manager.domain.model.entities.EloHistory;
 import com.tournament.tournament_manager.domain.model.entities.Match;
 import com.tournament.tournament_manager.domain.model.entities.Player;
-import com.tournament.tournament_manager.repository.EloHistoryRepository;
-import com.tournament.tournament_manager.repository.PlayerRepository;
+import com.tournament.tournament_manager.domain.port.in.UpdateEloUseCase;
+import com.tournament.tournament_manager.domain.port.out.SaveAllPlayersPort;
+import com.tournament.tournament_manager.domain.port.out.SaveEloHistoryPort;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
@@ -20,17 +21,19 @@ import java.util.List;
  * Battre un adversaire mieux classé rapporte plus de points que battre un outsider.
  *
  * <p>Invalide le cache Redis {@code playerStats} pour les deux joueurs après mise à jour.
+ * <p>Dépend uniquement de ports (interfaces) - aucune dépendance directe vers JPA.
  */
 @Service
 @Transactional(readOnly = true)
-public class EloService {
+public class EloService implements UpdateEloUseCase {
 
-    private final PlayerRepository playerRepository;
-    private final EloHistoryRepository eloHistoryRepository;
+    private final SaveAllPlayersPort saveAllPlayersPort;
+    private final SaveEloHistoryPort saveEloHistoryPort;
 
-    public EloService(PlayerRepository playerRepository, EloHistoryRepository eloHistoryRepository){
-        this.playerRepository = playerRepository;
-        this.eloHistoryRepository = eloHistoryRepository;
+    public EloService(SaveAllPlayersPort saveAllPlayersPort,
+                      SaveEloHistoryPort saveEloHistoryPort) {
+        this.saveAllPlayersPort = saveAllPlayersPort;
+        this.saveEloHistoryPort = saveEloHistoryPort;
     }
 
     /**
@@ -43,12 +46,13 @@ public class EloService {
      *
      * @param match le match terminé, avec {@code winner} renseigné et {@code player2} non null
      */
+    @Override
     @Caching(evict = {
             @CacheEvict(value = "playerStats", key = "#match.player1.id"),
             @CacheEvict(value = "playerStats", key = "#match.player2.id")
     })
     @Transactional
-    public void updateElo(Match match){
+    public void updateElo(Match match) {
         Player winner = match.getWinner();
         Player loser = match.getPlayer1().equals(match.getWinner())
                 ? match.getPlayer2()
@@ -67,11 +71,10 @@ public class EloService {
         winner.setEloRating(winner.getEloRating().add(newEloWinner - eloWinner));
         loser.setEloRating(loser.getEloRating().add(newEloLoser - eloLoser));
 
-        playerRepository.saveAll(List.of(winner, loser));
+        saveAllPlayersPort.saveAllPlayers(List.of(winner, loser));
 
         saveEloHistory(winner, match, newEloWinner - eloWinner, newEloWinner);
         saveEloHistory(loser, match, newEloLoser - eloLoser, newEloLoser);
-
     }
 
     /**
@@ -89,6 +92,6 @@ public class EloService {
         history.setMatch(match);
         history.setEloChange(eloChange);
         history.setEloAfter(eloAfter);
-        eloHistoryRepository.save(history);
+        saveEloHistoryPort.saveEloHistory(history);
     }
 }

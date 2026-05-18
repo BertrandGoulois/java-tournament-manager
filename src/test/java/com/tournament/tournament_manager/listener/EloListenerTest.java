@@ -3,16 +3,14 @@ package com.tournament.tournament_manager.listener;
 import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
 import com.tournament.tournament_manager.domain.model.entities.Match;
 import com.tournament.tournament_manager.domain.model.entities.Player;
+import com.tournament.tournament_manager.domain.port.in.UpdateEloUseCase;
+import com.tournament.tournament_manager.domain.port.out.LoadMatchPort;
 import com.tournament.tournament_manager.exception.MatchNotFoundException;
-import com.tournament.tournament_manager.repository.MatchRepository;
-import com.tournament.tournament_manager.service.EloService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
@@ -21,9 +19,9 @@ import static org.mockito.Mockito.*;
 class EloListenerTest {
 
     @Mock
-    private EloService eloService;
+    private UpdateEloUseCase updateEloUseCase;
     @Mock
-    private MatchRepository matchRepository;
+    private LoadMatchPort loadMatchPort;
 
     @InjectMocks
     private EloListener eloListener;
@@ -35,11 +33,12 @@ class EloListenerTest {
         Match match = new Match();
         match.setPlayer1(player1);
         match.setPlayer2(player2);
-        when(matchRepository.findById(1L)).thenReturn(Optional.of(match));
+
+        when(loadMatchPort.loadMatch(1L)).thenReturn(match);
 
         eloListener.onMatchFinished(new MatchFinishedEvent(1L));
 
-        verify(eloService, times(1)).updateElo(match);
+        verify(updateEloUseCase, times(1)).updateElo(match);
     }
 
     @Test
@@ -47,17 +46,18 @@ class EloListenerTest {
         Player player1 = new Player();
         Match match = new Match();
         match.setPlayer1(player1);
-        match.setPlayer2(null); // bye
-        when(matchRepository.findById(1L)).thenReturn(Optional.of(match));
+        match.setPlayer2(null);
+
+        when(loadMatchPort.loadMatch(1L)).thenReturn(match);
 
         eloListener.onMatchFinished(new MatchFinishedEvent(1L));
 
-        verifyNoInteractions(eloService);
+        verifyNoInteractions(updateEloUseCase);
     }
 
     @Test
     void onMatchFinished_shouldThrow_whenMatchNotFound() {
-        when(matchRepository.findById(99L)).thenReturn(Optional.empty());
+        when(loadMatchPort.loadMatch(99L)).thenThrow(new MatchNotFoundException(99L));
 
         assertThrows(MatchNotFoundException.class,
                 () -> eloListener.onMatchFinished(new MatchFinishedEvent(99L)));

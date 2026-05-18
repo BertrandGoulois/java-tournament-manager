@@ -6,6 +6,7 @@ import com.tournament.tournament_manager.domain.model.entities.Registration;
 import com.tournament.tournament_manager.domain.model.entities.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+import com.tournament.tournament_manager.domain.port.in.AdvanceBracketUseCase;
 import com.tournament.tournament_manager.domain.port.in.StartTournamentUseCase;
 import com.tournament.tournament_manager.domain.port.out.LoadMatchByTournamentPort;
 import com.tournament.tournament_manager.domain.port.out.LoadRegistrationPort;
@@ -37,7 +38,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @Transactional(readOnly = true)
-public class BracketService implements StartTournamentUseCase {
+public class BracketService implements StartTournamentUseCase, AdvanceBracketUseCase {
 
     private final LoadTournamentPort loadTournamentPort;
     private final SaveTournamentPort saveTournamentPort;

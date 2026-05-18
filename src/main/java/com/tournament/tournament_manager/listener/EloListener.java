@@ -1,15 +1,14 @@
 package com.tournament.tournament_manager.listener;
 
+import com.tournament.tournament_manager.config.kafka.KafkaConfig;
 import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
 import com.tournament.tournament_manager.domain.model.entities.Match;
+import com.tournament.tournament_manager.domain.port.in.UpdateEloUseCase;
+import com.tournament.tournament_manager.domain.port.out.LoadMatchPort;
 import com.tournament.tournament_manager.exception.MatchNotFoundException;
 import com.tournament.tournament_manager.repository.MatchRepository;
-import com.tournament.tournament_manager.service.EloService;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
-
-
-import static com.tournament.tournament_manager.config.kafka.KafkaConfig.MATCH_FINISHED_TOPIC;
 
 /**
  * Consomme les événements {@link MatchFinishedEvent} depuis le topic Kafka
@@ -21,27 +20,27 @@ import static com.tournament.tournament_manager.config.kafka.KafkaConfig.MATCH_F
 @Component
 public class EloListener {
 
-    private final EloService eloService;
-    private final MatchRepository matchRepository;
+    private final UpdateEloUseCase updateEloUseCase;
+    private final LoadMatchPort loadMatchPort;
 
-    public EloListener(EloService eloService, MatchRepository matchRepository) {
-        this.eloService = eloService;
-        this.matchRepository = matchRepository;
+    public EloListener(UpdateEloUseCase updateEloUseCase,
+                       LoadMatchPort loadMatchPort) {
+        this.updateEloUseCase = updateEloUseCase;
+        this.loadMatchPort = loadMatchPort;
     }
 
     /**
      * Récupère le match correspondant à l'événement et délègue
-     * le calcul ELO à {@link EloService}.
+     * le calcul ELO à {@link UpdateEloUseCase}.
      * Ignoré si le match est un bye ({@code player2 == null}).
      *
      * @param event l'événement contenant l'identifiant du match terminé
      * @throws MatchNotFoundException si le match n'existe pas
      */
-    @KafkaListener(topics = MATCH_FINISHED_TOPIC, groupId = "elo-group")
+    @KafkaListener(topics = KafkaConfig.MATCH_FINISHED_TOPIC, groupId = "elo-group")
     public void onMatchFinished(MatchFinishedEvent event) {
-        Match match = matchRepository.findById(event.matchId())
-                .orElseThrow(() -> new MatchNotFoundException(event.matchId()));
+        Match match = loadMatchPort.loadMatch(event.matchId());
         if (match.getPlayer2() == null) return;
-        eloService.updateElo(match);
+        updateEloUseCase.updateElo(match);
     }
 }

@@ -3,24 +3,23 @@ package com.tournament.tournament_manager.service;
 import com.tournament.tournament_manager.domain.model.entities.Match;
 import com.tournament.tournament_manager.domain.model.entities.Player;
 import com.tournament.tournament_manager.domain.model.valueobjects.EloRating;
-import com.tournament.tournament_manager.repository.EloHistoryRepository;
-import com.tournament.tournament_manager.repository.PlayerRepository;
+import com.tournament.tournament_manager.domain.port.out.SaveAllPlayersPort;
+import com.tournament.tournament_manager.domain.port.out.SaveEloHistoryPort;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class EloServiceTest {
 
     @Mock
-    private PlayerRepository playerRepository;
+    private SaveAllPlayersPort saveAllPlayersPort;
     @Mock
-    private EloHistoryRepository eloHistoryRepository;
+    private SaveEloHistoryPort saveEloHistoryPort;
 
     @InjectMocks
     private EloService eloService;
@@ -57,7 +56,7 @@ class EloServiceTest {
 
         eloService.updateElo(match);
 
-        verify(playerRepository, times(1)).saveAll(anyList());
+        verify(saveAllPlayersPort, times(1)).saveAllPlayers(anyList());
     }
 
     @Test
@@ -74,7 +73,7 @@ class EloServiceTest {
 
         eloService.updateElo(match);
 
-        verify(eloHistoryRepository, times(2)).save(any());
+        verify(saveEloHistoryPort, times(2)).saveEloHistory(any());
     }
 
     @Test
