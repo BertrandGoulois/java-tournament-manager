@@ -4,14 +4,17 @@ import com.tournament.tournament_manager.domain.model.entities.Player;
 import com.tournament.tournament_manager.domain.model.entities.Registration;
 import com.tournament.tournament_manager.domain.model.entities.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+import com.tournament.tournament_manager.domain.port.out.CountRegistrationPort;
+import com.tournament.tournament_manager.domain.port.out.ExistsRegistrationPort;
+import com.tournament.tournament_manager.domain.port.out.LoadPlayerPort;
+import com.tournament.tournament_manager.domain.port.out.LoadRegistrationPort;
+import com.tournament.tournament_manager.domain.port.out.LoadTournamentPort;
+import com.tournament.tournament_manager.domain.port.out.SaveRegistrationPort;
 import com.tournament.tournament_manager.dto.request.CreateRegistrationRequest;
 import com.tournament.tournament_manager.dto.response.RegistrationResponse;
 import com.tournament.tournament_manager.exception.InvalidException;
 import com.tournament.tournament_manager.exception.PlayerNotFoundException;
 import com.tournament.tournament_manager.exception.TournamentNotFoundException;
-import com.tournament.tournament_manager.repository.PlayerRepository;
-import com.tournament.tournament_manager.repository.RegistrationRepository;
-import com.tournament.tournament_manager.repository.TournamentRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -19,10 +22,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
-import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 
@@ -30,26 +31,32 @@ import static org.mockito.Mockito.when;
 class RegistrationServiceTest {
 
     @Mock
-    private PlayerRepository playerRepository;
+    private LoadPlayerPort loadPlayerPort;
     @Mock
-    private TournamentRepository tournamentRepository;
+    private LoadTournamentPort loadTournamentPort;
     @Mock
-    private RegistrationRepository registrationRepository;
+    private SaveRegistrationPort saveRegistrationPort;
+    @Mock
+    private ExistsRegistrationPort existsRegistrationPort;
+    @Mock
+    private CountRegistrationPort countRegistrationPort;
+    @Mock
+    private LoadRegistrationPort loadRegistrationPort;
 
     @InjectMocks
     private RegistrationService registrationService;
 
     @Test
     void registerPlayer_shouldThrow_whenPlayerNotFound() {
-        when(playerRepository.findById(1L)).thenReturn(Optional.empty());
+        when(loadPlayerPort.loadPlayer(1L)).thenThrow(new PlayerNotFoundException(1L));
         assertThrows(PlayerNotFoundException.class,
                 () -> registrationService.registerPlayer(new CreateRegistrationRequest(1L, 1L)));
     }
 
     @Test
     void registerPlayer_shouldThrow_whenTournamentNotFound() {
-        when(playerRepository.findById(1L)).thenReturn(Optional.of(new Player()));
-        when(tournamentRepository.findById(1L)).thenReturn(Optional.empty());
+        when(loadPlayerPort.loadPlayer(1L)).thenReturn(new Player());
+        when(loadTournamentPort.loadTournament(1L)).thenThrow(new TournamentNotFoundException(1L));
         assertThrows(TournamentNotFoundException.class,
                 () -> registrationService.registerPlayer(new CreateRegistrationRequest(1L, 1L)));
     }
@@ -60,8 +67,8 @@ class RegistrationServiceTest {
         Tournament tournament = new Tournament();
         tournament.setStatus(TournamentStatus.IN_PROGRESS);
 
-        when(playerRepository.findById(1L)).thenReturn(Optional.of(player));
-        when(tournamentRepository.findById(1L)).thenReturn(Optional.of(tournament));
+        when(loadPlayerPort.loadPlayer(1L)).thenReturn(player);
+        when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
 
         assertThrows(InvalidException.class,
                 () -> registrationService.registerPlayer(new CreateRegistrationRequest(1L, 1L)));
@@ -74,9 +81,9 @@ class RegistrationServiceTest {
         tournament.setStatus(TournamentStatus.OPEN);
         tournament.setMaxPlayers(4);
 
-        when(playerRepository.findById(1L)).thenReturn(Optional.of(player));
-        when(tournamentRepository.findById(1L)).thenReturn(Optional.of(tournament));
-        when(registrationRepository.existsByPlayerIdAndTournamentId(1L, 1L)).thenReturn(true);
+        when(loadPlayerPort.loadPlayer(1L)).thenReturn(player);
+        when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
+        when(existsRegistrationPort.existsByPlayerIdAndTournamentId(1L, 1L)).thenReturn(true);
 
         assertThrows(InvalidException.class,
                 () -> registrationService.registerPlayer(new CreateRegistrationRequest(1L, 1L)));
@@ -89,10 +96,10 @@ class RegistrationServiceTest {
         tournament.setStatus(TournamentStatus.OPEN);
         tournament.setMaxPlayers(4);
 
-        when(playerRepository.findById(1L)).thenReturn(Optional.of(player));
-        when(tournamentRepository.findById(1L)).thenReturn(Optional.of(tournament));
-        when(registrationRepository.existsByPlayerIdAndTournamentId(1L, 1L)).thenReturn(false);
-        when(registrationRepository.countByTournamentId(1L)).thenReturn(4L);
+        when(loadPlayerPort.loadPlayer(1L)).thenReturn(player);
+        when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
+        when(existsRegistrationPort.existsByPlayerIdAndTournamentId(1L, 1L)).thenReturn(false);
+        when(countRegistrationPort.countByTournamentId(1L)).thenReturn(4L);
 
         assertThrows(InvalidException.class,
                 () -> registrationService.registerPlayer(new CreateRegistrationRequest(1L, 1L)));
@@ -112,13 +119,14 @@ class RegistrationServiceTest {
         registration.setPlayer(player);
         registration.setTournament(tournament);
 
-        when(playerRepository.findById(1L)).thenReturn(Optional.of(player));
-        when(tournamentRepository.findById(1L)).thenReturn(Optional.of(tournament));
-        when(registrationRepository.existsByPlayerIdAndTournamentId(1L, 1L)).thenReturn(false);
-        when(registrationRepository.countByTournamentId(1L)).thenReturn(0L);
-        when(registrationRepository.save(any())).thenReturn(registration);
+        when(loadPlayerPort.loadPlayer(1L)).thenReturn(player);
+        when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
+        when(existsRegistrationPort.existsByPlayerIdAndTournamentId(1L, 1L)).thenReturn(false);
+        when(countRegistrationPort.countByTournamentId(1L)).thenReturn(0L);
+        when(saveRegistrationPort.saveRegistration(any())).thenReturn(registration);
 
-        RegistrationResponse response = registrationService.registerPlayer(new CreateRegistrationRequest(1L, 1L));
+        RegistrationResponse response = registrationService.registerPlayer(
+                new CreateRegistrationRequest(1L, 1L));
 
         assertEquals(1L, response.id());
     }
@@ -135,7 +143,7 @@ class RegistrationServiceTest {
         registration.setPlayer(player);
         registration.setTournament(tournament);
 
-        when(registrationRepository.findByTournamentId(1L)).thenReturn(List.of(registration));
+        when(loadRegistrationPort.loadByTournamentId(1L)).thenReturn(List.of(registration));
 
         List<RegistrationResponse> responses = registrationService.getTournamentRegistrations(1L);
 

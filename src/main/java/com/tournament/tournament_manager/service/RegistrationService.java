@@ -4,14 +4,17 @@ import com.tournament.tournament_manager.domain.model.entities.Player;
 import com.tournament.tournament_manager.domain.model.entities.Registration;
 import com.tournament.tournament_manager.domain.model.entities.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+import com.tournament.tournament_manager.domain.port.in.GetRegistrationsUseCase;
+import com.tournament.tournament_manager.domain.port.in.RegisterPlayerUseCase;
+import com.tournament.tournament_manager.domain.port.out.CountRegistrationPort;
+import com.tournament.tournament_manager.domain.port.out.ExistsRegistrationPort;
+import com.tournament.tournament_manager.domain.port.out.LoadPlayerPort;
+import com.tournament.tournament_manager.domain.port.out.LoadRegistrationPort;
+import com.tournament.tournament_manager.domain.port.out.LoadTournamentPort;
+import com.tournament.tournament_manager.domain.port.out.SaveRegistrationPort;
 import com.tournament.tournament_manager.dto.request.CreateRegistrationRequest;
 import com.tournament.tournament_manager.dto.response.RegistrationResponse;
 import com.tournament.tournament_manager.exception.InvalidException;
-import com.tournament.tournament_manager.exception.PlayerNotFoundException;
-import com.tournament.tournament_manager.exception.TournamentNotFoundException;
-import com.tournament.tournament_manager.repository.PlayerRepository;
-import com.tournament.tournament_manager.repository.RegistrationRepository;
-import com.tournament.tournament_manager.repository.TournamentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,20 +22,34 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Gère les inscriptions des joueurs aux tournois.
+ * Implémentation des cas d'utilisation liés aux inscriptions.
+ *
+ * <p>Dépend uniquement de ports (interfaces) — aucune dépendance directe vers JPA.
+ * Les détails techniques sont délégués aux adapters.
  */
 @Service
 @Transactional(readOnly = true)
-public class RegistrationService {
+public class RegistrationService implements RegisterPlayerUseCase, GetRegistrationsUseCase {
 
-    private final PlayerRepository playerRepository;
-    private final TournamentRepository tournamentRepository;
-    private final RegistrationRepository registrationRepository;
+    private final LoadPlayerPort loadPlayerPort;
+    private final LoadTournamentPort loadTournamentPort;
+    private final SaveRegistrationPort saveRegistrationPort;
+    private final ExistsRegistrationPort existsRegistrationPort;
+    private final CountRegistrationPort countRegistrationPort;
+    private final LoadRegistrationPort loadRegistrationPort;
 
-    public RegistrationService(PlayerRepository playerRepository, TournamentRepository tournamentRepository, RegistrationRepository registrationRepository) {
-        this.playerRepository = playerRepository;
-        this.tournamentRepository = tournamentRepository;
-        this.registrationRepository = registrationRepository;
+    public RegistrationService(LoadPlayerPort loadPlayerPort,
+                               LoadTournamentPort loadTournamentPort,
+                               SaveRegistrationPort saveRegistrationPort,
+                               ExistsRegistrationPort existsRegistrationPort,
+                               CountRegistrationPort countRegistrationPort,
+                               LoadRegistrationPort loadRegistrationPort) {
+        this.loadPlayerPort = loadPlayerPort;
+        this.loadTournamentPort = loadTournamentPort;
+        this.saveRegistrationPort = saveRegistrationPort;
+        this.existsRegistrationPort = existsRegistrationPort;
+        this.countRegistrationPort = countRegistrationPort;
+        this.loadRegistrationPort = loadRegistrationPort;
     }
 
     /**
@@ -47,31 +64,34 @@ public class RegistrationService {
      *
      * @param request contient l'identifiant du joueur et du tournoi
      * @return la représentation de l'inscription créée
-     * @throws PlayerNotFoundException     si le joueur n'existe pas
-     * @throws TournamentNotFoundException si le tournoi n'existe pas
-     * @throws InvalidException            si le tournoi n'est pas ouvert aux inscriptions
-     * @throws InvalidException            si le joueur est déjà inscrit
-     * @throws InvalidException            si le tournoi est complet
+     * @throws com.tournament.tournament_manager.exception.PlayerNotFoundException     si le joueur n'existe pas
+     * @throws com.tournament.tournament_manager.exception.TournamentNotFoundException si le tournoi n'existe pas
+     * @throws InvalidException si le tournoi n'est pas ouvert aux inscriptions
+     * @throws InvalidException si le joueur est déjà inscrit
+     * @throws InvalidException si le tournoi est complet
      */
+    @Override
     @Transactional
     public RegistrationResponse registerPlayer(CreateRegistrationRequest request) {
-        Player player = playerRepository.findById(request.playerId())
-                .orElseThrow(() -> new PlayerNotFoundException(request.playerId()));
-        Tournament tournament = tournamentRepository.findById(request.tournamentId())
-                .orElseThrow(() -> new TournamentNotFoundException(request.tournamentId()));
-        if (tournament.getStatus() != TournamentStatus.OPEN){
+        Player player = loadPlayerPort.loadPlayer(request.playerId());
+        Tournament tournament = loadTournamentPort.loadTournament(request.tournamentId());
+
+        if (tournament.getStatus() != TournamentStatus.OPEN) {
             throw new InvalidException("Tournament is not open for registration");
         }
-        if (registrationRepository.existsByPlayerIdAndTournamentId(request.playerId(), request.tournamentId())) {
+        if (existsRegistrationPort.existsByPlayerIdAndTournamentId(
+                request.playerId(), request.tournamentId())) {
             throw new InvalidException("Player already registered in this tournament");
         }
-        if (registrationRepository.countByTournamentId(request.tournamentId()) >= tournament.getMaxPlayers()) {
+        if (countRegistrationPort.countByTournamentId(request.tournamentId())
+                >= tournament.getMaxPlayers()) {
             throw new InvalidException("Tournament is full");
         }
+
         Registration registration = new Registration();
         registration.setPlayer(player);
         registration.setTournament(tournament);
-        return toResponse(registrationRepository.save(registration));
+        return toResponse(saveRegistrationPort.saveRegistration(registration));
     }
 
     /**
@@ -80,8 +100,9 @@ public class RegistrationService {
      * @param tournamentId identifiant du tournoi
      * @return liste des inscriptions, vide si aucun joueur inscrit
      */
-    public List<RegistrationResponse> getTournamentRegistrations(Long tournamentId){
-        return registrationRepository.findByTournamentId(tournamentId)
+    @Override
+    public List<RegistrationResponse> getTournamentRegistrations(Long tournamentId) {
+        return loadRegistrationPort.loadByTournamentId(tournamentId)
                 .stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
