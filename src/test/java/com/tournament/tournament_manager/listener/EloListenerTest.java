@@ -4,6 +4,7 @@ import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
 import com.tournament.tournament_manager.domain.model.entities.Match;
 import com.tournament.tournament_manager.domain.model.entities.Player;
 import com.tournament.tournament_manager.domain.port.in.UpdateEloUseCase;
+import com.tournament.tournament_manager.domain.port.out.ExistsEloHistoryPort;
 import com.tournament.tournament_manager.domain.port.out.LoadMatchPort;
 import com.tournament.tournament_manager.exception.MatchNotFoundException;
 import org.junit.jupiter.api.Test;
@@ -22,6 +23,8 @@ class EloListenerTest {
     private UpdateEloUseCase updateEloUseCase;
     @Mock
     private LoadMatchPort loadMatchPort;
+    @Mock
+    private ExistsEloHistoryPort existsEloHistoryPort;
 
     @InjectMocks
     private EloListener eloListener;
@@ -35,6 +38,7 @@ class EloListenerTest {
         match.setPlayer2(player2);
 
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
+        when(existsEloHistoryPort.existsByMatchId(1L)).thenReturn(false);
 
         eloListener.onMatchFinished(new MatchFinishedEvent(1L));
 
@@ -49,6 +53,22 @@ class EloListenerTest {
         match.setPlayer2(null);
 
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
+
+        eloListener.onMatchFinished(new MatchFinishedEvent(1L));
+
+        verifyNoInteractions(updateEloUseCase);
+    }
+
+    @Test
+    void onMatchFinished_alreadyProcessed_shouldSkipEloUpdate() {
+        Player player1 = new Player();
+        Player player2 = new Player();
+        Match match = new Match();
+        match.setPlayer1(player1);
+        match.setPlayer2(player2);
+
+        when(loadMatchPort.loadMatch(1L)).thenReturn(match);
+        when(existsEloHistoryPort.existsByMatchId(1L)).thenReturn(true);
 
         eloListener.onMatchFinished(new MatchFinishedEvent(1L));
 

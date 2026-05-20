@@ -2,6 +2,7 @@ package com.tournament.tournament_manager.infrastructure.persistence;
 
 import com.tournament.tournament_manager.domain.model.entities.EloHistory;
 import com.tournament.tournament_manager.domain.model.entities.Player;
+import com.tournament.tournament_manager.domain.port.out.ExistsEloHistoryPort;
 import com.tournament.tournament_manager.domain.port.out.SaveAllPlayersPort;
 import com.tournament.tournament_manager.domain.port.out.SaveEloHistoryPort;
 import com.tournament.tournament_manager.repository.EloHistoryRepository;
@@ -14,7 +15,7 @@ import java.util.List;
  * Adapter JPA implémentant les ports de sauvegarde ELO et historique.
  */
 @Component
-public class EloJpaAdapter implements SaveAllPlayersPort, SaveEloHistoryPort {
+public class EloJpaAdapter implements SaveAllPlayersPort, SaveEloHistoryPort, ExistsEloHistoryPort {
 
     private final PlayerRepository playerRepository;
     private final EloHistoryRepository eloHistoryRepository;
@@ -33,5 +34,10 @@ public class EloJpaAdapter implements SaveAllPlayersPort, SaveEloHistoryPort {
     @Override
     public void saveEloHistory(EloHistory eloHistory) {
         eloHistoryRepository.save(eloHistory);
+    }
+
+    @Override
+    public boolean existsByMatchId(Long matchId) {
+        return eloHistoryRepository.existsByMatchId(matchId);
     }
 }

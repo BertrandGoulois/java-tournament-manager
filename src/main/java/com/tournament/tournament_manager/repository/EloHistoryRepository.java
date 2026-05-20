@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface EloHistoryRepository extends JpaRepository<EloHistory, Long> {
     List<EloHistory> findByPlayerIdOrderByCreatedAtDesc(Long playerId);
+    boolean existsByMatchId(Long matchId);
 }

@@ -4,6 +4,7 @@ import com.tournament.tournament_manager.config.kafka.KafkaConfig;
 import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
 import com.tournament.tournament_manager.domain.model.entities.Match;
 import com.tournament.tournament_manager.domain.port.in.UpdateEloUseCase;
+import com.tournament.tournament_manager.domain.port.out.ExistsEloHistoryPort;
 import com.tournament.tournament_manager.domain.port.out.LoadMatchPort;
 import com.tournament.tournament_manager.exception.MatchNotFoundException;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -21,11 +22,14 @@ public class EloListener {
 
     private final UpdateEloUseCase updateEloUseCase;
     private final LoadMatchPort loadMatchPort;
+    private final ExistsEloHistoryPort existsEloHistoryPort;
 
     public EloListener(UpdateEloUseCase updateEloUseCase,
-                       LoadMatchPort loadMatchPort) {
+                       LoadMatchPort loadMatchPort,
+                       ExistsEloHistoryPort existsEloHistoryPort) {
         this.updateEloUseCase = updateEloUseCase;
         this.loadMatchPort = loadMatchPort;
+        this.existsEloHistoryPort = existsEloHistoryPort;
     }
 
     /**
@@ -40,6 +44,7 @@ public class EloListener {
     public void onMatchFinished(MatchFinishedEvent event) {
         Match match = loadMatchPort.loadMatch(event.matchId());
         if (match.getPlayer2() == null) return;
+        if (existsEloHistoryPort.existsByMatchId(event.matchId())) return;
         updateEloUseCase.updateElo(match);
     }
 }
