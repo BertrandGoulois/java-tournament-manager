@@ -6,6 +6,7 @@ import com.tournament.tournament_manager.domain.port.out.LoadAllTournamentsPort;
 import com.tournament.tournament_manager.domain.port.out.LoadTournamentPort;
 import com.tournament.tournament_manager.domain.port.out.SaveTournamentPort;
 import com.tournament.tournament_manager.dto.request.CreateTournamentRequest;
+import com.tournament.tournament_manager.dto.response.TournamentResponse;
 import com.tournament.tournament_manager.exception.InvalidTournamentException;
 import com.tournament.tournament_manager.exception.TournamentAlreadyExistsException;
 import com.tournament.tournament_manager.exception.TournamentNotFoundException;
@@ -14,6 +15,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -89,11 +93,13 @@ class TournamentServiceTest {
         tournament.setName("Test");
         tournament.setMaxPlayers(4);
 
-        when(loadAllTournamentsPort.loadAllTournaments()).thenReturn(List.of(tournament));
+        Page<Tournament> page = new PageImpl<>(List.of(tournament));
+        when(loadAllTournamentsPort.loadAllTournaments(any(Pageable.class))).thenReturn(page);
 
-        var responses = tournamentService.getAllTournaments();
-        assertEquals(1, responses.size());
-        assertEquals("Test", responses.get(0).name());
+        Page<TournamentResponse> responses = tournamentService.getAllTournaments(Pageable.unpaged());
+
+        assertEquals(1, responses.getTotalElements());
+        assertEquals("Test", responses.getContent().get(0).name());
     }
 
     @Test

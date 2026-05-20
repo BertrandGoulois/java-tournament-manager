@@ -7,6 +7,8 @@ import com.tournament.tournament_manager.domain.port.out.LoadTournamentPort;
 import com.tournament.tournament_manager.domain.port.out.SaveTournamentPort;
 import com.tournament.tournament_manager.exception.TournamentNotFoundException;
 import com.tournament.tournament_manager.repository.TournamentRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -41,7 +43,7 @@ public class TournamentJpaAdapter implements LoadTournamentPort, SaveTournamentP
     }
 
     @Override
-    public List<Tournament> loadAllTournaments() {
-        return tournamentRepository.findAll();
+    public Page<Tournament> loadAllTournaments(Pageable pageable) {
+        return tournamentRepository.findAll(pageable);
     }
 }

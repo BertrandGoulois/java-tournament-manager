@@ -1,6 +1,8 @@
 package com.tournament.tournament_manager.domain.port.out;
 
 import com.tournament.tournament_manager.domain.model.entities.Player;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -10,9 +12,10 @@ import java.util.List;
 public interface LoadAllPlayersPort {
 
     /**
-     * Charge tous les joueurs existants.
+     * Charge tous les joueurs existants de façon paginée.
      *
-     * @return liste des joueurs, vide si aucun joueur enregistré
+     * @param pageable paramètres de pagination (page, taille, tri)
+     * @return une page de joueurs
      */
-    List<Player> loadAllPlayers();
+    Page<Player> loadAllPlayers(Pageable pageable);
 }

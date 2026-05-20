@@ -16,6 +16,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -92,11 +95,12 @@ class TournamentControllerTest {
 
     @Test
     void getAllTournaments_shouldReturn200() throws Exception {
-        when(getTournamentUseCase.getAllTournaments()).thenReturn(List.of(sampleTournament()));
+        Page<TournamentResponse> page = new PageImpl<>(List.of(sampleTournament()));
+        when(getTournamentUseCase.getAllTournaments(any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get("/api/tournaments").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("Spring Championship"));
+                .andExpect(jsonPath("$.content[0].name").value("Spring Championship"));
     }
 
     @Test

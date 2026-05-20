@@ -7,6 +7,8 @@ import com.tournament.tournament_manager.exception.PlayerNotFoundException;
 import com.tournament.tournament_manager.repository.EloHistoryRepository;
 import com.tournament.tournament_manager.repository.MatchRepository;
 import com.tournament.tournament_manager.repository.PlayerRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -53,8 +55,8 @@ public class PlayerJpaAdapter implements LoadPlayerPort, SavePlayerPort,
     }
 
     @Override
-    public List<Player> loadAllPlayers() {
-        return playerRepository.findAll();
+    public Page<Player> loadAllPlayers(Pageable pageable) {
+        return playerRepository.findAll(pageable);
     }
 
     @Override

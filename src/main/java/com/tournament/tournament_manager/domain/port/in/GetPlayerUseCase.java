@@ -1,6 +1,8 @@
 package com.tournament.tournament_manager.domain.port.in;
 
 import com.tournament.tournament_manager.dto.response.PlayerResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -18,9 +20,9 @@ public interface GetPlayerUseCase {
     PlayerResponse getPlayerById(Long id);
 
     /**
-     * Retourne la liste de tous les joueurs.
+     * Retourne une page de tous les joueurs.
      *
-     * @return liste des joueurs, vide si aucun joueur enregistré
+     * @return page de joueurs, vide si aucun joueur enregistré
      */
-    List<PlayerResponse> getAllPlayers();
+    Page<PlayerResponse> getAllPlayers(Pageable pageable);
 }

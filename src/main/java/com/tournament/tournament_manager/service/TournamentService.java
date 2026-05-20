@@ -11,6 +11,8 @@ import com.tournament.tournament_manager.dto.request.CreateTournamentRequest;
 import com.tournament.tournament_manager.dto.response.TournamentResponse;
 import com.tournament.tournament_manager.exception.InvalidTournamentException;
 import com.tournament.tournament_manager.exception.TournamentAlreadyExistsException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -62,12 +64,16 @@ public class TournamentService implements CreateTournamentUseCase, GetTournament
         return toResponse(loadTournamentPort.loadTournament(id));
     }
 
+    /**
+     * Retourne une page de tournois.
+     *
+     * @param pageable paramètres de pagination (page, taille, tri)
+     * @return une page de tournois
+     */
     @Override
-    public List<TournamentResponse> getAllTournaments() {
-        return loadAllTournamentsPort.loadAllTournaments()
-                .stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+    public Page<TournamentResponse> getAllTournaments(Pageable pageable) {
+        return loadAllTournamentsPort.loadAllTournaments(pageable)
+                .map(this::toResponse);
     }
 
     private TournamentResponse toResponse(Tournament tournament) {

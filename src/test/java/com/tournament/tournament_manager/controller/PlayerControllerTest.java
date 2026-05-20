@@ -15,6 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -80,11 +83,12 @@ class PlayerControllerTest {
 
     @Test
     void getAllPlayers_shouldReturn200() throws Exception {
-        when(getPlayerUseCase.getAllPlayers()).thenReturn(List.of(samplePlayer()));
+        Page<PlayerResponse> page = new PageImpl<>(List.of(samplePlayer()));
+        when(getPlayerUseCase.getAllPlayers(any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get("/api/players").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].username").value("player1"));
+                .andExpect(jsonPath("$.content[0].username").value("player1"));
     }
 
     @Test

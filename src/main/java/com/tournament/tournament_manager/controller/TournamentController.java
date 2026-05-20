@@ -6,6 +6,8 @@ import com.tournament.tournament_manager.domain.port.in.StartTournamentUseCase;
 import com.tournament.tournament_manager.dto.request.CreateTournamentRequest;
 import com.tournament.tournament_manager.dto.response.TournamentResponse;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,8 +41,8 @@ public class TournamentController {
     }
 
     @GetMapping
-    public ResponseEntity<List<TournamentResponse>> getAllTournaments() {
-        return ResponseEntity.ok(getTournamentUseCase.getAllTournaments());
+    public ResponseEntity<Page<TournamentResponse>> getAllTournaments(Pageable pageable) {
+        return ResponseEntity.ok(getTournamentUseCase.getAllTournaments(pageable));
     }
 
     @GetMapping("/{id}")

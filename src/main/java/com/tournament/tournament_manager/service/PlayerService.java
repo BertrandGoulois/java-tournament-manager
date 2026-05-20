@@ -11,6 +11,8 @@ import com.tournament.tournament_manager.dto.response.PlayerResponse;
 import com.tournament.tournament_manager.dto.response.PlayerStatsResponse;
 import com.tournament.tournament_manager.exception.PlayerAlreadyExistsException;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -82,16 +84,15 @@ public class PlayerService implements CreatePlayerUseCase, GetPlayerUseCase, Get
     }
 
     /**
-     * Retourne la liste de tous les joueurs.
+     * Retourne une page de joueurs.
      *
-     * @return liste des joueurs, vide si aucun joueur enregistré
+     * @param pageable paramètres de pagination (page, taille, tri)
+     * @return une page de joueurs
      */
     @Override
-    public List<PlayerResponse> getAllPlayers() {
-        return loadAllPlayersPort.loadAllPlayers()
-                .stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+    public Page<PlayerResponse> getAllPlayers(Pageable pageable) {
+        return loadAllPlayersPort.loadAllPlayers(pageable)
+                .map(this::toResponse);
     }
 
     /**

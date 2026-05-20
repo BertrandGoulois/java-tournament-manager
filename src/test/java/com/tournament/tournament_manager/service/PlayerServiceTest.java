@@ -14,6 +14,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -97,11 +100,13 @@ class PlayerServiceTest {
         player.setUsername("toto");
         player.setEmail("toto@mail.com");
 
-        when(loadAllPlayersPort.loadAllPlayers()).thenReturn(List.of(player));
+        Page<Player> page = new PageImpl<>(List.of(player));
+        when(loadAllPlayersPort.loadAllPlayers(any(Pageable.class))).thenReturn(page);
 
-        List<PlayerResponse> responses = playerService.getAllPlayers();
-        assertEquals(1, responses.size());
-        assertEquals("toto", responses.get(0).username());
+        Page<PlayerResponse> responses = playerService.getAllPlayers(Pageable.unpaged());
+
+        assertEquals(1, responses.getTotalElements());
+        assertEquals("toto", responses.getContent().get(0).username());
     }
 
     @Test

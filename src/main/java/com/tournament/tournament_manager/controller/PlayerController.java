@@ -7,6 +7,8 @@ import com.tournament.tournament_manager.dto.request.CreatePlayerRequest;
 import com.tournament.tournament_manager.dto.response.PlayerResponse;
 import com.tournament.tournament_manager.dto.response.PlayerStatsResponse;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,8 +42,8 @@ public class PlayerController {
     }
 
     @GetMapping
-    public ResponseEntity<List<PlayerResponse>> getAllPlayers() {
-        return ResponseEntity.ok(getPlayerUseCase.getAllPlayers());
+    public ResponseEntity<Page<PlayerResponse>> getAllPlayers(Pageable pageable) {
+        return ResponseEntity.ok(getPlayerUseCase.getAllPlayers(pageable));
     }
 
     @GetMapping("/{id}")
