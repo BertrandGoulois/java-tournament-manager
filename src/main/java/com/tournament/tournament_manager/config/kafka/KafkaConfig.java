@@ -13,8 +13,11 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.*;
+import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
+import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
 import org.springframework.kafka.support.serializer.JacksonJsonSerializer;
+import org.springframework.util.backoff.FixedBackOff;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,6 +33,10 @@ import java.util.Map;
  * <p>Sérialisation : clé en {@code String}, valeur en JSON via Jackson.
  * Le type de désérialisation par défaut est {@code MatchFinishedEvent} —
  * tous les packages sont marqués comme trusted ({@code TRUSTED_PACKAGES = "*"}).
+ *
+ * <p>En cas d'échec répété d'un listener (3 tentatives espacées de 1 seconde),
+ * le message est redirigé vers le topic {@code match-finished.DLT}
+ * (Dead Letter Topic) pour inspection et rejeu manuel.
  */
 @EnableKafka
 @Configuration
@@ -40,6 +47,16 @@ public class KafkaConfig {
      * et consommé par les trois listeners.
      */
     public static final String MATCH_FINISHED_TOPIC = "match-finished";
+
+    /**
+     * Nombre de tentatives avant redirection vers la DLQ.
+     */
+    private static final long MAX_ATTEMPTS = 3;
+
+    /**
+     * Délai en millisecondes entre chaque tentative.
+     */
+    private static final long BACK_OFF_INTERVAL = 1000L;
 
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
@@ -65,6 +82,18 @@ public class KafkaConfig {
     @Bean
     public NewTopic matchFinishedTopic() {
         return TopicBuilder.name(MATCH_FINISHED_TOPIC)
+                .partitions(1)
+                .replicas(1)
+                .build();
+    }
+
+    /**
+     * Déclare le topic Dead Letter {@code match-finished.DLT}.
+     * Reçoit les messages qui ont échoué après {@code MAX_ATTEMPTS} tentatives.
+     */
+    @Bean
+    public NewTopic matchFinishedDltTopic() {
+        return TopicBuilder.name(MATCH_FINISHED_TOPIC + ".DLT")
                 .partitions(1)
                 .replicas(1)
                 .build();
@@ -108,19 +137,37 @@ public class KafkaConfig {
         config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JacksonJsonDeserializer.class);
         config.put(JacksonJsonDeserializer.TRUSTED_PACKAGES, "*");
-        config.put(JacksonJsonDeserializer.VALUE_DEFAULT_TYPE, "com.tournament.tournament_manager.domain.event.MatchFinishedEvent");
+        config.put(JacksonJsonDeserializer.VALUE_DEFAULT_TYPE,
+                "com.tournament.tournament_manager.domain.event.MatchFinishedEvent");
         return new DefaultKafkaConsumerFactory<>(config);
     }
 
     /**
+     * Configure le gestionnaire d'erreurs avec redirection vers la DLQ.
+     *
+     * <p>{@code FixedBackOff} : {@code MAX_ATTEMPTS} tentatives espacées de
+     * {@code BACK_OFF_INTERVAL} ms. Après épuisement des tentatives,
+     * {@code DeadLetterPublishingRecoverer} redirige le message vers
+     * {@code match-finished.DLT}.
+     */
+    @Bean
+    public DefaultErrorHandler errorHandler(KafkaTemplate<String, Object> kafkaTemplate) {
+        DeadLetterPublishingRecoverer recoverer = new DeadLetterPublishingRecoverer(kafkaTemplate);
+        return new DefaultErrorHandler(recoverer, new FixedBackOff(BACK_OFF_INTERVAL, MAX_ATTEMPTS));
+    }
+
+    /**
      * Fournit la factory de containers utilisée par les annotations {@code @KafkaListener}.
+     * Intègre le gestionnaire d'erreurs avec DLQ.
      */
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory(
-            ConsumerFactory<String, Object> consumerFactory) {
+            ConsumerFactory<String, Object> consumerFactory,
+            DefaultErrorHandler errorHandler) {
         ConcurrentKafkaListenerContainerFactory<String, Object> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory);
+        factory.setCommonErrorHandler(errorHandler);
         return factory;
     }
 }
