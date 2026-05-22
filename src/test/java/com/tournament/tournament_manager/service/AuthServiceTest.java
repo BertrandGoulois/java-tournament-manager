@@ -25,6 +25,9 @@ class AuthServiceTest {
     @Mock
     private JwtService jwtService;
 
+    @Mock
+    private RefreshTokenService refreshTokenService;
+
     @InjectMocks
     private AuthService authService;
 
@@ -35,12 +38,15 @@ class AuthServiceTest {
                 new UsernamePasswordAuthenticationToken("admin", "password123")
         );
         when(jwtService.generateToken("admin")).thenReturn("jwt-token");
+        when(refreshTokenService.generateRefreshToken("admin")).thenReturn("refresh-token");
 
         AuthResponse response = authService.login(request);
 
         assertEquals("jwt-token", response.token());
+        assertEquals("refresh-token", response.refreshToken());
         verify(authenticationManager, times(1)).authenticate(any());
         verify(jwtService, times(1)).generateToken("admin");
+        verify(refreshTokenService, times(1)).generateRefreshToken("admin");
     }
 
     @Test
