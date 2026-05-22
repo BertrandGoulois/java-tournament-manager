@@ -2,7 +2,7 @@ package com.tournament.tournament_manager.infrastructure.messaging;
 
 import com.tournament.tournament_manager.config.kafka.KafkaConfig;
 import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
-import com.tournament.tournament_manager.domain.port.out.PublishMatchEventPort;
+import com.tournament.tournament_manager.domain.port.out.match.PublishMatchEventPort;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 

@@ -1,10 +1,10 @@
 package com.tournament.tournament_manager.service;
 
 import com.tournament.tournament_manager.domain.model.entities.Tournament;
-import com.tournament.tournament_manager.domain.port.out.ExistsTournamentPort;
-import com.tournament.tournament_manager.domain.port.out.LoadAllTournamentsPort;
-import com.tournament.tournament_manager.domain.port.out.LoadTournamentPort;
-import com.tournament.tournament_manager.domain.port.out.SaveTournamentPort;
+import com.tournament.tournament_manager.domain.port.out.tournament.ExistsTournamentPort;
+import com.tournament.tournament_manager.domain.port.out.tournament.LoadAllTournamentsPort;
+import com.tournament.tournament_manager.domain.port.out.tournament.LoadTournamentPort;
+import com.tournament.tournament_manager.domain.port.out.tournament.SaveTournamentPort;
 import com.tournament.tournament_manager.dto.request.CreateTournamentRequest;
 import com.tournament.tournament_manager.dto.response.TournamentResponse;
 import com.tournament.tournament_manager.exception.InvalidTournamentException;

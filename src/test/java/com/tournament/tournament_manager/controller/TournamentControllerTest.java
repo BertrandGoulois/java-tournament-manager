@@ -6,9 +6,9 @@ import com.tournament.tournament_manager.config.security.JwtAuthenticationFilter
 import com.tournament.tournament_manager.config.security.SecurityConfig;
 import com.tournament.tournament_manager.config.security.UserDetailsServiceImpl;
 import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
-import com.tournament.tournament_manager.domain.port.in.CreateTournamentUseCase;
-import com.tournament.tournament_manager.domain.port.in.GetTournamentUseCase;
-import com.tournament.tournament_manager.domain.port.in.StartTournamentUseCase;
+import com.tournament.tournament_manager.domain.port.in.tournament.CreateTournamentUseCase;
+import com.tournament.tournament_manager.domain.port.in.tournament.GetTournamentUseCase;
+import com.tournament.tournament_manager.domain.port.in.tournament.StartTournamentUseCase;
 import com.tournament.tournament_manager.dto.request.CreateTournamentRequest;
 import com.tournament.tournament_manager.dto.response.TournamentResponse;
 import org.junit.jupiter.api.BeforeEach;

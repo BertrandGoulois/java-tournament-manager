@@ -3,8 +3,8 @@ package com.tournament.tournament_manager.listener;
 import com.tournament.tournament_manager.config.kafka.KafkaConfig;
 import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
 import com.tournament.tournament_manager.domain.model.entities.Match;
-import com.tournament.tournament_manager.domain.port.in.AdvanceBracketUseCase;
-import com.tournament.tournament_manager.domain.port.out.LoadMatchPort;
+import com.tournament.tournament_manager.domain.port.in.tournament.AdvanceBracketUseCase;
+import com.tournament.tournament_manager.domain.port.out.match.LoadMatchPort;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 

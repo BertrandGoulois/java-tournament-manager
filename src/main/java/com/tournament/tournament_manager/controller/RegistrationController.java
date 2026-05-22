@@ -1,7 +1,7 @@
 package com.tournament.tournament_manager.controller;
 
-import com.tournament.tournament_manager.domain.port.in.GetRegistrationsUseCase;
-import com.tournament.tournament_manager.domain.port.in.RegisterPlayerUseCase;
+import com.tournament.tournament_manager.domain.port.in.registration.GetRegistrationsUseCase;
+import com.tournament.tournament_manager.domain.port.in.registration.RegisterPlayerUseCase;
 import com.tournament.tournament_manager.dto.request.CreateRegistrationRequest;
 import com.tournament.tournament_manager.dto.response.RegistrationResponse;
 import jakarta.validation.Valid;

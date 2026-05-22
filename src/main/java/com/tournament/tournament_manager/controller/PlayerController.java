@@ -1,8 +1,8 @@
 package com.tournament.tournament_manager.controller;
 
-import com.tournament.tournament_manager.domain.port.in.CreatePlayerUseCase;
-import com.tournament.tournament_manager.domain.port.in.GetPlayerStatsUseCase;
-import com.tournament.tournament_manager.domain.port.in.GetPlayerUseCase;
+import com.tournament.tournament_manager.domain.port.in.player.CreatePlayerUseCase;
+import com.tournament.tournament_manager.domain.port.in.player.GetPlayerStatsUseCase;
+import com.tournament.tournament_manager.domain.port.in.player.GetPlayerUseCase;
 import com.tournament.tournament_manager.dto.request.CreatePlayerRequest;
 import com.tournament.tournament_manager.dto.response.PlayerResponse;
 import com.tournament.tournament_manager.dto.response.PlayerStatsResponse;
@@ -11,8 +11,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * Point d'entrée HTTP pour la gestion des joueurs.

@@ -1,12 +1,12 @@
 package com.tournament.tournament_manager.service;
 
 import com.tournament.tournament_manager.domain.model.entities.Tournament;
-import com.tournament.tournament_manager.domain.port.in.CreateTournamentUseCase;
-import com.tournament.tournament_manager.domain.port.in.GetTournamentUseCase;
-import com.tournament.tournament_manager.domain.port.out.ExistsTournamentPort;
-import com.tournament.tournament_manager.domain.port.out.LoadAllTournamentsPort;
-import com.tournament.tournament_manager.domain.port.out.LoadTournamentPort;
-import com.tournament.tournament_manager.domain.port.out.SaveTournamentPort;
+import com.tournament.tournament_manager.domain.port.in.tournament.CreateTournamentUseCase;
+import com.tournament.tournament_manager.domain.port.in.tournament.GetTournamentUseCase;
+import com.tournament.tournament_manager.domain.port.out.tournament.ExistsTournamentPort;
+import com.tournament.tournament_manager.domain.port.out.tournament.LoadAllTournamentsPort;
+import com.tournament.tournament_manager.domain.port.out.tournament.LoadTournamentPort;
+import com.tournament.tournament_manager.domain.port.out.tournament.SaveTournamentPort;
 import com.tournament.tournament_manager.dto.request.CreateTournamentRequest;
 import com.tournament.tournament_manager.dto.response.TournamentResponse;
 import com.tournament.tournament_manager.exception.InvalidTournamentException;
@@ -15,9 +15,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Implémentation des cas d'utilisation liés aux tournois.

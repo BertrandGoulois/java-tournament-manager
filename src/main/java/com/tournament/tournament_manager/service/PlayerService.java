@@ -1,10 +1,10 @@
 package com.tournament.tournament_manager.service;
 
 import com.tournament.tournament_manager.domain.model.entities.Player;
-import com.tournament.tournament_manager.domain.port.in.CreatePlayerUseCase;
-import com.tournament.tournament_manager.domain.port.in.GetPlayerStatsUseCase;
-import com.tournament.tournament_manager.domain.port.in.GetPlayerUseCase;
-import com.tournament.tournament_manager.domain.port.out.*;
+import com.tournament.tournament_manager.domain.port.in.player.CreatePlayerUseCase;
+import com.tournament.tournament_manager.domain.port.in.player.GetPlayerStatsUseCase;
+import com.tournament.tournament_manager.domain.port.in.player.GetPlayerUseCase;
+import com.tournament.tournament_manager.domain.port.out.player.*;
 import com.tournament.tournament_manager.dto.request.CreatePlayerRequest;
 import com.tournament.tournament_manager.dto.response.EloHistoryResponse;
 import com.tournament.tournament_manager.dto.response.PlayerResponse;

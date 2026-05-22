@@ -1,7 +1,7 @@
 package com.tournament.tournament_manager.controller;
 
-import com.tournament.tournament_manager.domain.port.in.GetMatchUseCase;
-import com.tournament.tournament_manager.domain.port.in.RecordMatchResultUseCase;
+import com.tournament.tournament_manager.domain.port.in.match.GetMatchUseCase;
+import com.tournament.tournament_manager.domain.port.in.match.RecordMatchResultUseCase;
 import com.tournament.tournament_manager.dto.request.RecordMatchResultRequest;
 import com.tournament.tournament_manager.dto.response.MatchResponse;
 import jakarta.validation.Valid;

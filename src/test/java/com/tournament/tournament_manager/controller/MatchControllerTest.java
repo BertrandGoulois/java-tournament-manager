@@ -6,8 +6,8 @@ import com.tournament.tournament_manager.config.security.JwtAuthenticationFilter
 import com.tournament.tournament_manager.config.security.SecurityConfig;
 import com.tournament.tournament_manager.config.security.UserDetailsServiceImpl;
 import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
-import com.tournament.tournament_manager.domain.port.in.GetMatchUseCase;
-import com.tournament.tournament_manager.domain.port.in.RecordMatchResultUseCase;
+import com.tournament.tournament_manager.domain.port.in.match.GetMatchUseCase;
+import com.tournament.tournament_manager.domain.port.in.match.RecordMatchResultUseCase;
 import com.tournament.tournament_manager.dto.request.RecordMatchResultRequest;
 import com.tournament.tournament_manager.dto.response.MatchResponse;
 import com.tournament.tournament_manager.exception.MatchNotFoundException;

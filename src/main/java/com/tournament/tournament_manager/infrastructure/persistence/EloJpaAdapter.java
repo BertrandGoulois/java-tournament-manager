@@ -2,9 +2,9 @@ package com.tournament.tournament_manager.infrastructure.persistence;
 
 import com.tournament.tournament_manager.domain.model.entities.EloHistory;
 import com.tournament.tournament_manager.domain.model.entities.Player;
-import com.tournament.tournament_manager.domain.port.out.ExistsEloHistoryPort;
-import com.tournament.tournament_manager.domain.port.out.SaveAllPlayersPort;
-import com.tournament.tournament_manager.domain.port.out.SaveEloHistoryPort;
+import com.tournament.tournament_manager.domain.port.out.elo.ExistsEloHistoryPort;
+import com.tournament.tournament_manager.domain.port.out.elo.SaveAllPlayersPort;
+import com.tournament.tournament_manager.domain.port.out.elo.SaveEloHistoryPort;
 import com.tournament.tournament_manager.repository.EloHistoryRepository;
 import com.tournament.tournament_manager.repository.PlayerRepository;
 import org.springframework.stereotype.Component;

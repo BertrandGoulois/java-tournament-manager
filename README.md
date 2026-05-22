@@ -50,6 +50,8 @@ Les side effects métier (mise à jour ELO, avancement du bracket, notifications
 - `bracket-group` → avance le bracket au tour suivant
 - `websocket-group` → broadcast une notification temps réel à tous les clients connectés via WebSocket
 
+En cas d'échec répété d'un listener (3 tentatives espacées d'1 seconde), le message est redirigé vers le topic `match-finished.DLT` (Dead Letter Topic) pour inspection et rejeu manuel.
+
 > Cette approche remplace une première implémentation basée sur les Spring Events synchrones, afin de se rapprocher d'une architecture orientée événements distribuée.
 
 **Test WebSocket** : une page de démonstration est disponible sur `http://localhost:8080/ws-test.html`. Elle permet de visualiser en temps réel les événements de fin de match sans authentification.
@@ -130,7 +132,8 @@ Page de démonstration disponible sur : `http://localhost:8080/ws-test.html`
 
 ```json
 {
-  "token": "<JWT token>"
+  "token": "<JWT access token>",
+  "refreshToken": "<refresh token>"
 }
 ```
 
@@ -139,6 +142,39 @@ Page de démonstration disponible sur : `http://localhost:8080/ws-test.html`
 ```
 Authorization: Bearer <JWT token>
 ```
+
+#### Refresh token
+
+- **POST** `/api/auth/refresh`
+- **Body JSON** :
+
+```json
+{
+  "refreshToken": "<refresh token>"
+}
+```
+
+- **Response JSON** :
+
+```json
+{
+  "token": "<nouveau JWT access token>",
+  "refreshToken": "<refresh token>"
+}
+```
+
+#### Logout
+
+- **POST** `/api/auth/logout`
+- **Body JSON** :
+
+```json
+{
+  "refreshToken": "<refresh token>"
+}
+```
+
+> Révoque le refresh token. Les appels ultérieurs avec ce token retourneront une erreur `400`.
 
 ---
 
@@ -173,7 +209,8 @@ Authorization: Bearer <JWT token>
 
 #### Get all players
 
-- **GET** `/api/players`
+- **GET** `/api/players?page=0&size=10&sort=username,asc`
+- **Response JSON** : objet `Page` Spring avec `content`, `totalElements`, `totalPages`, `number`
 
 #### Get player by ID
 
@@ -228,7 +265,8 @@ Authorization: Bearer <JWT token>
 
 #### Get all tournaments
 
-- **GET** `/api/tournaments`
+- **GET** `/api/tournaments?page=0&size=10&sort=name,asc`
+- **Response JSON** : objet `Page` Spring avec `content`, `totalElements`, `totalPages`, `number`
 
 #### Get tournament by ID
 
@@ -297,11 +335,14 @@ Authorization: Bearer <JWT token>
 - Architecture hexagonale (ports & adapters) - domaine métier isolé de l'infra
 - Génération de bracket en élimination directe avec support des byes
 - Calcul ELO après chaque match (K=32, formule standard)
+- Idempotence du calcul ELO - protection contre les doublons Kafka
 - Avancement automatique au tour suivant via événements Kafka
+- Dead Letter Queue Kafka pour les messages en échec (`match-finished.DLT`)
 - Notifications temps réel via WebSocket à chaque fin de match
 - Cache Redis sur les statistiques joueur (`GET /players/{id}/stats`)
 - Statistiques joueur (win rate, historique ELO)
-- Authentification JWT avec rôles ADMIN / PLAYER
+- Authentification JWT avec refresh token et révocation (logout)
+- Pagination sur les listes de joueurs et tournois
 - Migrations versionnées avec Liquibase
 - Couverture de tests élevée : tests unitaires (JUnit 5 / Mockito), tests controller (MockMvc) et tests d'intégration (Testcontainers + Kafka embarqué)
 
@@ -310,3 +351,4 @@ Authorization: Bearer <JWT token>
 ## Évolutions possibles
 
 - Format round-robin / phase de groupes
+- Tests de charge (Gatling)

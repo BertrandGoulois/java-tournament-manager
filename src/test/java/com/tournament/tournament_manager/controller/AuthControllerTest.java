@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tournament.tournament_manager.config.security.JwtAuthenticationFilter;
 import com.tournament.tournament_manager.config.security.SecurityConfig;
 import com.tournament.tournament_manager.config.security.UserDetailsServiceImpl;
+import com.tournament.tournament_manager.domain.port.in.auth.RefreshTokenUseCase;
 import com.tournament.tournament_manager.dto.request.LoginRequest;
 import com.tournament.tournament_manager.dto.response.AuthResponse;
 import com.tournament.tournament_manager.service.AuthService;
@@ -43,6 +44,9 @@ class AuthControllerTest {
     @MockitoBean
     private org.springframework.cache.CacheManager cacheManager;
 
+    @MockitoBean
+    private RefreshTokenUseCase refreshTokenUseCase;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
@@ -56,7 +60,7 @@ class AuthControllerTest {
 
     @Test
     void login_shouldReturn200() throws Exception {
-        when(authService.login(any())).thenReturn(new AuthResponse("jwt-token"));
+        when(authService.login(any())).thenReturn(new AuthResponse("jwt-token", "refresh-token"));
 
         mockMvc.perform(post("/api/auth/login")
                         .with(csrf())
@@ -73,5 +77,26 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new LoginRequest("", ""))))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void refresh_shouldReturn200() throws Exception {
+        when(refreshTokenUseCase.refresh(any())).thenReturn(new AuthResponse("new-jwt-token", "refresh-token"));
+
+        mockMvc.perform(post("/api/auth/refresh")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new com.tournament.tournament_manager.dto.request.RefreshTokenRequest("refresh-token"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").value("new-jwt-token"));
+    }
+
+    @Test
+    void logout_shouldReturn200() throws Exception {
+        mockMvc.perform(post("/api/auth/logout")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new com.tournament.tournament_manager.dto.request.RefreshTokenRequest("refresh-token"))))
+                .andExpect(status().isOk());
     }
 }

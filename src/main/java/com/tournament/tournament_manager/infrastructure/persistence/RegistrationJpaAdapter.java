@@ -1,10 +1,10 @@
 package com.tournament.tournament_manager.infrastructure.persistence;
 
 import com.tournament.tournament_manager.domain.model.entities.Registration;
-import com.tournament.tournament_manager.domain.port.out.CountRegistrationPort;
-import com.tournament.tournament_manager.domain.port.out.ExistsRegistrationPort;
-import com.tournament.tournament_manager.domain.port.out.LoadRegistrationPort;
-import com.tournament.tournament_manager.domain.port.out.SaveRegistrationPort;
+import com.tournament.tournament_manager.domain.port.out.registration.CountRegistrationPort;
+import com.tournament.tournament_manager.domain.port.out.registration.ExistsRegistrationPort;
+import com.tournament.tournament_manager.domain.port.out.registration.LoadRegistrationPort;
+import com.tournament.tournament_manager.domain.port.out.registration.SaveRegistrationPort;
 import com.tournament.tournament_manager.repository.RegistrationRepository;
 import org.springframework.stereotype.Component;
 

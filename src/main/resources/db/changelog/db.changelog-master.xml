@@ -8,4 +8,5 @@
     <include file="classpath:db/changelog/changes/001-create-tables.sql"/>
     <include file="classpath:db/changelog/changes/002-create-users.sql"/>
     <include file="classpath:db/changelog/changes/003-insert-admin-user.sql"/>
+    <include file="classpath:db/changelog/changes/004-create-refresh-tokens.sql"/>
 </databaseChangeLog>

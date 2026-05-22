@@ -19,10 +19,12 @@ public class AuthService {
 
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
 
-    public AuthService(AuthenticationManager authenticationManager, JwtService jwtService) {
+    public AuthService(AuthenticationManager authenticationManager, JwtService jwtService, RefreshTokenService refreshTokenService) {
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
+        this.refreshTokenService = refreshTokenService;
     }
 
     /**
@@ -41,7 +43,8 @@ public class AuthService {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.username(), request.password())
         );
-        String token = jwtService.generateToken(request.username());
-        return new AuthResponse(token);
+        String accessToken  = jwtService.generateToken(request.username());
+        String refreshToken = refreshTokenService.generateRefreshToken(request.username());
+        return new AuthResponse(accessToken, refreshToken);
     }
 }

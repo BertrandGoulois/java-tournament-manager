@@ -1,9 +1,9 @@
 package com.tournament.tournament_manager.infrastructure.persistence;
 
 import com.tournament.tournament_manager.domain.model.entities.Match;
-import com.tournament.tournament_manager.domain.port.out.LoadMatchByTournamentPort;
-import com.tournament.tournament_manager.domain.port.out.LoadMatchPort;
-import com.tournament.tournament_manager.domain.port.out.SaveMatchPort;
+import com.tournament.tournament_manager.domain.port.out.match.LoadMatchByTournamentPort;
+import com.tournament.tournament_manager.domain.port.out.match.LoadMatchPort;
+import com.tournament.tournament_manager.domain.port.out.match.SaveMatchPort;
 import com.tournament.tournament_manager.exception.MatchNotFoundException;
 import com.tournament.tournament_manager.repository.MatchRepository;
 import org.springframework.stereotype.Component;

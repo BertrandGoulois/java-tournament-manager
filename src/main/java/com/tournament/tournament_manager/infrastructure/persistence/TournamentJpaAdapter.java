@@ -1,17 +1,15 @@
 package com.tournament.tournament_manager.infrastructure.persistence;
 
 import com.tournament.tournament_manager.domain.model.entities.Tournament;
-import com.tournament.tournament_manager.domain.port.out.ExistsTournamentPort;
-import com.tournament.tournament_manager.domain.port.out.LoadAllTournamentsPort;
-import com.tournament.tournament_manager.domain.port.out.LoadTournamentPort;
-import com.tournament.tournament_manager.domain.port.out.SaveTournamentPort;
+import com.tournament.tournament_manager.domain.port.out.tournament.ExistsTournamentPort;
+import com.tournament.tournament_manager.domain.port.out.tournament.LoadAllTournamentsPort;
+import com.tournament.tournament_manager.domain.port.out.tournament.LoadTournamentPort;
+import com.tournament.tournament_manager.domain.port.out.tournament.SaveTournamentPort;
 import com.tournament.tournament_manager.exception.TournamentNotFoundException;
 import com.tournament.tournament_manager.repository.TournamentRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 /**
  * Adapter JPA implémentant les ports de chargement et sauvegarde des tournois.

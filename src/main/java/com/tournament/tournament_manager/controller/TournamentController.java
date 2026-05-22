@@ -1,8 +1,8 @@
 package com.tournament.tournament_manager.controller;
 
-import com.tournament.tournament_manager.domain.port.in.CreateTournamentUseCase;
-import com.tournament.tournament_manager.domain.port.in.GetTournamentUseCase;
-import com.tournament.tournament_manager.domain.port.in.StartTournamentUseCase;
+import com.tournament.tournament_manager.domain.port.in.tournament.CreateTournamentUseCase;
+import com.tournament.tournament_manager.domain.port.in.tournament.GetTournamentUseCase;
+import com.tournament.tournament_manager.domain.port.in.tournament.StartTournamentUseCase;
 import com.tournament.tournament_manager.dto.request.CreateTournamentRequest;
 import com.tournament.tournament_manager.dto.response.TournamentResponse;
 import jakarta.validation.Valid;
@@ -10,8 +10,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * Point d'entrée HTTP pour la gestion des tournois.
