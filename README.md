@@ -22,6 +22,7 @@ API REST de gestion de tournois sportifs en élimination directe, développée e
 - **WebSocket** / **STOMP** (notifications temps réel)
 - **JUnit 5** + **Mockito** (tests unitaires)
 - **Testcontainers** (tests d'intégration)
+- **Gatling** (tests de charge)
 - **Springdoc / Swagger UI** (documentation API)
 - **Lombok**
 
@@ -96,11 +97,26 @@ docker-compose up -d
 **Tests unitaires :**
 
 ```bash
+./mvnw test
+```
+
+**Tests d'intégration (nécessitent Docker) :**
+
+```bash
 ./mvnw verify
 ```
 
-> Tests unitaires uniquement (sans Docker) : `./mvnw test`
-> Les tests d'intégration (Testcontainers, Kafka embarqué) nécessitent Docker.
+**Tests de charge (Gatling) :**
+
+Prérequis : l'appli doit tourner sur `localhost:8080`.
+
+```bash
+./mvnw gatling:test
+```
+
+Le rapport HTML est généré dans `target/gatling/<run-id>/index.html`.
+
+> Le scénario simule un flux complet : login, création d'un tournoi, inscription de 8 joueurs, démarrage, consultation du bracket et des stats. La charge monte progressivement de 1 à 50 utilisateurs simultanés.
 
 **Documentation API :**
 
@@ -386,6 +402,7 @@ Authorization: Bearer <JWT token>
 - Authentification JWT avec refresh token et révocation (logout)
 - Pagination sur les listes de joueurs et tournois
 - Migrations versionnées avec Liquibase
+- Tests de charge Gatling - scénario complet end-to-end (login, tournoi, bracket, stats)
 - Couverture de tests élevée : tests unitaires (JUnit 5 / Mockito), tests controller (MockMvc) et tests d'intégration (Testcontainers + Kafka embarqué)
 
 ---
@@ -393,4 +410,3 @@ Authorization: Bearer <JWT token>
 ## Évolutions possibles
 
 - Format round-robin / phase de groupes
-- Tests de charge (Gatling)

@@ -109,6 +109,20 @@
 			<artifactId>spring-boot-starter-websocket</artifactId>
 		</dependency>
 
+		<!-- Gatling -->
+		<dependency>
+			<groupId>io.gatling.highcharts</groupId>
+			<artifactId>gatling-charts-highcharts</artifactId>
+			<version>3.13.1</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>io.gatling</groupId>
+			<artifactId>gatling-app</artifactId>
+			<version>3.13.1</version>
+			<scope>test</scope>
+		</dependency>
+
 		<!-- Tests -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -261,7 +275,20 @@
 				<configuration>
 					<excludes>
 						<exclude>**/KafkaIntegrationTest.java</exclude>
+						<exclude>**/PlayerIntegrationTest.java</exclude>
 					</excludes>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>io.gatling</groupId>
+				<artifactId>gatling-maven-plugin</artifactId>
+				<version>4.9.2</version>
+				<configuration>
+					<simulationClass>simulations.TournamentSimulation</simulationClass>
+					<jvmArgs>
+						<jvmArg>--add-opens=java.base/java.lang=ALL-UNNAMED</jvmArg>
+						<jvmArg>--add-opens=java.base/java.util=ALL-UNNAMED</jvmArg>
+					</jvmArgs>
 				</configuration>
 			</plugin>
 		</plugins>
