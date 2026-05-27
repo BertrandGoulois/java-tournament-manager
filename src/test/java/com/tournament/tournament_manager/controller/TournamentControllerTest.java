@@ -7,9 +7,11 @@ import com.tournament.tournament_manager.config.security.SecurityConfig;
 import com.tournament.tournament_manager.config.security.UserDetailsServiceImpl;
 import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
 import com.tournament.tournament_manager.domain.port.in.tournament.CreateTournamentUseCase;
+import com.tournament.tournament_manager.domain.port.in.tournament.GetBracketUseCase;
 import com.tournament.tournament_manager.domain.port.in.tournament.GetTournamentUseCase;
 import com.tournament.tournament_manager.domain.port.in.tournament.StartTournamentUseCase;
 import com.tournament.tournament_manager.dto.request.CreateTournamentRequest;
+import com.tournament.tournament_manager.dto.response.BracketResponse;
 import com.tournament.tournament_manager.dto.response.TournamentResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -48,6 +50,8 @@ class TournamentControllerTest {
     private GetTournamentUseCase getTournamentUseCase;
     @MockitoBean
     private StartTournamentUseCase startTournamentUseCase;
+    @MockitoBean
+    private GetBracketUseCase getBracketUseCase;
     @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
     @MockitoBean
@@ -118,5 +122,16 @@ class TournamentControllerTest {
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf()))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void getBracket_shouldReturn200() throws Exception {
+        BracketResponse bracket = new BracketResponse(1L, "Spring Championship", TournamentStatus.OPEN, List.of());
+        when(getBracketUseCase.getBracket(1L)).thenReturn(bracket);
+
+        mockMvc.perform(get("/api/tournaments/1/bracket").with(user("admin").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tournamentId").value(1))
+                .andExpect(jsonPath("$.tournamentName").value("Spring Championship"));
     }
 }

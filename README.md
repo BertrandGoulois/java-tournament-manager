@@ -278,6 +278,47 @@ Authorization: Bearer <JWT token>
 
 > Génère automatiquement le bracket en élimination directe. Les joueurs sans adversaire (byes) sont qualifiés automatiquement.
 
+#### Get tournament bracket
+
+- **GET** `/api/tournaments/{id}/bracket`
+- **Response JSON** :
+
+```json
+{
+  "tournamentId": 1,
+  "tournamentName": "Spring Championship",
+  "status": "IN_PROGRESS",
+  "rounds": [
+    {
+      "round": 8,
+      "matches": [
+        {
+          "id": 1,
+          "player1Id": 1,
+          "player2Id": 2,
+          "winnerId": 1,
+          "status": "FINISHED"
+        }
+      ]
+    },
+    {
+      "round": 4,
+      "matches": [
+        {
+          "id": 5,
+          "player1Id": 1,
+          "player2Id": null,
+          "winnerId": null,
+          "status": "PENDING"
+        }
+      ]
+    }
+  ]
+}
+```
+
+> Les rounds sont triés du premier (valeur la plus haute) à la finale (round 2).
+
 ---
 
 ### Registrations
@@ -334,6 +375,7 @@ Authorization: Bearer <JWT token>
 
 - Architecture hexagonale (ports & adapters) - domaine métier isolé de l'infra
 - Génération de bracket en élimination directe avec support des byes
+- Consultation du bracket complet par round (`GET /tournaments/{id}/bracket`)
 - Calcul ELO après chaque match (K=32, formule standard)
 - Idempotence du calcul ELO - protection contre les doublons Kafka
 - Avancement automatique au tour suivant via événements Kafka

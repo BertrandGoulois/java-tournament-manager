@@ -3,6 +3,7 @@ package com.tournament.tournament_manager.infrastructure.persistence;
 import com.tournament.tournament_manager.domain.model.entities.Match;
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchByTournamentPort;
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchPort;
+import com.tournament.tournament_manager.domain.port.out.match.LoadMatchesByTournamentPort;
 import com.tournament.tournament_manager.domain.port.out.match.SaveMatchPort;
 import com.tournament.tournament_manager.exception.MatchNotFoundException;
 import com.tournament.tournament_manager.repository.MatchRepository;
@@ -15,7 +16,7 @@ import java.util.List;
  * Fait le lien entre le domaine et la couche de persistance Spring Data.
  */
 @Component
-public class MatchJpaAdapter implements LoadMatchPort, SaveMatchPort, LoadMatchByTournamentPort {
+public class MatchJpaAdapter implements LoadMatchPort, SaveMatchPort, LoadMatchByTournamentPort, LoadMatchesByTournamentPort {
 
     private final MatchRepository matchRepository;
 
@@ -37,5 +38,10 @@ public class MatchJpaAdapter implements LoadMatchPort, SaveMatchPort, LoadMatchB
     @Override
     public List<Match> loadByTournamentIdAndRound(Long tournamentId, int round) {
         return matchRepository.findByTournamentIdAndRound(tournamentId, round);
+    }
+
+    @Override
+    public List<Match> loadByTournamentId(Long tournamentId) {
+        return matchRepository.findByTournamentId(tournamentId);
     }
 }
