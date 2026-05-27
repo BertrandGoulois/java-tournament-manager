@@ -19,6 +19,7 @@ target/
 *.iml
 *.ipr
 application-local.properties
+application-gatling.properties
 
 ### NetBeans ###
 /nbproject/private/
