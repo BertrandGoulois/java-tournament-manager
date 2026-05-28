@@ -52,7 +52,8 @@ public class SecurityConfig {
                                 "/v3/api-docs",
                                 "/webjars/**",
                                 "/ws/**",
-                                "/ws-test.html"
+                                "/ws-test.html",
+                                "/error"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

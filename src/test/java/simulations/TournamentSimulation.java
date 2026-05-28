@@ -24,14 +24,15 @@ public class TournamentSimulation extends Simulation {
                             {"username":"admin","password":"password123"}
                             """))
                     .check(jsonPath("$.token").saveAs("jwt")))
+            .exitHereIfFailed()
             .pause(1)
             // Créer un tournoi
             .exec(http("Create Tournament")
                     .post("/api/tournaments")
                     .header("Authorization", session -> "Bearer " + session.getString("jwt"))
                     .body(StringBody(session -> """
-                            {"name":"Tournament_%d","maxPlayers":8}
-                            """.formatted(session.userId())))
+                            {"name":"T_%s","maxPlayers":8}
+                            """.formatted(java.util.UUID.randomUUID().toString().substring(0, 8))))
                     .check(jsonPath("$.id").saveAs("tournamentId")))
             .pause(1)
             // Créer 8 joueurs
@@ -74,11 +75,13 @@ public class TournamentSimulation extends Simulation {
                 scenario.injectOpen(
                         atOnceUsers(1),
                         nothingFor(Duration.ofSeconds(10)),
-                        rampUsers(10).during(Duration.ofSeconds(20)),
+                        rampUsers(50).during(Duration.ofSeconds(20)),
                         nothingFor(Duration.ofSeconds(10)),
-                        rampUsers(30).during(Duration.ofSeconds(30)),
+                        rampUsers(100).during(Duration.ofSeconds(30)),
                         nothingFor(Duration.ofSeconds(10)),
-                        rampUsers(50).during(Duration.ofSeconds(30))
+                        rampUsers(200).during(Duration.ofSeconds(30)),
+                        nothingFor(Duration.ofSeconds(10)),
+                        rampUsers(500).during(Duration.ofSeconds(30))
                 )
         ).protocols(httpProtocol)
                 .assertions(
@@ -91,9 +94,12 @@ public class TournamentSimulation extends Simulation {
         return exec(http("Create Player " + index)
                 .post("/api/players")
                 .header("Authorization", session -> "Bearer " + session.getString("jwt"))
-                .body(StringBody(session -> """
-                        {"username":"player_%d_%d","email":"player_%d_%d@mail.com"}
-                        """.formatted(session.userId(), index, session.userId(), index)))
+                .body(StringBody(session -> {
+                    String uid = java.util.UUID.randomUUID().toString().substring(0, 8);
+                    return """
+                            {"username":"p_%s_%d","email":"p_%s_%d@mail.com"}
+                            """.formatted(uid, index, uid, index);
+                }))
                 .check(jsonPath("$.id").saveAs("playerId" + index)));
     }
 
