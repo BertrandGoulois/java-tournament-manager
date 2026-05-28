@@ -40,7 +40,7 @@ public class EloListener {
      * @param event l'événement contenant l'identifiant du match terminé
      * @throws MatchNotFoundException si le match n'existe pas
      */
-    @KafkaListener(topics = KafkaConfig.MATCH_FINISHED_TOPIC, groupId = "elo-group")
+    @KafkaListener(topics = KafkaConfig.MATCH_FINISHED_TOPIC, groupId = KafkaConfig.ELO_GROUP)
     public void onMatchFinished(MatchFinishedEvent event) {
         Match match = loadMatchPort.loadMatch(event.matchId());
         if (match.getPlayer2() == null) return;

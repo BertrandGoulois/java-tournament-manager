@@ -1,5 +1,6 @@
 package com.tournament.tournament_manager.listener;
 
+import com.tournament.tournament_manager.config.kafka.KafkaConfig;
 import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -28,7 +29,7 @@ public class WebSocketListener {
      *
      * @param event l'événement contenant l'identifiant du match terminé
      */
-    @KafkaListener(topics = MATCH_FINISHED_TOPIC, groupId = "websocket-group")
+    @KafkaListener(topics = MATCH_FINISHED_TOPIC, groupId = KafkaConfig.WEBSOCKET_GROUP)
     public void onMatchFinished(MatchFinishedEvent event) {
         messagingTemplate.convertAndSend("/topic/matches", event);
     }

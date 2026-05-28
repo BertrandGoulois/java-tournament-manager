@@ -42,11 +42,12 @@ import java.util.Map;
 @Configuration
 public class KafkaConfig {
 
-    /**
-     * Nom du topic Kafka publié par {@code MatchService}
-     * et consommé par les trois listeners.
-     */
     public static final String MATCH_FINISHED_TOPIC = "match-finished";
+    public static final String MATCH_FINISHED_DLT = "match-finished.DLT";
+    public static final String ELO_GROUP = "elo-group";
+    public static final String BRACKET_GROUP = "bracket-group";
+    public static final String WEBSOCKET_GROUP = "websocket-group";
+    public static final String DLT_GROUP = "dlt-group";
 
     /**
      * Nombre de tentatives avant redirection vers la DLQ.

@@ -33,7 +33,7 @@ public class BracketListener {
      *
      * @param event l'événement contenant l'identifiant du match terminé
      */
-    @KafkaListener(topics = KafkaConfig.MATCH_FINISHED_TOPIC, groupId = "bracket-group")
+    @KafkaListener(topics = KafkaConfig.MATCH_FINISHED_TOPIC, groupId = KafkaConfig.BRACKET_GROUP)
     public void onMatchFinished(MatchFinishedEvent event) {
         Match match = loadMatchPort.loadMatch(event.matchId());
         advanceBracketUseCase.advanceToNextRound(match.getTournament(), match.getRound());
