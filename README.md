@@ -51,7 +51,7 @@ Les side effects métier (mise à jour ELO, avancement du bracket, notifications
 - `bracket-group` → avance le bracket au tour suivant
 - `websocket-group` → broadcast une notification temps réel à tous les clients connectés via WebSocket
 
-En cas d'échec répété d'un listener (3 tentatives espacées d'1 seconde), le message est redirigé vers le topic `match-finished.DLT` (Dead Letter Topic) pour inspection et rejeu manuel.
+En cas d'échec répété d'un listener (3 tentatives espacées d'1 seconde), le message est redirigé vers le topic `match-finished.DLT` (Dead Letter Topic) pour inspection et rejeu manuel via Kafka UI.
 
 > Cette approche remplace une première implémentation basée sur les Spring Events synchrones, afin de se rapprocher d'une architecture orientée événements distribuée.
 
@@ -78,7 +78,7 @@ spring.datasource.password=tonmotdepasse
 
 > Les tables et le user admin sont créés automatiquement par Liquibase au démarrage. Aucun script SQL manuel requis.
 
-3. Démarrer les services (Kafka, Zookeeper, Redis) :
+3. Démarrer les services (Kafka, Zookeeper, Redis, Kafka UI) :
 
 ```bash
 docker-compose up -d
@@ -116,7 +116,7 @@ Prérequis : l'appli doit tourner sur `localhost:8080`.
 
 Le rapport HTML est généré dans `target/gatling/<run-id>/index.html`.
 
-> Le scénario simule un flux complet : login, création d'un tournoi, inscription de 8 joueurs, démarrage, consultation du bracket et des stats. La charge monte progressivement de 1 à 50 utilisateurs simultanés.
+> Le scénario simule un flux complet : login, création d'un tournoi, inscription de 8 joueurs, démarrage, consultation du bracket et des stats. La charge monte progressivement de 1 à 500 utilisateurs simultanés.
 
 **Documentation API :**
 
@@ -125,6 +125,12 @@ Swagger UI disponible sur : `http://localhost:8080/swagger-ui/index.html`
 **Test WebSocket :**
 
 Page de démonstration disponible sur : `http://localhost:8080/ws-test.html`
+
+**Kafka UI :**
+
+Interface de monitoring Kafka disponible sur : `http://localhost:8090`
+
+Permet de visualiser les topics, les messages en échec dans `match-finished.DLT` et de les rejouer manuellement.
 
 ---
 
@@ -396,6 +402,7 @@ Authorization: Bearer <JWT token>
 - Idempotence du calcul ELO - protection contre les doublons Kafka
 - Avancement automatique au tour suivant via événements Kafka
 - Dead Letter Queue Kafka pour les messages en échec (`match-finished.DLT`)
+- Kafka UI pour l'inspection et le rejeu des messages en échec
 - Notifications temps réel via WebSocket à chaque fin de match
 - Cache Redis sur les statistiques joueur (`GET /players/{id}/stats`)
 - Statistiques joueur (win rate, historique ELO)
