@@ -2,6 +2,7 @@ package com.tournament.tournament_manager.service;
 
 import com.tournament.tournament_manager.domain.model.entities.Player;
 import com.tournament.tournament_manager.domain.port.in.player.CreatePlayerUseCase;
+import com.tournament.tournament_manager.domain.port.in.player.DeletePlayerUseCase;
 import com.tournament.tournament_manager.domain.port.in.player.GetPlayerStatsUseCase;
 import com.tournament.tournament_manager.domain.port.in.player.GetPlayerUseCase;
 import com.tournament.tournament_manager.domain.port.out.player.*;
@@ -10,12 +11,14 @@ import com.tournament.tournament_manager.dto.response.EloHistoryResponse;
 import com.tournament.tournament_manager.dto.response.PlayerResponse;
 import com.tournament.tournament_manager.dto.response.PlayerStatsResponse;
 import com.tournament.tournament_manager.exception.PlayerAlreadyExistsException;
+import com.tournament.tournament_manager.exception.PlayerNotFoundException;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,7 +30,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @Transactional(readOnly = true)
-public class PlayerService implements CreatePlayerUseCase, GetPlayerUseCase, GetPlayerStatsUseCase {
+public class PlayerService implements CreatePlayerUseCase, GetPlayerUseCase, GetPlayerStatsUseCase, DeletePlayerUseCase {
 
     private final LoadPlayerPort loadPlayerPort;
     private final SavePlayerPort savePlayerPort;
@@ -35,19 +38,22 @@ public class PlayerService implements CreatePlayerUseCase, GetPlayerUseCase, Get
     private final LoadAllPlayersPort loadAllPlayersPort;
     private final CountMatchesByPlayerPort countMatchesByPlayerPort;
     private final LoadEloHistoryPort loadEloHistoryPort;
+    private final SoftDeletePlayerPort softDeletePlayerPort;
 
     public PlayerService(LoadPlayerPort loadPlayerPort,
                          SavePlayerPort savePlayerPort,
                          ExistsPlayerPort existsPlayerPort,
                          LoadAllPlayersPort loadAllPlayersPort,
                          CountMatchesByPlayerPort countMatchesByPlayerPort,
-                         LoadEloHistoryPort loadEloHistoryPort) {
+                         LoadEloHistoryPort loadEloHistoryPort,
+                         SoftDeletePlayerPort softDeletePlayerPort) {
         this.loadPlayerPort = loadPlayerPort;
         this.savePlayerPort = savePlayerPort;
         this.existsPlayerPort = existsPlayerPort;
         this.loadAllPlayersPort = loadAllPlayersPort;
         this.countMatchesByPlayerPort = countMatchesByPlayerPort;
         this.loadEloHistoryPort = loadEloHistoryPort;
+        this.softDeletePlayerPort = softDeletePlayerPort;
     }
 
     /**
@@ -151,5 +157,20 @@ public class PlayerService implements CreatePlayerUseCase, GetPlayerUseCase, Get
                 player.getEloRating().value(),
                 player.getCreatedAt()
         );
+    }
+
+    /**
+     * Désactive un joueur sans le supprimer physiquement de la base.
+     *
+     * @param id identifiant du joueur
+     * @throws PlayerNotFoundException si le joueur n'existe pas
+     */
+    @Override
+    @Transactional
+    public void deletePlayer(Long id) {
+        Player player = loadPlayerPort.loadPlayer(id);
+        player.setDeleted(true);
+        player.setDeletedAt(LocalDateTime.now());
+        softDeletePlayerPort.softDeletePlayer(player);
     }
 }

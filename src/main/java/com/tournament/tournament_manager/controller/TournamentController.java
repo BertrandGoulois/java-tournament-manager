@@ -1,9 +1,6 @@
 package com.tournament.tournament_manager.controller;
 
-import com.tournament.tournament_manager.domain.port.in.tournament.CreateTournamentUseCase;
-import com.tournament.tournament_manager.domain.port.in.tournament.GetBracketUseCase;
-import com.tournament.tournament_manager.domain.port.in.tournament.GetTournamentUseCase;
-import com.tournament.tournament_manager.domain.port.in.tournament.StartTournamentUseCase;
+import com.tournament.tournament_manager.domain.port.in.tournament.*;
 import com.tournament.tournament_manager.dto.request.CreateTournamentRequest;
 import com.tournament.tournament_manager.dto.response.BracketResponse;
 import com.tournament.tournament_manager.dto.response.TournamentResponse;
@@ -26,15 +23,18 @@ public class TournamentController {
     private final GetTournamentUseCase getTournamentUseCase;
     private final StartTournamentUseCase startTournamentUseCase;
     private final GetBracketUseCase getBracketUseCase;
+    private final DeleteTournamentUseCase deleteTournamentUseCase;
 
     public TournamentController(CreateTournamentUseCase createTournamentUseCase,
                                 GetTournamentUseCase getTournamentUseCase,
                                 StartTournamentUseCase startTournamentUseCase,
-                                GetBracketUseCase getBracketUseCase) {
+                                GetBracketUseCase getBracketUseCase,
+                                DeleteTournamentUseCase deleteTournamentUseCase) {
         this.createTournamentUseCase = createTournamentUseCase;
         this.getTournamentUseCase = getTournamentUseCase;
         this.startTournamentUseCase = startTournamentUseCase;
         this.getBracketUseCase = getBracketUseCase;
+        this.deleteTournamentUseCase = deleteTournamentUseCase;
     }
 
     @PostMapping
@@ -62,5 +62,11 @@ public class TournamentController {
     @GetMapping("/{id}/bracket")
     public ResponseEntity<BracketResponse> getBracket(@PathVariable Long id) {
         return ResponseEntity.ok(getBracketUseCase.getBracket(id));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteTournament(@PathVariable Long id) {
+        deleteTournamentUseCase.deleteTournament(id);
+        return ResponseEntity.noContent().build();
     }
 }

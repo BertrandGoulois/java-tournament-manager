@@ -1,6 +1,7 @@
 package com.tournament.tournament_manager.controller;
 
 import com.tournament.tournament_manager.domain.port.in.player.CreatePlayerUseCase;
+import com.tournament.tournament_manager.domain.port.in.player.DeletePlayerUseCase;
 import com.tournament.tournament_manager.domain.port.in.player.GetPlayerStatsUseCase;
 import com.tournament.tournament_manager.domain.port.in.player.GetPlayerUseCase;
 import com.tournament.tournament_manager.dto.request.CreatePlayerRequest;
@@ -24,13 +25,16 @@ public class PlayerController {
     private final CreatePlayerUseCase createPlayerUseCase;
     private final GetPlayerUseCase getPlayerUseCase;
     private final GetPlayerStatsUseCase getPlayerStatsUseCase;
+    private final DeletePlayerUseCase deletePlayerUseCase;
 
     public PlayerController(CreatePlayerUseCase createPlayerUseCase,
                             GetPlayerUseCase getPlayerUseCase,
-                            GetPlayerStatsUseCase getPlayerStatsUseCase) {
+                            GetPlayerStatsUseCase getPlayerStatsUseCase,
+                            DeletePlayerUseCase deletePlayerUseCase) {
         this.createPlayerUseCase = createPlayerUseCase;
         this.getPlayerUseCase = getPlayerUseCase;
         this.getPlayerStatsUseCase = getPlayerStatsUseCase;
+        this.deletePlayerUseCase = deletePlayerUseCase;
     }
 
     @PostMapping
@@ -52,5 +56,11 @@ public class PlayerController {
     @GetMapping("/{id}/stats")
     public ResponseEntity<PlayerStatsResponse> getPlayerStats(@PathVariable Long id) {
         return ResponseEntity.ok(getPlayerStatsUseCase.getPlayerStats(id));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePlayer(@PathVariable Long id) {
+        deletePlayerUseCase.deletePlayer(id);
+        return ResponseEntity.noContent().build();
     }
 }

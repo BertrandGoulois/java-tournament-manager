@@ -6,10 +6,7 @@ import com.tournament.tournament_manager.config.security.JwtAuthenticationFilter
 import com.tournament.tournament_manager.config.security.SecurityConfig;
 import com.tournament.tournament_manager.config.security.UserDetailsServiceImpl;
 import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
-import com.tournament.tournament_manager.domain.port.in.tournament.CreateTournamentUseCase;
-import com.tournament.tournament_manager.domain.port.in.tournament.GetBracketUseCase;
-import com.tournament.tournament_manager.domain.port.in.tournament.GetTournamentUseCase;
-import com.tournament.tournament_manager.domain.port.in.tournament.StartTournamentUseCase;
+import com.tournament.tournament_manager.domain.port.in.tournament.*;
 import com.tournament.tournament_manager.dto.request.CreateTournamentRequest;
 import com.tournament.tournament_manager.dto.response.BracketResponse;
 import com.tournament.tournament_manager.dto.response.TournamentResponse;
@@ -36,6 +33,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 
 @WebMvcTest(TournamentController.class)
 @Import(SecurityConfig.class)
@@ -52,6 +50,8 @@ class TournamentControllerTest {
     private StartTournamentUseCase startTournamentUseCase;
     @MockitoBean
     private GetBracketUseCase getBracketUseCase;
+    @MockitoBean
+    private DeleteTournamentUseCase deleteTournamentUseCase;
     @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
     @MockitoBean
@@ -133,5 +133,13 @@ class TournamentControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.tournamentId").value(1))
                 .andExpect(jsonPath("$.tournamentName").value("Spring Championship"));
+    }
+
+    @Test
+    void deleteTournament_shouldReturn204() throws Exception {
+        mockMvc.perform(delete("/api/tournaments/1")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isNoContent());
     }
 }

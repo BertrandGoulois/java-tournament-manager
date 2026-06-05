@@ -1,10 +1,7 @@
 package com.tournament.tournament_manager.infrastructure.persistence;
 
 import com.tournament.tournament_manager.domain.model.entities.Tournament;
-import com.tournament.tournament_manager.domain.port.out.tournament.ExistsTournamentPort;
-import com.tournament.tournament_manager.domain.port.out.tournament.LoadAllTournamentsPort;
-import com.tournament.tournament_manager.domain.port.out.tournament.LoadTournamentPort;
-import com.tournament.tournament_manager.domain.port.out.tournament.SaveTournamentPort;
+import com.tournament.tournament_manager.domain.port.out.tournament.*;
 import com.tournament.tournament_manager.exception.TournamentNotFoundException;
 import com.tournament.tournament_manager.repository.TournamentRepository;
 import org.springframework.data.domain.Page;
@@ -16,7 +13,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class TournamentJpaAdapter implements LoadTournamentPort, SaveTournamentPort,
-        ExistsTournamentPort, LoadAllTournamentsPort {
+        ExistsTournamentPort, LoadAllTournamentsPort, SoftDeleteTournamentPort {
 
     private final TournamentRepository tournamentRepository;
 
@@ -43,5 +40,10 @@ public class TournamentJpaAdapter implements LoadTournamentPort, SaveTournamentP
     @Override
     public Page<Tournament> loadAllTournaments(Pageable pageable) {
         return tournamentRepository.findAll(pageable);
+    }
+
+    @Override
+    public void softDeleteTournament(Tournament tournament) {
+        tournamentRepository.save(tournament);
     }
 }

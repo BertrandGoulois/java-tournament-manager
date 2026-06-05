@@ -19,7 +19,7 @@ import java.util.List;
  */
 @Component
 public class PlayerJpaAdapter implements LoadPlayerPort, SavePlayerPort,
-        ExistsPlayerPort, LoadAllPlayersPort, CountMatchesByPlayerPort, LoadEloHistoryPort {
+        ExistsPlayerPort, LoadAllPlayersPort, CountMatchesByPlayerPort, LoadEloHistoryPort, SoftDeletePlayerPort {
 
     private final PlayerRepository playerRepository;
     private final MatchRepository matchRepository;
@@ -72,5 +72,10 @@ public class PlayerJpaAdapter implements LoadPlayerPort, SavePlayerPort,
     @Override
     public List<EloHistory> loadByPlayerIdOrderByDateDesc(Long playerId) {
         return eloHistoryRepository.findByPlayerIdOrderByCreatedAtDesc(playerId);
+    }
+
+    @Override
+    public void softDeletePlayer(Player player) {
+        playerRepository.save(player);
     }
 }

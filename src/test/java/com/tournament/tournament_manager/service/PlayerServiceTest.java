@@ -14,16 +14,18 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class PlayerServiceTest {
@@ -40,6 +42,8 @@ class PlayerServiceTest {
     private CountMatchesByPlayerPort countMatchesByPlayerPort;
     @Mock
     private LoadEloHistoryPort loadEloHistoryPort;
+    @Mock
+    private SoftDeletePlayerPort softDeletePlayerPort;
 
     @InjectMocks
     private PlayerService playerService;
@@ -159,5 +163,19 @@ class PlayerServiceTest {
     void getPlayerStats_shouldThrow_whenNotFound() {
         when(loadPlayerPort.loadPlayer(99L)).thenThrow(new PlayerNotFoundException(99L));
         assertThrows(PlayerNotFoundException.class, () -> playerService.getPlayerStats(99L));
+    }
+
+    @Test
+    void deletePlayer_shouldSetDeletedTrue() {
+        Player player = new Player();
+        player.setId(1L);
+
+        when(loadPlayerPort.loadPlayer(1L)).thenReturn(player);
+
+        playerService.deletePlayer(1L);
+
+        assertTrue(player.isDeleted());
+        assertNotNull(player.getDeletedAt());
+        verify(softDeletePlayerPort, times(1)).softDeletePlayer(player);
     }
 }

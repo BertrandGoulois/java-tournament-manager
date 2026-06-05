@@ -1,0 +1,7 @@
+-- changeset bertrand:5
+
+ALTER TABLE players ADD COLUMN deleted BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE players ADD COLUMN deleted_at TIMESTAMP;
+
+ALTER TABLE tournaments ADD COLUMN deleted BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE tournaments ADD COLUMN deleted_at TIMESTAMP;

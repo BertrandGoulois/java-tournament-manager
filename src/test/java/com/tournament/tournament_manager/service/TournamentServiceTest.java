@@ -1,10 +1,7 @@
 package com.tournament.tournament_manager.service;
 
 import com.tournament.tournament_manager.domain.model.entities.Tournament;
-import com.tournament.tournament_manager.domain.port.out.tournament.ExistsTournamentPort;
-import com.tournament.tournament_manager.domain.port.out.tournament.LoadAllTournamentsPort;
-import com.tournament.tournament_manager.domain.port.out.tournament.LoadTournamentPort;
-import com.tournament.tournament_manager.domain.port.out.tournament.SaveTournamentPort;
+import com.tournament.tournament_manager.domain.port.out.tournament.*;
 import com.tournament.tournament_manager.dto.request.CreateTournamentRequest;
 import com.tournament.tournament_manager.dto.response.TournamentResponse;
 import com.tournament.tournament_manager.exception.InvalidTournamentException;
@@ -21,10 +18,11 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class TournamentServiceTest {
@@ -37,6 +35,8 @@ class TournamentServiceTest {
     private ExistsTournamentPort existsTournamentPort;
     @Mock
     private LoadAllTournamentsPort loadAllTournamentsPort;
+    @Mock
+    private SoftDeleteTournamentPort softDeleteTournamentPort;
 
     @InjectMocks
     private TournamentService tournamentService;
@@ -107,5 +107,19 @@ class TournamentServiceTest {
         when(existsTournamentPort.existsByName("Test")).thenReturn(false);
         assertThrows(InvalidTournamentException.class,
                 () -> tournamentService.createTournament(new CreateTournamentRequest("Test", 0)));
+    }
+
+    @Test
+    void deleteTournament_shouldSetDeletedTrue() {
+        Tournament tournament = new Tournament();
+        tournament.setId(1L);
+
+        when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
+
+        tournamentService.deleteTournament(1L);
+
+        assertTrue(tournament.isDeleted());
+        assertNotNull(tournament.getDeletedAt());
+        verify(softDeleteTournamentPort, times(1)).softDeleteTournament(tournament);
     }
 }

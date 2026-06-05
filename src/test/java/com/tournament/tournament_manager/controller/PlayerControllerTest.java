@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.tournament.tournament_manager.config.security.JwtAuthenticationFilter;
 import com.tournament.tournament_manager.domain.port.in.player.CreatePlayerUseCase;
+import com.tournament.tournament_manager.domain.port.in.player.DeletePlayerUseCase;
 import com.tournament.tournament_manager.domain.port.in.player.GetPlayerStatsUseCase;
 import com.tournament.tournament_manager.domain.port.in.player.GetPlayerUseCase;
 import com.tournament.tournament_manager.dto.request.CreatePlayerRequest;
@@ -33,6 +34,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 
 @WebMvcTest(value = PlayerController.class, excludeFilters = {
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = JwtAuthenticationFilter.class)
@@ -48,6 +50,8 @@ class PlayerControllerTest {
     private GetPlayerUseCase getPlayerUseCase;
     @MockitoBean
     private GetPlayerStatsUseCase getPlayerStatsUseCase;
+    @MockitoBean
+    private DeletePlayerUseCase deletePlayerUseCase;
     @MockitoBean
     private org.springframework.cache.CacheManager cacheManager;
 
@@ -124,5 +128,13 @@ class PlayerControllerTest {
 
         mockMvc.perform(get("/api/players/99/stats").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void deletePlayer_shouldReturn204() throws Exception {
+        mockMvc.perform(delete("/api/players/1")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isNoContent());
     }
 }
