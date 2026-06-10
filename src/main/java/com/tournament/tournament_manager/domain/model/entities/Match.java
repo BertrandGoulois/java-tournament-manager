@@ -29,6 +29,9 @@ public class Match {
     @Column(updatable = false)
     private LocalDateTime playedAt;
 
+    @Column(columnDefinition = "TEXT")
+    private String commentary;
+
     @ManyToOne()
     @JoinColumn(name = "tournament_id", nullable = false)
     private Tournament tournament;

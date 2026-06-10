@@ -1,10 +1,7 @@
 package com.tournament.tournament_manager.infrastructure.persistence;
 
 import com.tournament.tournament_manager.domain.model.entities.Match;
-import com.tournament.tournament_manager.domain.port.out.match.LoadMatchByTournamentPort;
-import com.tournament.tournament_manager.domain.port.out.match.LoadMatchPort;
-import com.tournament.tournament_manager.domain.port.out.match.LoadMatchesByTournamentPort;
-import com.tournament.tournament_manager.domain.port.out.match.SaveMatchPort;
+import com.tournament.tournament_manager.domain.port.out.match.*;
 import com.tournament.tournament_manager.exception.MatchNotFoundException;
 import com.tournament.tournament_manager.repository.MatchRepository;
 import org.springframework.stereotype.Component;
@@ -16,7 +13,7 @@ import java.util.List;
  * Fait le lien entre le domaine et la couche de persistance Spring Data.
  */
 @Component
-public class MatchJpaAdapter implements LoadMatchPort, SaveMatchPort, LoadMatchByTournamentPort, LoadMatchesByTournamentPort {
+public class MatchJpaAdapter implements LoadMatchPort, SaveMatchPort, LoadMatchByTournamentPort, LoadMatchesByTournamentPort, SaveCommentaryPort {
 
     private final MatchRepository matchRepository;
 
@@ -43,5 +40,13 @@ public class MatchJpaAdapter implements LoadMatchPort, SaveMatchPort, LoadMatchB
     @Override
     public List<Match> loadByTournamentId(Long tournamentId) {
         return matchRepository.findByTournamentId(tournamentId);
+    }
+
+    @Override
+    public void saveCommentary(Long matchId, String commentary) {
+        Match match = matchRepository.findById(matchId)
+                .orElseThrow(() -> new MatchNotFoundException(matchId));
+        match.setCommentary(commentary);
+        matchRepository.save(match);
     }
 }

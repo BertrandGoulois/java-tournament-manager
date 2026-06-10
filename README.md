@@ -20,6 +20,7 @@ API REST de gestion de tournois sportifs en élimination directe, développée e
 - **Apache Kafka** (messaging distribué, remplacement des Spring Events)
 - **Redis** (cache des statistiques joueur)
 - **WebSocket** / **STOMP** (notifications temps réel)
+- **OpenAI GPT-4o-mini** (génération de commentaires de matchs via LLM)
 - **JUnit 5** + **Mockito** (tests unitaires)
 - **Testcontainers** (tests d'intégration)
 - **Gatling** (tests de charge)
@@ -30,7 +31,7 @@ API REST de gestion de tournois sportifs en élimination directe, développée e
 
 ## Architecture & Design
 
-Le projet suit une **architecture hexagonale** (ports & adapters) : le domaine métier est isolé de toute dépendance technique (JPA, Kafka, Redis). Les services implémentent des ports entrants (use cases) et dépendent de ports sortants (interfaces) implémentés par des adapters dans `infrastructure/`.
+Le projet suit une **architecture hexagonale** (ports & adapters) : le domaine métier est isolé de toute dépendance technique (JPA, Kafka, Redis, OpenAI). Les services implémentent des ports entrants (use cases) et dépendent de ports sortants (interfaces) implémentés par des adapters dans `infrastructure/`.
 
 ```
 domain/
@@ -43,13 +44,15 @@ domain/
 infrastructure/
   persistence/  → adapters JPA (implémentent les ports sortants)
   messaging/    → adapter Kafka
+  ai/           → adapter OpenAI
 ```
 
-Les side effects métier (mise à jour ELO, avancement du bracket, notifications temps réel) sont découplés du service principal via Kafka. Lorsqu'un résultat de match est enregistré, un événement `MatchFinishedEvent` est publié sur le topic `match-finished`. Trois consumers indépendants traitent cet événement de façon asynchrone :
+Les side effects métier (mise à jour ELO, avancement du bracket, notifications temps réel, génération de commentaires) sont découplés du service principal via Kafka. Lorsqu'un résultat de match est enregistré, un événement `MatchFinishedEvent` est publié sur le topic `match-finished`. Quatre consumers indépendants traitent cet événement de façon asynchrone :
 
 - `elo-group` → met à jour les ratings ELO des deux joueurs
 - `bracket-group` → avance le bracket au tour suivant
 - `websocket-group` → broadcast une notification temps réel à tous les clients connectés via WebSocket
+- `commentary-group` → génère un commentaire narratif via OpenAI GPT-4o-mini
 
 En cas d'échec répété d'un listener (3 tentatives espacées d'1 seconde), le message est redirigé vers le topic `match-finished.DLT` (Dead Letter Topic) pour inspection et rejeu manuel via Kafka UI.
 
@@ -68,17 +71,24 @@ git clone https://github.com/BertrandGoulois/java-tournament-manager.git
 cd java-tournament-manager
 ```
 
-2. Créer un fichier `src/main/resources/application-local.properties` :
+2. Créer un fichier `.env` à la racine du projet :
+
+```
+POSTGRES_PASSWORD=tonmotdepasse
+```
+
+3. Créer un fichier `src/main/resources/application-local.properties` :
 
 ```properties
 spring.datasource.url=jdbc:postgresql://localhost:5432/tournament_manager
 spring.datasource.username=postgres
 spring.datasource.password=tonmotdepasse
+openai.api.key=sk-...ta-clef
 ```
 
 > Les tables et le user admin sont créés automatiquement par Liquibase au démarrage. Aucun script SQL manuel requis.
 
-3. Démarrer les services (Kafka, Zookeeper, Redis, Kafka UI) :
+4. Démarrer les services (Kafka, Zookeeper, Redis, Kafka UI) :
 
 ```bash
 docker-compose up -d
@@ -240,6 +250,11 @@ Authorization: Bearer <JWT token>
 - **Errors** :
   - `404` → joueur introuvable
 
+#### Delete player (soft delete)
+
+- **DELETE** `/api/players/{id}`
+- **Response** : `204 No Content`
+
 #### Get player stats
 
 - **GET** `/api/players/{id}/stats`
@@ -293,6 +308,11 @@ Authorization: Bearer <JWT token>
 #### Get tournament by ID
 
 - **GET** `/api/tournaments/{id}`
+
+#### Delete tournament (soft delete)
+
+- **DELETE** `/api/tournaments/{id}`
+- **Response** : `204 No Content`
 
 #### Start tournament
 
@@ -385,11 +405,25 @@ Authorization: Bearer <JWT token>
 }
 ```
 
-> Après enregistrement du résultat : publication d'un événement Kafka `match-finished`, mise à jour ELO des deux joueurs, avancement automatique au tour suivant, notification WebSocket temps réel, fin du tournoi si c'était la finale.
+> Après enregistrement du résultat : publication d'un événement Kafka `match-finished`, mise à jour ELO des deux joueurs, avancement automatique au tour suivant, notification WebSocket temps réel, génération de commentaire LLM, fin du tournoi si c'était la finale.
 
 - **Errors** :
   - `400` → match déjà terminé
   - `400` → le gagnant n'est pas un des joueurs du match
+
+#### Get match commentary
+
+- **GET** `/api/matches/{id}/commentary`
+- **Response JSON** :
+
+```json
+{
+  "matchId": 1,
+  "commentary": "Dans un duel spectaculaire, player1 (ELO 1200) a dominé player2 (ELO 1000) avec 76% de chances de victoire. Une performance solide qui lui rapporte 8 points ELO."
+}
+```
+
+> Le commentaire est généré de façon asynchrone via OpenAI GPT-4o-mini après la fin du match. Retourne "Commentaire en cours de génération..." si le LLM n'a pas encore répondu.
 
 ---
 
@@ -401,12 +435,15 @@ Authorization: Bearer <JWT token>
 - Calcul ELO après chaque match (K=32, formule standard)
 - Idempotence du calcul ELO - protection contre les doublons Kafka
 - Avancement automatique au tour suivant via événements Kafka
+- Génération automatique de commentaires de matchs via OpenAI GPT-4o-mini (event-driven via Kafka)
 - Dead Letter Queue Kafka pour les messages en échec (`match-finished.DLT`)
 - Kafka UI pour l'inspection et le rejeu des messages en échec
 - Notifications temps réel via WebSocket à chaque fin de match
 - Cache Redis sur les statistiques joueur (`GET /players/{id}/stats`)
 - Statistiques joueur (win rate, historique ELO)
 - Authentification JWT avec refresh token et révocation (logout)
+- Rate limiting sur les endpoints sensibles (Login : 5 req/min, Create Player : 10 req/min)
+- Soft delete sur joueurs et tournois
 - Pagination sur les listes de joueurs et tournois
 - Migrations versionnées avec Liquibase
 - Tests de charge Gatling - scénario complet end-to-end (login, tournoi, bracket, stats)

@@ -48,6 +48,7 @@ public class KafkaConfig {
     public static final String BRACKET_GROUP = "bracket-group";
     public static final String WEBSOCKET_GROUP = "websocket-group";
     public static final String DLT_GROUP = "dlt-group";
+    public static final String COMMENTARY_GROUP = "commentary-group";
 
     /**
      * Nombre de tentatives avant redirection vers la DLQ.

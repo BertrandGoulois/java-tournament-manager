@@ -130,6 +130,13 @@
 			<version>8.10.1</version>
 		</dependency>
 
+        <!-- OpenAI -->
+		<dependency>
+			<groupId>com.theokanning.openai-gpt3-java</groupId>
+			<artifactId>service</artifactId>
+			<version>0.18.2</version>
+		</dependency>
+
 		<!-- Tests -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

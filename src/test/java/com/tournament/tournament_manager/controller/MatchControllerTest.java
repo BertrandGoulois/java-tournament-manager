@@ -6,6 +6,7 @@ import com.tournament.tournament_manager.config.security.JwtAuthenticationFilter
 import com.tournament.tournament_manager.config.security.SecurityConfig;
 import com.tournament.tournament_manager.config.security.UserDetailsServiceImpl;
 import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
+import com.tournament.tournament_manager.domain.port.in.match.GetMatchCommentaryUseCase;
 import com.tournament.tournament_manager.domain.port.in.match.GetMatchUseCase;
 import com.tournament.tournament_manager.domain.port.in.match.RecordMatchResultUseCase;
 import com.tournament.tournament_manager.dto.request.RecordMatchResultRequest;
@@ -42,6 +43,8 @@ class MatchControllerTest {
     private RecordMatchResultUseCase recordMatchResultUseCase;
     @MockitoBean
     private GetMatchUseCase getMatchUseCase;
+    @MockitoBean
+    private GetMatchCommentaryUseCase getMatchCommentaryUseCase;
     @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
     @MockitoBean
@@ -103,5 +106,15 @@ class MatchControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(new RecordMatchResultRequest(null))))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void getMatchCommentary_shouldReturn200() throws Exception {
+        when(getMatchCommentaryUseCase.getMatchCommentary(1L))
+                .thenReturn(new com.tournament.tournament_manager.dto.response.MatchCommentaryResponse(1L, "Super match !"));
+
+        mockMvc.perform(get("/api/matches/1/commentary").with(user("admin").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.commentary").value("Super match !"));
     }
 }
