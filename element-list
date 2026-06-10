@@ -23,6 +23,7 @@ com.tournament.tournament_manager.domain.port.out.tournament
 com.tournament.tournament_manager.dto.request
 com.tournament.tournament_manager.dto.response
 com.tournament.tournament_manager.exception
+com.tournament.tournament_manager.infrastructure.ai
 com.tournament.tournament_manager.infrastructure.messaging
 com.tournament.tournament_manager.infrastructure.persistence
 com.tournament.tournament_manager.listener
