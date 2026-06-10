@@ -20,6 +20,7 @@ target/
 *.ipr
 application-local.properties
 application-gatling.properties
+.env
 
 ### NetBeans ###
 /nbproject/private/
