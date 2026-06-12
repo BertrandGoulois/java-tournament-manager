@@ -5,7 +5,8 @@ import com.tournament.tournament_manager.dto.request.CreatePlayerRequest;
 import com.tournament.tournament_manager.dto.response.PlayerResponse;
 import com.tournament.tournament_manager.exception.PlayerNotFoundException;
 import com.tournament.tournament_manager.repository.PlayerRepository;
-import com.tournament.tournament_manager.service.PlayerService;
+import com.tournament.tournament_manager.service.player.CreatePlayerService;
+import com.tournament.tournament_manager.service.player.GetPlayerService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -20,7 +21,10 @@ import static org.junit.jupiter.api.Assertions.*;
 class PlayerIntegrationTest {
 
     @Autowired
-    private PlayerService playerService;
+    private CreatePlayerService createPlayerService;
+
+    @Autowired
+    private GetPlayerService getPlayerService;
 
     @Autowired
     private PlayerRepository playerRepository;
@@ -28,7 +32,7 @@ class PlayerIntegrationTest {
     @Test
     void createPlayer_shouldPersistInDatabase() {
         CreatePlayerRequest request = new CreatePlayerRequest("toto", "toto@mail.com");
-        PlayerResponse response = playerService.createPlayer(request);
+        PlayerResponse response = createPlayerService.createPlayer(request);
 
         assertEquals("toto", response.username());
         assertEquals(1000, response.eloRating());
@@ -38,19 +42,19 @@ class PlayerIntegrationTest {
     @Test
     void createPlayer_shouldHaveDefaultElo() {
         CreatePlayerRequest request = new CreatePlayerRequest("toto", "toto@mail.com");
-        PlayerResponse response = playerService.createPlayer(request);
+        PlayerResponse response = createPlayerService.createPlayer(request);
         assertEquals(1000, response.eloRating());
     }
 
     @Test
     void getPlayerById_shouldThrow_whenNotFound() {
-        assertThrows(PlayerNotFoundException.class, () -> playerService.getPlayerById(999L));
+        assertThrows(PlayerNotFoundException.class, () -> getPlayerService.getPlayerById(999L));
     }
 
     @Test
     void createPlayer_shouldThrow_whenUsernameAlreadyExists() {
-        playerService.createPlayer(new CreatePlayerRequest("toto", "toto@mail.com"));
+        createPlayerService.createPlayer(new CreatePlayerRequest("toto", "toto@mail.com"));
         assertThrows(Exception.class, () ->
-                playerService.createPlayer(new CreatePlayerRequest("toto", "other@mail.com")));
+                createPlayerService.createPlayer(new CreatePlayerRequest("toto", "other@mail.com")));
     }
 }

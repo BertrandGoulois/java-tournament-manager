@@ -3,7 +3,6 @@ package com.tournament.tournament_manager.listener;
 import com.tournament.tournament_manager.config.kafka.KafkaConfig;
 import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
 import com.tournament.tournament_manager.domain.model.entities.Match;
-import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 import com.tournament.tournament_manager.domain.port.out.match.GenerateCommentaryPort;
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchPort;
 import com.tournament.tournament_manager.domain.port.out.match.SaveCommentaryPort;

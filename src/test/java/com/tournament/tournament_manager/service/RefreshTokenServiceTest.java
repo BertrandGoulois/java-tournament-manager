@@ -7,6 +7,7 @@ import com.tournament.tournament_manager.domain.port.out.auth.LoadRefreshTokenPo
 import com.tournament.tournament_manager.domain.port.out.auth.SaveRefreshTokenPort;
 import com.tournament.tournament_manager.dto.response.AuthResponse;
 import com.tournament.tournament_manager.exception.InvalidException;
+import com.tournament.tournament_manager.service.token.RefreshTokenService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -17,7 +18,6 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)

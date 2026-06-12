@@ -1,4 +1,4 @@
-package com.tournament.tournament_manager.service;
+package com.tournament.tournament_manager.service.elo;
 
 import com.tournament.tournament_manager.domain.model.entities.EloHistory;
 import com.tournament.tournament_manager.domain.model.entities.Match;

@@ -21,6 +21,7 @@ API REST de gestion de tournois sportifs en élimination directe, développée e
 - **Redis** (cache des statistiques joueur)
 - **WebSocket** / **STOMP** (notifications temps réel)
 - **OpenAI GPT-4o-mini** (génération de commentaires de matchs via LLM)
+- **Prometheus** + **Grafana** (monitoring et visualisation des métriques JVM / HTTP)
 - **JUnit 5** + **Mockito** (tests unitaires)
 - **Testcontainers** (tests d'intégration)
 - **Gatling** (tests de charge)
@@ -31,7 +32,7 @@ API REST de gestion de tournois sportifs en élimination directe, développée e
 
 ## Architecture & Design
 
-Le projet suit une **architecture hexagonale** (ports & adapters) : le domaine métier est isolé de toute dépendance technique (JPA, Kafka, Redis, OpenAI). Les services implémentent des ports entrants (use cases) et dépendent de ports sortants (interfaces) implémentés par des adapters dans `infrastructure/`.
+Le projet suit une **architecture hexagonale** (ports & adapters) : le domaine métier est isolé de toute dépendance technique (JPA, Kafka, Redis, OpenAI). Chaque use case est implémenté par une classe dédiée (principe de responsabilité unique).
 
 ```
 domain/
@@ -39,7 +40,8 @@ domain/
   port/
     in/         → interfaces use cases (ex. RecordMatchResultUseCase)
     out/        → interfaces infra (ex. SaveMatchPort, LoadMatchPort)
-  service/      → logique métier, implémente les ports entrants
+
+service/        → use cases atomiques (une classe par use case, ex. CreateTournamentService, RecordMatchResultService)
 
 infrastructure/
   persistence/  → adapters JPA (implémentent les ports sortants)
@@ -75,6 +77,7 @@ cd java-tournament-manager
 
 ```
 POSTGRES_PASSWORD=tonmotdepasse
+OPENAI_API_KEY=sk-...ta-clef
 ```
 
 3. Créer un fichier `src/main/resources/application-local.properties` :
@@ -88,17 +91,19 @@ openai.api.key=sk-...ta-clef
 
 > Les tables et le user admin sont créés automatiquement par Liquibase au démarrage. Aucun script SQL manuel requis.
 
-4. Démarrer les services (Kafka, Zookeeper, Redis, Kafka UI) :
+4. Démarrer tous les services :
 
 ```bash
 docker-compose up -d
 ```
 
+> Lance PostgreSQL, Redis, Kafka, Zookeeper, Kafka UI, Prometheus, Grafana et l'application Spring Boot dans des containers Docker.
+
 ---
 
 ## Running
 
-**Démarrage :**
+**Démarrage en local (hors Docker) :**
 
 ```bash
 ./mvnw spring-boot:run
@@ -141,6 +146,14 @@ Page de démonstration disponible sur : `http://localhost:8080/ws-test.html`
 Interface de monitoring Kafka disponible sur : `http://localhost:8090`
 
 Permet de visualiser les topics, les messages en échec dans `match-finished.DLT` et de les rejouer manuellement.
+
+**Monitoring :**
+
+Prometheus disponible sur : `http://localhost:9090`
+
+Grafana disponible sur : `http://localhost:3000` (admin / admin)
+
+> Dashboard Spring Boot 3.x Statistics (ID `19004`) disponible après import manuel dans Grafana. Visualise en temps réel : uptime, heap, CPU, GC, HikariCP, threads.
 
 ---
 
@@ -430,6 +443,7 @@ Authorization: Bearer <JWT token>
 ## Key Features
 
 - Architecture hexagonale (ports & adapters) - domaine métier isolé de l'infra
+- Use cases atomiques : une classe par use case (principe de responsabilité unique)
 - Génération de bracket en élimination directe avec support des byes
 - Consultation du bracket complet par round (`GET /tournaments/{id}/bracket`)
 - Calcul ELO après chaque match (K=32, formule standard)
@@ -446,6 +460,7 @@ Authorization: Bearer <JWT token>
 - Soft delete sur joueurs et tournois
 - Pagination sur les listes de joueurs et tournois
 - Migrations versionnées avec Liquibase
+- Monitoring Prometheus / Grafana avec dashboard Spring Boot (métriques JVM, HTTP, HikariCP)
 - Tests de charge Gatling - scénario complet end-to-end (login, tournoi, bracket, stats)
 - Couverture de tests élevée : tests unitaires (JUnit 5 / Mockito), tests controller (MockMvc) et tests d'intégration (Testcontainers + Kafka embarqué)
 

@@ -1,4 +1,4 @@
-package com.tournament.tournament_manager.service;
+package com.tournament.tournament_manager.service.bracket;
 
 import com.tournament.tournament_manager.domain.model.entities.Match;
 import com.tournament.tournament_manager.domain.model.entities.Player;
@@ -88,7 +88,6 @@ class BracketQueryServiceTest {
     @Test
     void getBracket_shouldThrow_whenTournamentNotFound() {
         when(loadTournamentPort.loadTournament(99L)).thenThrow(new TournamentNotFoundException(99L));
-
         assertThrows(TournamentNotFoundException.class,
                 () -> bracketQueryService.getBracket(99L));
     }

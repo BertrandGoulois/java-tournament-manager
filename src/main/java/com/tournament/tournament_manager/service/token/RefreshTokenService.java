@@ -1,4 +1,4 @@
-package com.tournament.tournament_manager.service;
+package com.tournament.tournament_manager.service.token;
 
 import com.tournament.tournament_manager.config.security.JwtService;
 import com.tournament.tournament_manager.domain.model.entities.RefreshToken;

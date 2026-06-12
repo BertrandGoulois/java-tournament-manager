@@ -7,7 +7,7 @@ import com.tournament.tournament_manager.config.security.UserDetailsServiceImpl;
 import com.tournament.tournament_manager.domain.port.in.auth.RefreshTokenUseCase;
 import com.tournament.tournament_manager.dto.request.LoginRequest;
 import com.tournament.tournament_manager.dto.response.AuthResponse;
-import com.tournament.tournament_manager.service.AuthService;
+import com.tournament.tournament_manager.service.auth.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

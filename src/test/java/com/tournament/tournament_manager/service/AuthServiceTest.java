@@ -3,6 +3,8 @@ package com.tournament.tournament_manager.service;
 import com.tournament.tournament_manager.config.security.JwtService;
 import com.tournament.tournament_manager.dto.request.LoginRequest;
 import com.tournament.tournament_manager.dto.response.AuthResponse;
+import com.tournament.tournament_manager.service.auth.AuthService;
+import com.tournament.tournament_manager.service.token.RefreshTokenService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -13,7 +15,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)

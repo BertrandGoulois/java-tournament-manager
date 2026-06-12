@@ -1,4 +1,4 @@
-package com.tournament.tournament_manager.service;
+package com.tournament.tournament_manager.service.match;
 
 import com.tournament.tournament_manager.domain.model.entities.Match;
 import com.tournament.tournament_manager.domain.port.in.match.GetMatchCommentaryUseCase;
@@ -8,18 +8,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Implémentation du cas d'utilisation de consultation du commentaire de match.
- *
- * <p>Le commentaire est généré de façon asynchrone par {@code CommentaryListener}
- * après la fin du match. Ce service se contente de le lire depuis la base.
+ * Cas d'utilisation : consultation du commentaire d'un match.
  */
 @Service
 @Transactional(readOnly = true)
-public class MatchCommentaryService implements GetMatchCommentaryUseCase {
+public class GetMatchCommentaryService implements GetMatchCommentaryUseCase {
 
     private final LoadMatchPort loadMatchPort;
 
-    public MatchCommentaryService(LoadMatchPort loadMatchPort) {
+    public GetMatchCommentaryService(LoadMatchPort loadMatchPort) {
         this.loadMatchPort = loadMatchPort;
     }
 

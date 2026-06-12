@@ -115,7 +115,7 @@ public class KafkaConfig {
     }
 
     /**
-     * Fournit le {@code KafkaTemplate} utilisé par {@code MatchService}
+     * Fournit le {@code KafkaTemplate} utilisé par {@code RecordMatchResultService}
      * pour publier les événements.
      */
     @Bean
