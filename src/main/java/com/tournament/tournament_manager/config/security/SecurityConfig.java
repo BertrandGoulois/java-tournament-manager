@@ -57,7 +57,9 @@ public class SecurityConfig {
                                 "/webjars/**",
                                 "/ws/**",
                                 "/ws-test.html",
-                                "/error"
+                                "/error",
+                                "/actuator/prometheus",
+                                "/actuator/health"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

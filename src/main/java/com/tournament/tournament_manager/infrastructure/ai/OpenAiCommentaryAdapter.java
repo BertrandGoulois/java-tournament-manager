@@ -1,13 +1,12 @@
 package com.tournament.tournament_manager.infrastructure.ai;
 
-import com.theokanning.openai.completion.chat.ChatCompletionRequest;
-import com.theokanning.openai.completion.chat.ChatMessage;
-import com.theokanning.openai.service.OpenAiService;
+import com.openai.client.OpenAIClient;
+import com.openai.client.okhttp.OpenAIOkHttpClient;
+import com.openai.models.chat.completions.ChatCompletion;
+import com.openai.models.chat.completions.ChatCompletionCreateParams;
 import com.tournament.tournament_manager.domain.port.out.match.GenerateCommentaryPort;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 /**
  * Adapter OpenAI implémentant la génération de commentaire via GPT.
@@ -16,10 +15,12 @@ import java.util.List;
 @Component
 public class OpenAiCommentaryAdapter implements GenerateCommentaryPort {
 
-    private final OpenAiService openAiService;
+    private final OpenAIClient client;
 
     public OpenAiCommentaryAdapter(@Value("${openai.api.key}") String apiKey) {
-        this.openAiService = new OpenAiService(apiKey);
+        this.client = OpenAIOkHttpClient.builder()
+                .apiKey(apiKey)
+                .build();
     }
 
     /**
@@ -30,17 +31,18 @@ public class OpenAiCommentaryAdapter implements GenerateCommentaryPort {
      */
     @Override
     public String generateCommentary(String prompt) {
-        ChatCompletionRequest request = ChatCompletionRequest.builder()
+        ChatCompletionCreateParams params = ChatCompletionCreateParams.builder()
                 .model("gpt-4o-mini")
-                .messages(List.of(new ChatMessage("user", prompt)))
-                .maxTokens(200)
-                .temperature(0.7)
+                .addUserMessage(prompt)
+                .maxCompletionTokens(200)
                 .build();
 
-        return openAiService.createChatCompletion(request)
-                .getChoices()
+        ChatCompletion completion = client.chat().completions().create(params);
+
+        return completion.choices()
                 .get(0)
-                .getMessage()
-                .getContent();
+                .message()
+                .content()
+                .orElse("");
     }
 }
