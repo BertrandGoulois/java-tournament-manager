@@ -28,4 +28,11 @@ com.tournament.tournament_manager.infrastructure.messaging
 com.tournament.tournament_manager.infrastructure.persistence
 com.tournament.tournament_manager.listener
 com.tournament.tournament_manager.repository
-com.tournament.tournament_manager.service
+com.tournament.tournament_manager.service.auth
+com.tournament.tournament_manager.service.bracket
+com.tournament.tournament_manager.service.elo
+com.tournament.tournament_manager.service.match
+com.tournament.tournament_manager.service.player
+com.tournament.tournament_manager.service.registration
+com.tournament.tournament_manager.service.token
+com.tournament.tournament_manager.service.tournament
