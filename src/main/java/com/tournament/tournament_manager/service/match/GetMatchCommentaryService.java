@@ -4,6 +4,7 @@ import com.tournament.tournament_manager.domain.model.entities.Match;
 import com.tournament.tournament_manager.domain.port.in.match.GetMatchCommentaryUseCase;
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchPort;
 import com.tournament.tournament_manager.dto.response.MatchCommentaryResponse;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,11 +24,13 @@ public class GetMatchCommentaryService implements GetMatchCommentaryUseCase {
     /**
      * Retourne le commentaire d'un match terminé.
      * Retourne un message d'attente si le commentaire n'est pas encore généré.
+     * * En cas d'indisponibilité du service, retourne un message de fallback.
      *
      * @param matchId identifiant du match
      * @return le commentaire du match
      */
     @Override
+    @CircuitBreaker(name = "openai", fallbackMethod = "fallbackCommentary")
     public MatchCommentaryResponse getMatchCommentary(Long matchId) {
         Match match = loadMatchPort.loadMatch(matchId);
 
@@ -36,5 +39,16 @@ public class GetMatchCommentaryService implements GetMatchCommentaryUseCase {
                 : "Commentaire en cours de génération...";
 
         return new MatchCommentaryResponse(matchId, commentary);
+    }
+
+    /**
+     * Fallback retourné lorsque le circuit breaker est ouvert.
+     *
+     * @param matchId identifiant du match
+     * @param ex      l'exception déclenchante
+     * @return un message d'indisponibilité
+     */
+    public MatchCommentaryResponse fallbackCommentary(Long matchId, Exception ex) {
+        return new MatchCommentaryResponse(matchId, "Commentaire temporairement indisponible.");
     }
 }

@@ -27,6 +27,7 @@ API REST de gestion de tournois sportifs en élimination directe, développée e
 - **Gatling** (tests de charge)
 - **Springdoc / Swagger UI** (documentation API)
 - **Lombok**
+- **Resilience4j** (circuit breaker sur l'appel OpenAI)
 
 ---
 
@@ -463,6 +464,7 @@ Authorization: Bearer <JWT token>
 - Monitoring Prometheus / Grafana avec dashboard Spring Boot (métriques JVM, HTTP, HikariCP)
 - Tests de charge Gatling - scénario complet end-to-end (login, tournoi, bracket, stats)
 - Couverture de tests élevée : tests unitaires (JUnit 5 / Mockito), tests controller (MockMvc) et tests d'intégration (Testcontainers + Kafka embarqué)
+- Circuit breaker Resilience4j sur la génération de commentaires OpenAI (fallback automatique en cas d'indisponibilité)
 
 ---
 
