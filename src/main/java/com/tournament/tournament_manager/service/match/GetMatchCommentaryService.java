@@ -4,7 +4,6 @@ import com.tournament.tournament_manager.domain.model.entities.Match;
 import com.tournament.tournament_manager.domain.port.in.match.GetMatchCommentaryUseCase;
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchPort;
 import com.tournament.tournament_manager.dto.response.MatchCommentaryResponse;
-import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,7 +29,6 @@ public class GetMatchCommentaryService implements GetMatchCommentaryUseCase {
      * @return le commentaire du match
      */
     @Override
-    @CircuitBreaker(name = "openai", fallbackMethod = "fallbackCommentary")
     public MatchCommentaryResponse getMatchCommentary(Long matchId) {
         Match match = loadMatchPort.loadMatch(matchId);
 

@@ -1,26 +1,29 @@
 package com.tournament.tournament_manager.infrastructure.ai;
 
 import com.openai.client.OpenAIClient;
-import com.openai.client.okhttp.OpenAIOkHttpClient;
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
 import com.tournament.tournament_manager.domain.port.out.match.GenerateCommentaryPort;
-import org.springframework.beans.factory.annotation.Value;
+import com.tournament.tournament_manager.exception.OpenAiUnavailableException;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.stereotype.Component;
 
 /**
  * Adapter OpenAI implémentant la génération de commentaire via GPT.
  * Utilise le modèle {@code gpt-4o-mini} pour minimiser les coûts.
+ *
+ * <p>Protégé par un circuit breaker Resilience4j : après une série d'échecs,
+ * les appels suivants sont court-circuités vers {@link #fallbackGenerateCommentary}
+ * sans solliciter l'API OpenAI, afin d'éviter de saturer l'application en cas
+ * d'indisponibilité prolongée du service externe.
  */
 @Component
 public class OpenAiCommentaryAdapter implements GenerateCommentaryPort {
 
     private final OpenAIClient client;
 
-    public OpenAiCommentaryAdapter(@Value("${openai.api.key}") String apiKey) {
-        this.client = OpenAIOkHttpClient.builder()
-                .apiKey(apiKey)
-                .build();
+    public OpenAiCommentaryAdapter(OpenAIClient client) {
+        this.client = client;
     }
 
     /**
@@ -30,6 +33,7 @@ public class OpenAiCommentaryAdapter implements GenerateCommentaryPort {
      * @return le commentaire généré
      */
     @Override
+    @CircuitBreaker(name = "openai", fallbackMethod = "fallbackGenerateCommentary")
     public String generateCommentary(String prompt) {
         ChatCompletionCreateParams params = ChatCompletionCreateParams.builder()
                 .model("gpt-4o-mini")
@@ -44,5 +48,17 @@ public class OpenAiCommentaryAdapter implements GenerateCommentaryPort {
                 .message()
                 .content()
                 .orElse("");
+    }
+
+    /**
+     * Fallback invoqué lorsque le circuit breaker est ouvert ou que l'appel échoue.
+     * Relance une exception dédiée, capturée par {@code CommentaryListener}
+     * comme tout autre échec de génération.
+     *
+     * @param prompt le prompt qui aurait été envoyé
+     * @param t      la cause de l'échec
+     */
+    private String fallbackGenerateCommentary(String prompt, Throwable t) {
+        throw new OpenAiUnavailableException("Service de commentaire IA indisponible", t);
     }
 }

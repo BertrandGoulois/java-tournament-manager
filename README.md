@@ -59,6 +59,8 @@ Les side effects métier (mise à jour ELO, avancement du bracket, notifications
 
 En cas d'échec répété d'un listener (3 tentatives espacées d'1 seconde), le message est redirigé vers le topic `match-finished.DLT` (Dead Letter Topic) pour inspection et rejeu manuel via Kafka UI.
 
+> L'appel à OpenAI dans `OpenAiCommentaryAdapter` est protégé par un circuit breaker Resilience4j : après une série d'échecs, les appels suivants sont court-circuités sans solliciter l'API, le `CommentaryListener` reçoit une exception dédiée et journalise l'incident sans bloquer le traitement des autres événements.
+
 > Cette approche remplace une première implémentation basée sur les Spring Events synchrones, afin de se rapprocher d'une architecture orientée événements distribuée.
 
 **Test WebSocket** : une page de démonstration est disponible sur `http://localhost:8080/ws-test.html`. Elle permet de visualiser en temps réel les événements de fin de match sans authentification.
@@ -465,7 +467,7 @@ Authorization: Bearer <JWT token>
 - Monitoring Prometheus / Grafana avec dashboard Spring Boot (métriques JVM, HTTP, HikariCP)
 - Tests de charge Gatling - scénario complet end-to-end (login, tournoi, bracket, stats)
 - Couverture de tests élevée : tests unitaires (JUnit 5 / Mockito), tests controller (MockMvc) et tests d'intégration (Testcontainers + Kafka embarqué)
-- Circuit breaker Resilience4j sur la génération de commentaires OpenAI (fallback automatique en cas d'indisponibilité)
+- Circuit breaker Resilience4j sur l'appel OpenAI (testé : transitions CLOSED → OPEN → HALF_OPEN, court-circuit vérifié)
 
 ---
 
