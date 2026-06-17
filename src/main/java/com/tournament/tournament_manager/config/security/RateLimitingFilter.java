@@ -2,6 +2,7 @@ package com.tournament.tournament_manager.config.security;
 
 import io.github.bucket4j.Bandwidth;
 import io.github.bucket4j.Bucket;
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,8 +14,12 @@ import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * Filtre de rate limiting par IP sur les endpoints sensibles.
@@ -32,10 +37,15 @@ public class RateLimitingFilter extends OncePerRequestFilter {
     private final Map<String, Bucket> createPlayerBuckets = new ConcurrentHashMap<>();
 
     @Value("${rate-limiting.login.capacity:5}")
-    private int loginCapacity;
+    private int loginCapacity = 5;
 
     @Value("${rate-limiting.player.capacity:10}")
-    private int playerCapacity;
+    private int playerCapacity = 10;
+
+    @Value("${rate-limiting.trusted-proxies:}")
+    private String trustedProxiesRaw = "";
+
+    private Set<String> trustedProxies = new HashSet<>();
 
     private Bucket newLoginBucket() {
         return Bucket.builder()
@@ -53,6 +63,14 @@ public class RateLimitingFilter extends OncePerRequestFilter {
                         .refillIntervally(playerCapacity, Duration.ofMinutes(1))
                         .build())
                 .build();
+    }
+
+    @PostConstruct
+    public void init() {
+        trustedProxies = Arrays.stream(trustedProxiesRaw.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toSet());
     }
 
     @Override
@@ -85,11 +103,27 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
+    /**
+     * Détermine l'IP cliente à utiliser pour le rate limiting.
+     *
+     * <p>Le header {@code X-Forwarded-For} n'est pris en compte que si la requête
+     * provient d'une source explicitement déclarée de confiance (reverse proxy connu),
+     * configurée via {@code rate-limiting.trusted-proxies}. Sans cela, n'importe quel
+     * client pourrait falsifier ce header pour contourner le rate limiting par IP.
+     *
+     * @param request la requête HTTP entrante
+     * @return l'IP à utiliser pour le bucket de rate limiting
+     */
     private String getClientIp(HttpServletRequest request) {
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip == null || ip.isEmpty()) {
-            ip = request.getRemoteAddr();
+        String remoteAddr = request.getRemoteAddr();
+        boolean trustedSource = trustedProxies.contains("*") || trustedProxies.contains(remoteAddr);
+
+        if (trustedSource) {
+            String forwarded = request.getHeader("X-Forwarded-For");
+            if (forwarded != null && !forwarded.isEmpty()) {
+                return forwarded.split(",")[0].trim();
+            }
         }
-        return ip;
+        return remoteAddr;
     }
 }
