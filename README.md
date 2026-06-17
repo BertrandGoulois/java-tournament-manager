@@ -472,4 +472,4 @@ Authorization: Bearer <JWT token>
 ## Évolutions possibles
 
 - Format round-robin / phase de groupes
-- Validation de la confiance accordée au header `X-Forwarded-For` (restreindre aux IPs de reverse proxy connues, ex. via `ForwardedHeaderFilter`) pour un déploiement sans proxy de confiance
+- Reverse proxy (nginx) devant l'application pour une validation complète de la confiance sur `X-Forwarded-For` en environnement de production
