@@ -19,9 +19,16 @@ public class TournamentSimulation extends Simulation {
 
     ScenarioBuilder scenario = scenario("Tournament Full Flow")
             .exec(session -> session.set("userId", session.userId()))
+            .exec(session -> {
+                long id = session.userId();
+                int b = (int) (id % 250) + 1;
+                int c = (int) ((id / 250) % 250) + 1;
+                return session.set("fakeIp", "10.0." + b + "." + c);
+            })
             // Login
             .exec(http("Login")
                     .post("/api/auth/login")
+                    .header("X-Forwarded-For", session -> session.getString("fakeIp"))
                     .body(StringBody("""
                             {"username":"admin","password":"password123"}
                             """))
@@ -32,6 +39,7 @@ public class TournamentSimulation extends Simulation {
             .exec(http("Create Tournament")
                     .post("/api/tournaments")
                     .header("Authorization", session -> "Bearer " + session.getString("jwt"))
+                    .header("X-Forwarded-For", session -> session.getString("fakeIp"))
                     .body(StringBody(session -> """
                             {"name":"T_%s","maxPlayers":8}
                             """.formatted(java.util.UUID.randomUUID().toString().substring(0, 8))))
@@ -60,17 +68,20 @@ public class TournamentSimulation extends Simulation {
             // Démarrer le tournoi
             .exec(http("Start Tournament")
                     .post("/api/tournaments/#{tournamentId}/start")
-                    .header("Authorization", session -> "Bearer " + session.getString("jwt")))
+                    .header("Authorization", session -> "Bearer " + session.getString("jwt"))
+                    .header("X-Forwarded-For", session -> session.getString("fakeIp")))
             .pause(1)
             // Consulter le bracket
             .exec(http("Get Bracket")
                     .get("/api/tournaments/#{tournamentId}/bracket")
-                    .header("Authorization", session -> "Bearer " + session.getString("jwt")))
+                    .header("Authorization", session -> "Bearer " + session.getString("jwt"))
+                    .header("X-Forwarded-For", session -> session.getString("fakeIp")))
             .pause(1)
             // Consulter les stats du joueur 1
             .exec(http("Get Player Stats")
                     .get("/api/players/#{playerId1}/stats")
-                    .header("Authorization", session -> "Bearer " + session.getString("jwt")));
+                    .header("Authorization", session -> "Bearer " + session.getString("jwt"))
+                    .header("X-Forwarded-For", session -> session.getString("fakeIp")));
 
     {
         setUp(
@@ -96,6 +107,7 @@ public class TournamentSimulation extends Simulation {
         return exec(http("Create Player " + index)
                 .post("/api/players")
                 .header("Authorization", session -> "Bearer " + session.getString("jwt"))
+                .header("X-Forwarded-For", session -> session.getString("fakeIp"))
                 .body(StringBody(session -> {
                     String uid = java.util.UUID.randomUUID().toString().substring(0, 8);
                     return """
@@ -109,6 +121,7 @@ public class TournamentSimulation extends Simulation {
         return exec(http("Register Player " + index)
                 .post("/api/registrations")
                 .header("Authorization", session -> "Bearer " + session.getString("jwt"))
+                .header("X-Forwarded-For", session -> session.getString("fakeIp"))
                 .body(StringBody(session -> """
                         {"playerId":%s,"tournamentId":%s}
                         """.formatted(

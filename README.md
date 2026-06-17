@@ -132,7 +132,7 @@ Prérequis : l'appli doit tourner sur `localhost:8080`.
 
 Le rapport HTML est généré dans `target/gatling/<run-id>/index.html`.
 
-> Le scénario simule un flux complet : login, création d'un tournoi, inscription de 8 joueurs, démarrage, consultation du bracket et des stats. La charge monte progressivement de 1 à 500 utilisateurs simultanés.
+> Le scénario simule un flux complet : login, création d'un tournoi, inscription de 8 joueurs, démarrage, consultation du bracket et des stats. La charge monte progressivement de 1 à 500 utilisateurs simultanés, chacun avec une IP simulée distincte via le header `X-Forwarded-For` pour valider le rate limiting par client sans saturer un bucket partagé.
 
 **Documentation API :**
 
@@ -458,6 +458,7 @@ Authorization: Bearer <JWT token>
 - Statistiques joueur (win rate, historique ELO)
 - Authentification JWT avec refresh token et révocation (logout)
 - Rate limiting sur les endpoints sensibles (Login : 5 req/min, Create Player : 10 req/min)
+- Tests de charge multi-IP simulées via `X-Forwarded-For` pour valider le rate limiting par client
 - Soft delete sur joueurs et tournois
 - Pagination sur les listes de joueurs et tournois
 - Migrations versionnées avec Liquibase
@@ -471,3 +472,4 @@ Authorization: Bearer <JWT token>
 ## Évolutions possibles
 
 - Format round-robin / phase de groupes
+- Validation de la confiance accordée au header `X-Forwarded-For` (restreindre aux IPs de reverse proxy connues, ex. via `ForwardedHeaderFilter`) pour un déploiement sans proxy de confiance

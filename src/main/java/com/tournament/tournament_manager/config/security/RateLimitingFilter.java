@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -29,6 +30,30 @@ public class RateLimitingFilter extends OncePerRequestFilter {
 
     private final Map<String, Bucket> loginBuckets = new ConcurrentHashMap<>();
     private final Map<String, Bucket> createPlayerBuckets = new ConcurrentHashMap<>();
+
+    @Value("${rate-limiting.login.capacity:5}")
+    private int loginCapacity;
+
+    @Value("${rate-limiting.player.capacity:10}")
+    private int playerCapacity;
+
+    private Bucket newLoginBucket() {
+        return Bucket.builder()
+                .addLimit(Bandwidth.builder()
+                        .capacity(loginCapacity)
+                        .refillIntervally(loginCapacity, Duration.ofMinutes(1))
+                        .build())
+                .build();
+    }
+
+    private Bucket newCreatePlayerBucket() {
+        return Bucket.builder()
+                .addLimit(Bandwidth.builder()
+                        .capacity(playerCapacity)
+                        .refillIntervally(playerCapacity, Duration.ofMinutes(1))
+                        .build())
+                .build();
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -58,24 +83,6 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
-    }
-
-    private Bucket newLoginBucket() {
-        return Bucket.builder()
-                .addLimit(Bandwidth.builder()
-                        .capacity(5)
-                        .refillIntervally(5, Duration.ofMinutes(1))
-                        .build())
-                .build();
-    }
-
-    private Bucket newCreatePlayerBucket() {
-        return Bucket.builder()
-                .addLimit(Bandwidth.builder()
-                        .capacity(10)
-                        .refillIntervally(10, Duration.ofMinutes(1))
-                        .build())
-                .build();
     }
 
     private String getClientIp(HttpServletRequest request) {
