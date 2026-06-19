@@ -11,7 +11,7 @@ API REST de gestion de tournois sportifs en élimination directe, développée e
 
 ## Technical Stack
 
-- **Java 21**
+- **Java 21** (Virtual Threads activés via `spring.threads.virtual.enabled=true`)
 - **Spring Boot 4**
 - **Spring Security** + **JWT** (authentification stateless)
 - **Spring Data JPA** / **Hibernate**
