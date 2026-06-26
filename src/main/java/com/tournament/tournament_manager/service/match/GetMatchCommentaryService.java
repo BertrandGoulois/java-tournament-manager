@@ -3,7 +3,7 @@ package com.tournament.tournament_manager.service.match;
 import com.tournament.tournament_manager.domain.model.entities.Match;
 import com.tournament.tournament_manager.domain.port.in.match.GetMatchCommentaryUseCase;
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchPort;
-import com.tournament.tournament_manager.dto.response.MatchCommentaryResponse;
+import com.tournament.tournament_manager.dto.response.match.MatchCommentaryResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

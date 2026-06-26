@@ -5,8 +5,9 @@ import com.tournament.tournament_manager.config.security.JwtAuthenticationFilter
 import com.tournament.tournament_manager.config.security.SecurityConfig;
 import com.tournament.tournament_manager.config.security.UserDetailsServiceImpl;
 import com.tournament.tournament_manager.domain.port.in.auth.RefreshTokenUseCase;
-import com.tournament.tournament_manager.dto.request.LoginRequest;
-import com.tournament.tournament_manager.dto.response.AuthResponse;
+import com.tournament.tournament_manager.dto.request.auth.LoginRequest;
+import com.tournament.tournament_manager.dto.request.auth.RefreshTokenRequest;
+import com.tournament.tournament_manager.dto.response.auth.AuthResponse;
 import com.tournament.tournament_manager.service.auth.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -86,7 +87,7 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/auth/refresh")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new com.tournament.tournament_manager.dto.request.RefreshTokenRequest("refresh-token"))))
+                        .content(objectMapper.writeValueAsString(new RefreshTokenRequest("refresh-token"))))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").value("new-jwt-token"));
     }
@@ -96,7 +97,7 @@ class AuthControllerTest {
         mockMvc.perform(post("/api/auth/logout")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new com.tournament.tournament_manager.dto.request.RefreshTokenRequest("refresh-token"))))
+                        .content(objectMapper.writeValueAsString(new RefreshTokenRequest("refresh-token"))))
                 .andExpect(status().isOk());
     }
 }

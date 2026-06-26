@@ -3,7 +3,7 @@ package com.tournament.tournament_manager.service.registration;
 import com.tournament.tournament_manager.domain.model.entities.Registration;
 import com.tournament.tournament_manager.domain.port.in.registration.GetRegistrationsUseCase;
 import com.tournament.tournament_manager.domain.port.out.registration.LoadRegistrationPort;
-import com.tournament.tournament_manager.dto.response.RegistrationResponse;
+import com.tournament.tournament_manager.dto.response.registration.RegistrationResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

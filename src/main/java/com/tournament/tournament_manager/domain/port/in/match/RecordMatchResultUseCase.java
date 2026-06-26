@@ -1,7 +1,7 @@
 package com.tournament.tournament_manager.domain.port.in.match;
 
-import com.tournament.tournament_manager.dto.request.RecordMatchResultRequest;
-import com.tournament.tournament_manager.dto.response.MatchResponse;
+import com.tournament.tournament_manager.dto.request.match.RecordMatchResultRequest;
+import com.tournament.tournament_manager.dto.response.match.MatchResponse;
 
 /**
  * Port entrant : cas d'utilisation pour enregistrer le résultat d'un match.

@@ -5,8 +5,8 @@ import com.tournament.tournament_manager.domain.port.in.player.GetPlayerStatsUse
 import com.tournament.tournament_manager.domain.port.out.player.CountMatchesByPlayerPort;
 import com.tournament.tournament_manager.domain.port.out.player.LoadEloHistoryPort;
 import com.tournament.tournament_manager.domain.port.out.player.LoadPlayerPort;
-import com.tournament.tournament_manager.dto.response.EloHistoryResponse;
-import com.tournament.tournament_manager.dto.response.PlayerStatsResponse;
+import com.tournament.tournament_manager.dto.response.player.EloHistoryResponse;
+import com.tournament.tournament_manager.dto.response.player.PlayerStatsResponse;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

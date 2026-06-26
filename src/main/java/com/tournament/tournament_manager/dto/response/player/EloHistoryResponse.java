@@ -1,4 +1,4 @@
-package com.tournament.tournament_manager.dto.response;
+package com.tournament.tournament_manager.dto.response.player;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;

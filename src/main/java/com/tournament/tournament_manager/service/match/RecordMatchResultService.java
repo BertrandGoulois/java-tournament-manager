@@ -7,8 +7,8 @@ import com.tournament.tournament_manager.domain.port.in.match.RecordMatchResultU
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchPort;
 import com.tournament.tournament_manager.domain.port.out.match.PublishMatchEventPort;
 import com.tournament.tournament_manager.domain.port.out.match.SaveMatchPort;
-import com.tournament.tournament_manager.dto.request.RecordMatchResultRequest;
-import com.tournament.tournament_manager.dto.response.MatchResponse;
+import com.tournament.tournament_manager.dto.request.match.RecordMatchResultRequest;
+import com.tournament.tournament_manager.dto.response.match.MatchResponse;
 import com.tournament.tournament_manager.exception.InvalidException;
 import com.tournament.tournament_manager.exception.MatchNotFoundException;
 import org.springframework.stereotype.Service;

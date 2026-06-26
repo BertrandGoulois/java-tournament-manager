@@ -1,9 +1,10 @@
 package com.tournament.tournament_manager.controller;
 
 import com.tournament.tournament_manager.domain.port.in.tournament.*;
-import com.tournament.tournament_manager.dto.request.CreateTournamentRequest;
-import com.tournament.tournament_manager.dto.response.BracketResponse;
-import com.tournament.tournament_manager.dto.response.TournamentResponse;
+import com.tournament.tournament_manager.dto.request.tournament.CreateTournamentRequest;
+import com.tournament.tournament_manager.dto.response.tournament.BracketResponse;
+import com.tournament.tournament_manager.dto.response.tournament.StandingsResponse;
+import com.tournament.tournament_manager.dto.response.tournament.TournamentResponse;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,17 +25,20 @@ public class TournamentController {
     private final StartTournamentUseCase startTournamentUseCase;
     private final GetBracketUseCase getBracketUseCase;
     private final DeleteTournamentUseCase deleteTournamentUseCase;
+    private final GetStandingsUseCase getStandingsUseCase;
 
     public TournamentController(CreateTournamentUseCase createTournamentUseCase,
                                 GetTournamentUseCase getTournamentUseCase,
                                 StartTournamentUseCase startTournamentUseCase,
                                 GetBracketUseCase getBracketUseCase,
-                                DeleteTournamentUseCase deleteTournamentUseCase) {
+                                DeleteTournamentUseCase deleteTournamentUseCase,
+                                GetStandingsUseCase getStandingsUseCase) {
         this.createTournamentUseCase = createTournamentUseCase;
         this.getTournamentUseCase = getTournamentUseCase;
         this.startTournamentUseCase = startTournamentUseCase;
         this.getBracketUseCase = getBracketUseCase;
         this.deleteTournamentUseCase = deleteTournamentUseCase;
+        this.getStandingsUseCase = getStandingsUseCase;
     }
 
     @PostMapping
@@ -62,6 +66,11 @@ public class TournamentController {
     @GetMapping("/{id}/bracket")
     public ResponseEntity<BracketResponse> getBracket(@PathVariable Long id) {
         return ResponseEntity.ok(getBracketUseCase.getBracket(id));
+    }
+
+    @GetMapping("/{id}/standings")
+    public ResponseEntity<StandingsResponse> getStandings(@PathVariable Long id) {
+        return ResponseEntity.ok(getStandingsUseCase.getStandings(id));
     }
 
     @DeleteMapping("/{id}")

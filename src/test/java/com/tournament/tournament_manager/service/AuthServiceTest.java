@@ -1,8 +1,8 @@
 package com.tournament.tournament_manager.service;
 
 import com.tournament.tournament_manager.config.security.JwtService;
-import com.tournament.tournament_manager.dto.request.LoginRequest;
-import com.tournament.tournament_manager.dto.response.AuthResponse;
+import com.tournament.tournament_manager.dto.request.auth.LoginRequest;
+import com.tournament.tournament_manager.dto.response.auth.AuthResponse;
 import com.tournament.tournament_manager.service.auth.AuthService;
 import com.tournament.tournament_manager.service.token.RefreshTokenService;
 import org.junit.jupiter.api.Test;

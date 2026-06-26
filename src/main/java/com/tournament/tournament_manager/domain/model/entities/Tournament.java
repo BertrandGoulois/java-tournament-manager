@@ -1,5 +1,6 @@
 package com.tournament.tournament_manager.domain.model.entities;
 
+import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -31,6 +32,10 @@ public class Tournament {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TournamentStatus status = TournamentStatus.OPEN;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private TournamentFormat format = TournamentFormat.SINGLE_ELIMINATION;
 
     @Column(nullable = false)
     private int maxPlayers;

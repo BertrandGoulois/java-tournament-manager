@@ -1,6 +1,6 @@
 package com.tournament.tournament_manager.domain.port.in.player;
 
-import com.tournament.tournament_manager.dto.response.PlayerStatsResponse;
+import com.tournament.tournament_manager.dto.response.player.PlayerStatsResponse;
 
 /**
  * Port entrant : cas d'utilisation pour consulter les statistiques d'un joueur.

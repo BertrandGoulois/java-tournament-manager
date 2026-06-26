@@ -5,7 +5,7 @@
 ![Coverage](.github/badges/jacoco.svg)
 ![Branches](.github/badges/branches.svg)
 
-API REST de gestion de tournois sportifs en élimination directe, développée en Java 21 / Spring Boot.
+API REST de gestion de tournois sportifs (élimination directe ou round-robin), développée en Java 21 / Spring Boot.
 
 ---
 
@@ -41,6 +41,7 @@ domain/
   port/
     in/         → interfaces use cases (ex. RecordMatchResultUseCase)
     out/        → interfaces infra (ex. SaveMatchPort, LoadMatchPort)
+    out/strategy/ → interfaces de stratégie métier (ex. TournamentStartStrategy)
 
 service/        → use cases atomiques (une classe par use case, ex. CreateTournamentService, RecordMatchResultService)
 
@@ -48,12 +49,32 @@ infrastructure/
   persistence/  → adapters JPA (implémentent les ports sortants)
   messaging/    → adapter Kafka
   ai/           → adapter OpenAI
+  strategy/     → stratégies de démarrage de tournoi (SingleEliminationStartStrategy, RoundRobinStartStrategy)
 ```
+
+### Multi-format de tournoi
+
+Un tournoi peut être créé selon trois formats (`TournamentFormat`) :
+
+- `SINGLE_ELIMINATION` (par défaut) - bracket en élimination directe
+- `ROUND_ROBIN` - chaque joueur affronte tous les autres une fois, classement par points
+- `GROUPS_THEN_KNOCKOUT` - phase de groupes round-robin puis bracket entre qualifiés (**non encore implémenté**, fondations posées)
+
+Le démarrage du tournoi (`StartTournamentService`) délègue la génération des matchs initiaux à la stratégie correspondante, via le pattern **Strategy** : Spring injecte toutes les implémentations de `TournamentStartStrategy` et le service choisit la bonne selon `tournament.getFormat()`.
+
+- `SingleEliminationStartStrategy` → mélange aléatoire et génère le premier tour du bracket (avec byes si effectif impair)
+- `RoundRobinStartStrategy` → génère l'intégralité des confrontations en une seule fois via la **méthode du cercle**, garantissant que chaque paire de joueurs se rencontre exactement une fois
+
+`BracketListener` route également la **progression** du tournoi selon le format : avancement round par round (élimination directe) ou vérification d'achèvement global dès que tous les matchs sont joués (round-robin, via `CheckTournamentCompletionService`).
+
+Le **classement round-robin** (`GetStandingsService`) est calculé à la demande à partir des matchs terminés - pas de table dédiée - avec 3 points par victoire, trié par points puis par nombre de victoires.
+
+### Architecture événementielle (Kafka)
 
 Les side effects métier (mise à jour ELO, avancement du bracket, notifications temps réel, génération de commentaires) sont découplés du service principal via Kafka. Lorsqu'un résultat de match est enregistré, un événement `MatchFinishedEvent` est publié sur le topic `match-finished`. Quatre consumers indépendants traitent cet événement de façon asynchrone :
 
 - `elo-group` → met à jour les ratings ELO des deux joueurs
-- `bracket-group` → avance le bracket au tour suivant
+- `bracket-group` → avance le bracket au tour suivant, ou vérifie l'achèvement du tournoi round-robin
 - `websocket-group` → broadcast une notification temps réel à tous les clients connectés via WebSocket
 - `commentary-group` → génère un commentaire narratif via OpenAI GPT-4o-mini
 
@@ -123,6 +144,8 @@ docker-compose up -d
 ```bash
 ./mvnw verify
 ```
+
+> `KafkaIntegrationTest`, `PlayerIntegrationTest` et `RoundRobinIntegrationTest` sont exclus de la CI standard (`maven-surefire-plugin`) pour rester rapide et stable. `RoundRobinIntegrationTest` valide le flux complet (création, démarrage, résultats, classement, fin de tournoi) sans dépendre d'un container Kafka : la vérification de fin de tournoi, normalement déclenchée par le listener Kafka asynchrone, est appelée directement.
 
 **Tests de charge (Gatling) :**
 
@@ -308,12 +331,15 @@ Authorization: Bearer <JWT token>
 ```json
 {
   "name": "Spring Championship",
-  "maxPlayers": 8
+  "maxPlayers": 8,
+  "format": "SINGLE_ELIMINATION"
 }
 ```
 
+> `format` est optionnel - `SINGLE_ELIMINATION` par défaut si omis. Valeurs possibles : `SINGLE_ELIMINATION`, `ROUND_ROBIN`, `GROUPS_THEN_KNOCKOUT` (ce dernier pas encore implémenté).
+
 - **Errors** :
-  - `400` → `maxPlayers` n'est pas une puissance de 2
+  - `400` → `maxPlayers` n'est pas une puissance de 2 (uniquement pour le format `SINGLE_ELIMINATION` ; n'importe quel effectif ≥ 2 est accepté en `ROUND_ROBIN`)
   - `409` → nom déjà utilisé
 
 #### Get all tournaments
@@ -334,7 +360,7 @@ Authorization: Bearer <JWT token>
 
 - **POST** `/api/tournaments/{id}/start`
 
-> Génère automatiquement le bracket en élimination directe. Les joueurs sans adversaire (byes) sont qualifiés automatiquement.
+> Génère automatiquement les matchs initiaux selon le format du tournoi : bracket en élimination directe avec byes pour `SINGLE_ELIMINATION`, ou intégralité des confrontations pour `ROUND_ROBIN`.
 
 #### Get tournament bracket
 
@@ -375,7 +401,31 @@ Authorization: Bearer <JWT token>
 }
 ```
 
-> Les rounds sont triés du premier (valeur la plus haute) à la finale (round 2).
+> Les rounds sont triés du premier (valeur la plus haute) à la finale (round 2). Pertinent pour le format `SINGLE_ELIMINATION`.
+
+#### Get tournament standings
+
+- **GET** `/api/tournaments/{id}/standings`
+- **Response JSON** :
+
+```json
+{
+  "tournamentId": 1,
+  "tournamentName": "Round Robin Cup",
+  "standings": [
+    {
+      "playerId": 1,
+      "username": "alice",
+      "matchesPlayed": 3,
+      "wins": 3,
+      "losses": 0,
+      "points": 9
+    }
+  ]
+}
+```
+
+> Pertinent pour les tournois au format `ROUND_ROBIN`. Calculé à la demande à partir des matchs terminés (3 points par victoire), trié par points décroissants.
 
 ---
 
@@ -421,7 +471,7 @@ Authorization: Bearer <JWT token>
 }
 ```
 
-> Après enregistrement du résultat : publication d'un événement Kafka `match-finished`, mise à jour ELO des deux joueurs, avancement automatique au tour suivant, notification WebSocket temps réel, génération de commentaire LLM, fin du tournoi si c'était la finale.
+> Après enregistrement du résultat : publication d'un événement Kafka `match-finished`, mise à jour ELO des deux joueurs, notification WebSocket temps réel, génération de commentaire LLM, et progression du tournoi selon son format (avancement au tour suivant ou vérification de fin de tournoi).
 
 - **Errors** :
   - `400` → match déjà terminé
@@ -447,11 +497,14 @@ Authorization: Bearer <JWT token>
 
 - Architecture hexagonale (ports & adapters) - domaine métier isolé de l'infra
 - Use cases atomiques : une classe par use case (principe de responsabilité unique)
+- Support multi-format de tournoi (`SINGLE_ELIMINATION`, `ROUND_ROBIN`) via pattern Strategy, extensible pour de futurs formats
 - Génération de bracket en élimination directe avec support des byes
+- Génération round-robin via la méthode du cercle (chaque paire de joueurs se rencontre exactement une fois)
+- Classement round-robin calculé à la demande (`GET /tournaments/{id}/standings`)
 - Consultation du bracket complet par round (`GET /tournaments/{id}/bracket`)
 - Calcul ELO après chaque match (K=32, formule standard)
 - Idempotence du calcul ELO - protection contre les doublons Kafka
-- Avancement automatique au tour suivant via événements Kafka
+- Avancement automatique au tour suivant via événements Kafka (élimination directe) ou détection de fin de tournoi (round-robin)
 - Génération automatique de commentaires de matchs via OpenAI GPT-4o-mini (event-driven via Kafka)
 - Dead Letter Queue Kafka pour les messages en échec (`match-finished.DLT`)
 - Kafka UI pour l'inspection et le rejeu des messages en échec
@@ -466,12 +519,12 @@ Authorization: Bearer <JWT token>
 - Migrations versionnées avec Liquibase
 - Monitoring Prometheus / Grafana avec dashboard Spring Boot (métriques JVM, HTTP, HikariCP)
 - Tests de charge Gatling - scénario complet end-to-end (login, tournoi, bracket, stats)
-- Couverture de tests élevée : tests unitaires (JUnit 5 / Mockito), tests controller (MockMvc) et tests d'intégration (Testcontainers + Kafka embarqué)
+- Couverture de tests élevée : tests unitaires (JUnit 5 / Mockito), tests controller (MockMvc) et tests d'intégration (Testcontainers)
 - Circuit breaker Resilience4j sur l'appel OpenAI (testé : transitions CLOSED → OPEN → HALF_OPEN, court-circuit vérifié)
 
 ---
 
 ## Évolutions possibles
 
-- Format round-robin / phase de groupes
+- Format hybride `GROUPS_THEN_KNOCKOUT` (phase de groupes round-robin puis bracket élimination directe entre qualifiés) - fondations déjà posées (enum, routage du listener)
 - Reverse proxy (nginx) devant l'application pour une validation complète de la confiance sur `X-Forwarded-For` en environnement de production

@@ -1,4 +1,4 @@
-package com.tournament.tournament_manager.dto.response;
+package com.tournament.tournament_manager.dto.response.tournament;
 
 import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 

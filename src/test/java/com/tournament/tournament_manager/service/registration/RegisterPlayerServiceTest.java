@@ -9,8 +9,8 @@ import com.tournament.tournament_manager.domain.port.out.registration.CountRegis
 import com.tournament.tournament_manager.domain.port.out.registration.ExistsRegistrationPort;
 import com.tournament.tournament_manager.domain.port.out.registration.SaveRegistrationPort;
 import com.tournament.tournament_manager.domain.port.out.tournament.LoadTournamentPort;
-import com.tournament.tournament_manager.dto.request.CreateRegistrationRequest;
-import com.tournament.tournament_manager.dto.response.RegistrationResponse;
+import com.tournament.tournament_manager.dto.request.registration.CreateRegistrationRequest;
+import com.tournament.tournament_manager.dto.response.registration.RegistrationResponse;
 import com.tournament.tournament_manager.exception.InvalidException;
 import com.tournament.tournament_manager.exception.PlayerNotFoundException;
 import com.tournament.tournament_manager.exception.TournamentNotFoundException;

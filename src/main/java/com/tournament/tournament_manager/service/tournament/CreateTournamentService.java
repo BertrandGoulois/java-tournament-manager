@@ -1,11 +1,12 @@
 package com.tournament.tournament_manager.service.tournament;
 
 import com.tournament.tournament_manager.domain.model.entities.Tournament;
+import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 import com.tournament.tournament_manager.domain.port.in.tournament.CreateTournamentUseCase;
 import com.tournament.tournament_manager.domain.port.out.tournament.ExistsTournamentPort;
 import com.tournament.tournament_manager.domain.port.out.tournament.SaveTournamentPort;
-import com.tournament.tournament_manager.dto.request.CreateTournamentRequest;
-import com.tournament.tournament_manager.dto.response.TournamentResponse;
+import com.tournament.tournament_manager.dto.request.tournament.CreateTournamentRequest;
+import com.tournament.tournament_manager.dto.response.tournament.TournamentResponse;
 import com.tournament.tournament_manager.exception.InvalidTournamentException;
 import com.tournament.tournament_manager.exception.TournamentAlreadyExistsException;
 import org.springframework.stereotype.Service;
@@ -32,12 +33,17 @@ public class CreateTournamentService implements CreateTournamentUseCase {
         if (existsTournamentPort.existsByName(request.name())) {
             throw new TournamentAlreadyExistsException(request.name());
         }
-        if (!isPowerOfTwo(request.maxPlayers())) {
+
+        TournamentFormat format = request.format();
+
+        if (format == TournamentFormat.SINGLE_ELIMINATION && !isPowerOfTwo(request.maxPlayers())) {
             throw new InvalidTournamentException(request.maxPlayers());
         }
+
         Tournament tournament = new Tournament();
         tournament.setName(request.name());
         tournament.setMaxPlayers(request.maxPlayers());
+        tournament.setFormat(format);
         return toResponse(saveTournamentPort.saveTournament(tournament));
     }
 
@@ -46,6 +52,7 @@ public class CreateTournamentService implements CreateTournamentUseCase {
                 tournament.getId(),
                 tournament.getName(),
                 tournament.getStatus(),
+                tournament.getFormat(),
                 tournament.getMaxPlayers(),
                 tournament.getCreatedAt()
         );

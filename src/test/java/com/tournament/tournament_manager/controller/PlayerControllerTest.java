@@ -7,9 +7,9 @@ import com.tournament.tournament_manager.domain.port.in.player.CreatePlayerUseCa
 import com.tournament.tournament_manager.domain.port.in.player.DeletePlayerUseCase;
 import com.tournament.tournament_manager.domain.port.in.player.GetPlayerStatsUseCase;
 import com.tournament.tournament_manager.domain.port.in.player.GetPlayerUseCase;
-import com.tournament.tournament_manager.dto.request.CreatePlayerRequest;
-import com.tournament.tournament_manager.dto.response.PlayerResponse;
-import com.tournament.tournament_manager.dto.response.PlayerStatsResponse;
+import com.tournament.tournament_manager.dto.request.player.CreatePlayerRequest;
+import com.tournament.tournament_manager.dto.response.player.PlayerResponse;
+import com.tournament.tournament_manager.dto.response.player.PlayerStatsResponse;
 import com.tournament.tournament_manager.exception.PlayerNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -9,8 +9,9 @@ import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 import com.tournament.tournament_manager.domain.port.in.match.GetMatchCommentaryUseCase;
 import com.tournament.tournament_manager.domain.port.in.match.GetMatchUseCase;
 import com.tournament.tournament_manager.domain.port.in.match.RecordMatchResultUseCase;
-import com.tournament.tournament_manager.dto.request.RecordMatchResultRequest;
-import com.tournament.tournament_manager.dto.response.MatchResponse;
+import com.tournament.tournament_manager.dto.request.match.RecordMatchResultRequest;
+import com.tournament.tournament_manager.dto.response.match.MatchCommentaryResponse;
+import com.tournament.tournament_manager.dto.response.match.MatchResponse;
 import com.tournament.tournament_manager.exception.MatchNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -111,7 +112,7 @@ class MatchControllerTest {
     @Test
     void getMatchCommentary_shouldReturn200() throws Exception {
         when(getMatchCommentaryUseCase.getMatchCommentary(1L))
-                .thenReturn(new com.tournament.tournament_manager.dto.response.MatchCommentaryResponse(1L, "Super match !"));
+                .thenReturn(new MatchCommentaryResponse(1L, "Super match !"));
 
         mockMvc.perform(get("/api/matches/1/commentary").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())

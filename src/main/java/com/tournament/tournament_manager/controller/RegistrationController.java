@@ -2,8 +2,8 @@ package com.tournament.tournament_manager.controller;
 
 import com.tournament.tournament_manager.domain.port.in.registration.GetRegistrationsUseCase;
 import com.tournament.tournament_manager.domain.port.in.registration.RegisterPlayerUseCase;
-import com.tournament.tournament_manager.dto.request.CreateRegistrationRequest;
-import com.tournament.tournament_manager.dto.response.RegistrationResponse;
+import com.tournament.tournament_manager.dto.request.registration.CreateRegistrationRequest;
+import com.tournament.tournament_manager.dto.response.registration.RegistrationResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

@@ -1,7 +1,7 @@
 package com.tournament.tournament_manager.domain.port.in.registration;
 
-import com.tournament.tournament_manager.dto.request.CreateRegistrationRequest;
-import com.tournament.tournament_manager.dto.response.RegistrationResponse;
+import com.tournament.tournament_manager.dto.request.registration.CreateRegistrationRequest;
+import com.tournament.tournament_manager.dto.response.registration.RegistrationResponse;
 
 /**
  * Port entrant : cas d'utilisation pour inscrire un joueur à un tournoi.

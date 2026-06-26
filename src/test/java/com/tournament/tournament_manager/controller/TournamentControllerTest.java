@@ -5,11 +5,13 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.tournament.tournament_manager.config.security.JwtAuthenticationFilter;
 import com.tournament.tournament_manager.config.security.SecurityConfig;
 import com.tournament.tournament_manager.config.security.UserDetailsServiceImpl;
+import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
 import com.tournament.tournament_manager.domain.port.in.tournament.*;
-import com.tournament.tournament_manager.dto.request.CreateTournamentRequest;
-import com.tournament.tournament_manager.dto.response.BracketResponse;
-import com.tournament.tournament_manager.dto.response.TournamentResponse;
+import com.tournament.tournament_manager.dto.request.tournament.CreateTournamentRequest;
+import com.tournament.tournament_manager.dto.response.tournament.BracketResponse;
+import com.tournament.tournament_manager.dto.response.tournament.StandingsResponse;
+import com.tournament.tournament_manager.dto.response.tournament.TournamentResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +53,8 @@ class TournamentControllerTest {
     @MockitoBean
     private DeleteTournamentUseCase deleteTournamentUseCase;
     @MockitoBean
+    private GetStandingsUseCase getStandingsUseCase;
+    @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
     @MockitoBean
     private UserDetailsServiceImpl userDetailsService;
@@ -69,7 +73,7 @@ class TournamentControllerTest {
     }
 
     private TournamentResponse sampleTournament() {
-        return new TournamentResponse(1L, "Spring Championship", TournamentStatus.OPEN, 8, null);
+        return new TournamentResponse(1L, "Spring Championship", TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, 8, null);
     }
 
     @Test
@@ -80,7 +84,7 @@ class TournamentControllerTest {
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new CreateTournamentRequest("Spring Championship", 8))))
+                        .content(objectMapper.writeValueAsString(new CreateTournamentRequest("Spring Championship", 8, TournamentFormat.SINGLE_ELIMINATION))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("Spring Championship"));
     }
@@ -91,7 +95,7 @@ class TournamentControllerTest {
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new CreateTournamentRequest("", 2))))
+                        .content(objectMapper.writeValueAsString(new CreateTournamentRequest("", 2, TournamentFormat.SINGLE_ELIMINATION))))
                 .andExpect(status().isBadRequest());
     }
 
@@ -128,6 +132,17 @@ class TournamentControllerTest {
         when(getBracketUseCase.getBracket(1L)).thenReturn(bracket);
 
         mockMvc.perform(get("/api/tournaments/1/bracket").with(user("admin").roles("ADMIN")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tournamentId").value(1))
+                .andExpect(jsonPath("$.tournamentName").value("Spring Championship"));
+    }
+
+    @Test
+    void getStandings_shouldReturn200() throws Exception {
+        StandingsResponse standings = new StandingsResponse(1L, "Spring Championship", List.of());
+        when(getStandingsUseCase.getStandings(1L)).thenReturn(standings);
+
+        mockMvc.perform(get("/api/tournaments/1/standings").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.tournamentId").value(1))
                 .andExpect(jsonPath("$.tournamentName").value("Spring Championship"));

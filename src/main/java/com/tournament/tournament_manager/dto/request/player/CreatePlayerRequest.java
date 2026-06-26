@@ -1,4 +1,4 @@
-package com.tournament.tournament_manager.dto.request;
+package com.tournament.tournament_manager.dto.request.player;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

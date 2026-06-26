@@ -1,6 +1,6 @@
 package com.tournament.tournament_manager.domain.port.in.match;
 
-import com.tournament.tournament_manager.dto.response.MatchCommentaryResponse;
+import com.tournament.tournament_manager.dto.response.match.MatchCommentaryResponse;
 
 /**
  * Port entrant : cas d'utilisation pour générer un commentaire de match via LLM.

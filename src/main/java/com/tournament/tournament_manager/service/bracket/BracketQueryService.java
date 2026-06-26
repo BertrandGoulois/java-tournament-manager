@@ -5,9 +5,9 @@ import com.tournament.tournament_manager.domain.model.entities.Tournament;
 import com.tournament.tournament_manager.domain.port.in.tournament.GetBracketUseCase;
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchesByTournamentPort;
 import com.tournament.tournament_manager.domain.port.out.tournament.LoadTournamentPort;
-import com.tournament.tournament_manager.dto.response.BracketMatchResponse;
-import com.tournament.tournament_manager.dto.response.BracketResponse;
-import com.tournament.tournament_manager.dto.response.BracketRoundResponse;
+import com.tournament.tournament_manager.dto.response.tournament.BracketMatchResponse;
+import com.tournament.tournament_manager.dto.response.tournament.BracketResponse;
+import com.tournament.tournament_manager.dto.response.tournament.BracketRoundResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

@@ -4,7 +4,7 @@ import com.tournament.tournament_manager.domain.model.entities.Tournament;
 import com.tournament.tournament_manager.domain.port.in.tournament.GetTournamentUseCase;
 import com.tournament.tournament_manager.domain.port.out.tournament.LoadAllTournamentsPort;
 import com.tournament.tournament_manager.domain.port.out.tournament.LoadTournamentPort;
-import com.tournament.tournament_manager.dto.response.TournamentResponse;
+import com.tournament.tournament_manager.dto.response.tournament.TournamentResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -42,6 +42,7 @@ public class GetTournamentService implements GetTournamentUseCase {
                 tournament.getId(),
                 tournament.getName(),
                 tournament.getStatus(),
+                tournament.getFormat(),
                 tournament.getMaxPlayers(),
                 tournament.getCreatedAt()
         );

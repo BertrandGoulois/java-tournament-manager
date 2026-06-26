@@ -1,9 +1,9 @@
 package com.tournament.tournament_manager.controller;
 
 import com.tournament.tournament_manager.domain.port.in.auth.RefreshTokenUseCase;
-import com.tournament.tournament_manager.dto.request.LoginRequest;
-import com.tournament.tournament_manager.dto.request.RefreshTokenRequest;
-import com.tournament.tournament_manager.dto.response.AuthResponse;
+import com.tournament.tournament_manager.dto.request.auth.LoginRequest;
+import com.tournament.tournament_manager.dto.request.auth.RefreshTokenRequest;
+import com.tournament.tournament_manager.dto.response.auth.AuthResponse;
 import com.tournament.tournament_manager.service.auth.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;

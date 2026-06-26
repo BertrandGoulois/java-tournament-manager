@@ -1,6 +1,6 @@
 package com.tournament.tournament_manager.domain.port.in.tournament;
 
-import com.tournament.tournament_manager.dto.response.TournamentResponse;
+import com.tournament.tournament_manager.dto.response.tournament.TournamentResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

@@ -1,6 +1,6 @@
 package com.tournament.tournament_manager.domain.port.in.tournament;
 
-import com.tournament.tournament_manager.dto.response.BracketResponse;
+import com.tournament.tournament_manager.dto.response.tournament.BracketResponse;
 
 /**
  * Port entrant : cas d'utilisation pour consulter le bracket d'un tournoi.

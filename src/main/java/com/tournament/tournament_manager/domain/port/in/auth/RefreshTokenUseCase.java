@@ -1,6 +1,6 @@
 package com.tournament.tournament_manager.domain.port.in.auth;
 
-import com.tournament.tournament_manager.dto.response.AuthResponse;
+import com.tournament.tournament_manager.dto.response.auth.AuthResponse;
 
 /**
  * Port entrant : cas d'utilisation pour le refresh token JWT.

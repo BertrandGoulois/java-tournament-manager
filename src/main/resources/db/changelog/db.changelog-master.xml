@@ -11,4 +11,5 @@
     <include file="classpath:db/changelog/changes/004-create-refresh-tokens.sql"/>
     <include file="classpath:db/changelog/changes/005-add-soft-delete.sql"/>
     <include file="classpath:db/changelog/changes/006-add-match-commentary.sql"/>
+    <include file="classpath:db/changelog/changes/007-add-tournament-format.sql"/>
 </databaseChangeLog>

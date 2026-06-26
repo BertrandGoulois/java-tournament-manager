@@ -1,6 +1,6 @@
 package com.tournament.tournament_manager.domain.port.in.registration;
 
-import com.tournament.tournament_manager.dto.response.RegistrationResponse;
+import com.tournament.tournament_manager.dto.response.registration.RegistrationResponse;
 
 import java.util.List;
 

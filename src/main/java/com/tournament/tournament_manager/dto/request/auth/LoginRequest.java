@@ -1,4 +1,4 @@
-package com.tournament.tournament_manager.dto.request;
+package com.tournament.tournament_manager.dto.request.auth;
 
 import jakarta.validation.constraints.NotBlank;
 
