@@ -76,7 +76,7 @@ class RoundRobinIntegrationTest {
 
         // Création du tournoi en round-robin
         TournamentResponse tournament = createTournamentService.createTournament(
-                new CreateTournamentRequest("RR Integration Cup", 4, TournamentFormat.ROUND_ROBIN));
+                new CreateTournamentRequest("RR Integration Cup", 4, TournamentFormat.ROUND_ROBIN, null, null));
         assertEquals(TournamentFormat.ROUND_ROBIN, tournament.format());
 
         // Inscription des 4 joueurs

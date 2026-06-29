@@ -6,6 +6,7 @@ import com.tournament.tournament_manager.domain.model.entities.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 import com.tournament.tournament_manager.domain.port.in.tournament.AdvanceBracketUseCase;
 import com.tournament.tournament_manager.domain.port.in.tournament.CheckTournamentCompletionUseCase;
+import com.tournament.tournament_manager.domain.port.in.tournament.GenerateKnockoutBracketFromGroupsUseCase;
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchPort;
 import com.tournament.tournament_manager.exception.MatchNotFoundException;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,8 @@ class BracketListenerTest {
     private AdvanceBracketUseCase advanceBracketUseCase;
     @Mock
     private CheckTournamentCompletionUseCase checkTournamentCompletionUseCase;
+    @Mock
+    private GenerateKnockoutBracketFromGroupsUseCase generateKnockoutBracketFromGroupsUseCase;
     @Mock
     private LoadMatchPort loadMatchPort;
 
@@ -68,5 +71,38 @@ class BracketListenerTest {
 
         assertThrows(MatchNotFoundException.class,
                 () -> bracketListener.onMatchFinished(new MatchFinishedEvent(99L)));
+    }
+
+    @Test
+    void onMatchFinished_shouldCheckGroupsCompletion_whenGroupMatchInGroupsThenKnockout() {
+        Tournament tournament = new Tournament();
+        tournament.setFormat(TournamentFormat.GROUPS_THEN_KNOCKOUT);
+        Match match = new Match();
+        match.setTournament(tournament);
+        match.setGroupNumber(1);
+
+        when(loadMatchPort.loadMatch(1L)).thenReturn(match);
+
+        bracketListener.onMatchFinished(new MatchFinishedEvent(1L));
+
+        verify(generateKnockoutBracketFromGroupsUseCase, times(1)).checkGroupsCompletionAndGenerateBracket(tournament);
+        verify(advanceBracketUseCase, never()).advanceToNextRound(any(), anyInt());
+    }
+
+    @Test
+    void onMatchFinished_shouldAdvanceBracket_whenKnockoutMatchInGroupsThenKnockout() {
+        Tournament tournament = new Tournament();
+        tournament.setFormat(TournamentFormat.GROUPS_THEN_KNOCKOUT);
+        Match match = new Match();
+        match.setTournament(tournament);
+        match.setGroupNumber(null);
+        match.setRound(2);
+
+        when(loadMatchPort.loadMatch(1L)).thenReturn(match);
+
+        bracketListener.onMatchFinished(new MatchFinishedEvent(1L));
+
+        verify(advanceBracketUseCase, times(1)).advanceToNextRound(tournament, 2);
+        verify(generateKnockoutBracketFromGroupsUseCase, never()).checkGroupsCompletionAndGenerateBracket(any());
     }
 }

@@ -22,6 +22,9 @@ public class Match {
     @Column(nullable = false)
     private int round;
 
+    @Column(name = "group_number")
+    private Integer groupNumber;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private MatchStatus status = MatchStatus.PENDING;

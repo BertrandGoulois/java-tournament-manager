@@ -7,7 +7,9 @@ import jakarta.validation.constraints.NotBlank;
 public record CreateTournamentRequest(
         @NotBlank String name,
         @Min(4) int maxPlayers,
-        TournamentFormat format
+        TournamentFormat format,
+        Integer numberOfGroups,
+        Integer qualifiersPerGroup
 ) {
     public TournamentFormat format() {
         return format != null ? format : TournamentFormat.SINGLE_ELIMINATION;

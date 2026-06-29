@@ -1,4 +1,4 @@
--- changeset bertrand:002
+-- changeset bertrand:2
 
 CREATE TABLE users (
                        id BIGSERIAL PRIMARY KEY,

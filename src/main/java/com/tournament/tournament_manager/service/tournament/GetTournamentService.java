@@ -44,6 +44,8 @@ public class GetTournamentService implements GetTournamentUseCase {
                 tournament.getStatus(),
                 tournament.getFormat(),
                 tournament.getMaxPlayers(),
+                tournament.getNumberOfGroups(),
+                tournament.getQualifiersPerGroup(),
                 tournament.getCreatedAt()
         );
     }

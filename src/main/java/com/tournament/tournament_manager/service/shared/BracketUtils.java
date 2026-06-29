@@ -1,4 +1,4 @@
-package com.tournament.tournament_manager.service.bracket;
+package com.tournament.tournament_manager.service.shared;
 
 import com.tournament.tournament_manager.domain.model.entities.Match;
 import com.tournament.tournament_manager.domain.model.entities.Player;

@@ -1,4 +1,4 @@
--- changeset bertrand:001
+-- changeset bertrand:1
 
 CREATE TABLE players (
                          id BIGSERIAL PRIMARY KEY,

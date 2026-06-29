@@ -12,4 +12,5 @@
     <include file="classpath:db/changelog/changes/005-add-soft-delete.sql"/>
     <include file="classpath:db/changelog/changes/006-add-match-commentary.sql"/>
     <include file="classpath:db/changelog/changes/007-add-tournament-format.sql"/>
+    <include file="classpath:db/changelog/changes/008-add-groups-then-knockout-fields.sql"/>
 </databaseChangeLog>

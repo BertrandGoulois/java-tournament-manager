@@ -37,6 +37,12 @@ public class Tournament {
     @Column(nullable = false)
     private TournamentFormat format = TournamentFormat.SINGLE_ELIMINATION;
 
+    @Column(name = "number_of_groups")
+    private Integer numberOfGroups;
+
+    @Column(name = "qualifiers_per_group")
+    private Integer qualifiersPerGroup;
+
     @Column(nullable = false)
     private int maxPlayers;
 

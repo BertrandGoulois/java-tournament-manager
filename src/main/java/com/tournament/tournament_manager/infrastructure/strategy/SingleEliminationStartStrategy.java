@@ -5,7 +5,7 @@ import com.tournament.tournament_manager.domain.model.entities.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 import com.tournament.tournament_manager.domain.port.out.match.SaveMatchPort;
 import com.tournament.tournament_manager.domain.port.out.strategy.TournamentStartStrategy;
-import com.tournament.tournament_manager.service.bracket.BracketUtils;
+import com.tournament.tournament_manager.service.shared.BracketUtils;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;

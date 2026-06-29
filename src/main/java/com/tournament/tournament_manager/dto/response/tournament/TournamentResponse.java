@@ -11,5 +11,7 @@ public record TournamentResponse(
         TournamentStatus status,
         TournamentFormat format,
         int maxPlayers,
+        Integer numberOfGroups,
+        Integer qualifiersPerGroup,
         LocalDateTime createdAt
 ) {}

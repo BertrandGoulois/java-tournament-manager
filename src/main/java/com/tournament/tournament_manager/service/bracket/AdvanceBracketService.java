@@ -9,6 +9,7 @@ import com.tournament.tournament_manager.domain.port.in.tournament.AdvanceBracke
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchByTournamentPort;
 import com.tournament.tournament_manager.domain.port.out.match.SaveMatchPort;
 import com.tournament.tournament_manager.domain.port.out.tournament.SaveTournamentPort;
+import com.tournament.tournament_manager.service.shared.BracketUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

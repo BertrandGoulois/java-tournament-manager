@@ -73,7 +73,7 @@ class TournamentControllerTest {
     }
 
     private TournamentResponse sampleTournament() {
-        return new TournamentResponse(1L, "Spring Championship", TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, 8, null);
+        return new TournamentResponse(1L, "Spring Championship", TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, 8, null, null, null);
     }
 
     @Test
@@ -84,7 +84,7 @@ class TournamentControllerTest {
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new CreateTournamentRequest("Spring Championship", 8, TournamentFormat.SINGLE_ELIMINATION))))
+                        .content(objectMapper.writeValueAsString(new CreateTournamentRequest("Spring Championship", 8, TournamentFormat.SINGLE_ELIMINATION, null, null))))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name").value("Spring Championship"));
     }
@@ -95,7 +95,7 @@ class TournamentControllerTest {
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(new CreateTournamentRequest("", 2, TournamentFormat.SINGLE_ELIMINATION))))
+                        .content(objectMapper.writeValueAsString(new CreateTournamentRequest("", 2, TournamentFormat.SINGLE_ELIMINATION, null, null))))
                 .andExpect(status().isBadRequest());
     }
 
