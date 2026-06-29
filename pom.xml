@@ -313,6 +313,8 @@
 					<excludes>
 						<exclude>**/KafkaIntegrationTest.java</exclude>
 						<exclude>**/PlayerIntegrationTest.java</exclude>
+						<exclude>**/RoundRobinIntegrationTest.java</exclude>
+						<exclude>**/GroupsThenKnockoutIntegrationTest.java</exclude>
 					</excludes>
 				</configuration>
 			</plugin>
