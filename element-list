@@ -44,5 +44,6 @@ com.tournament.tournament_manager.service.elo
 com.tournament.tournament_manager.service.match
 com.tournament.tournament_manager.service.player
 com.tournament.tournament_manager.service.registration
+com.tournament.tournament_manager.service.shared
 com.tournament.tournament_manager.service.token
 com.tournament.tournament_manager.service.tournament
