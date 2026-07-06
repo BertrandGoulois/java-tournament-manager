@@ -7,10 +7,13 @@ import com.tournament.tournament_manager.config.security.UserDetailsServiceImpl;
 import com.tournament.tournament_manager.dto.response.rpc.JsonRpcError;
 import com.tournament.tournament_manager.dto.response.rpc.JsonRpcResponse;
 import com.tournament.tournament_manager.service.rpc.JsonRpcDispatchService;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
+import io.lettuce.core.RedisClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -39,7 +42,9 @@ class JsonRpcControllerTest {
     @MockitoBean
     private UserDetailsServiceImpl userDetailsService;
     @MockitoBean
-    private org.springframework.cache.CacheManager cacheManager;
+    private CacheManager cacheManager;
+    @MockitoBean
+    private ProxyManager<String> rateLimitProxyManager;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 

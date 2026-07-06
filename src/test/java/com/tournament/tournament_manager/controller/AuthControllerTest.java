@@ -9,8 +9,16 @@ import com.tournament.tournament_manager.dto.request.auth.LoginRequest;
 import com.tournament.tournament_manager.dto.request.auth.RefreshTokenRequest;
 import com.tournament.tournament_manager.dto.response.auth.AuthResponse;
 import com.tournament.tournament_manager.service.auth.AuthService;
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.distributed.BucketProxy;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
+import io.github.bucket4j.distributed.proxy.RemoteBucketBuilder;
+import io.lettuce.core.RedisClient;
+import jakarta.servlet.FilterChain;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
@@ -18,9 +26,10 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.function.Supplier;
+
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -48,15 +57,29 @@ class AuthControllerTest {
     @MockitoBean
     private RefreshTokenUseCase refreshTokenUseCase;
 
+    @MockitoBean
+    private ProxyManager<String> rateLimitProxyManager;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     void setUp() throws Exception {
         doAnswer(invocation -> {
-            jakarta.servlet.FilterChain chain = invocation.getArgument(2);
+            FilterChain chain = invocation.getArgument(2);
             chain.doFilter(invocation.getArgument(0), invocation.getArgument(1));
             return null;
         }).when(jwtAuthenticationFilter).doFilter(any(), any(), any());
+
+        @SuppressWarnings("unchecked")
+        RemoteBucketBuilder<String> bucketBuilder =
+                mock(RemoteBucketBuilder.class);
+        BucketProxy bucket = mock(BucketProxy.class);
+        doReturn(bucketBuilder).when(rateLimitProxyManager).builder();
+        doReturn(bucket).when(bucketBuilder).build(
+                ArgumentMatchers.any(),
+                ArgumentMatchers.<Supplier<BucketConfiguration>>any()
+        );
+        doReturn(true).when(bucket).tryConsume(1L);
     }
 
     @Test

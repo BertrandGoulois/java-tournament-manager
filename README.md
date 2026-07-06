@@ -30,6 +30,7 @@ API REST de gestion de tournois sportifs (élimination directe, round-robin, ou 
 - **Springdoc / Swagger UI** (documentation API)
 - **Lombok**
 - **Resilience4j** (circuit breaker sur l'appel OpenAI)
+- **Bucket4j + Redis** (rate limiting distribué, buckets partagés entre instances via Lettuce)
 
 ---
 
@@ -608,7 +609,7 @@ Authorization: Bearer <JWT token>
 - Cache Redis sur les statistiques joueur (`GET /players/{id}/stats`)
 - Statistiques joueur (win rate, historique ELO)
 - Authentification JWT avec refresh token et révocation (logout)
-- Rate limiting sur les endpoints sensibles (Login : 5 req/min, Create Player : 10 req/min)
+- Rate limiting distribué sur les endpoints sensibles (Login : 5 req/min, Create Player : 10 req/min) via Bucket4j + Redis — buckets partagés entre instances, fenêtre glissante (`refillGreedy`)
 - Tests de charge multi-IP simulées via `X-Forwarded-For` pour valider le rate limiting par client
 - Soft delete sur joueurs et tournois
 - Pagination sur les listes de joueurs et tournois

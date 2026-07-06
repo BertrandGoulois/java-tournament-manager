@@ -13,10 +13,13 @@ import com.tournament.tournament_manager.dto.request.match.RecordMatchResultRequ
 import com.tournament.tournament_manager.dto.response.match.MatchCommentaryResponse;
 import com.tournament.tournament_manager.dto.response.match.MatchResponse;
 import com.tournament.tournament_manager.exception.MatchNotFoundException;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
+import io.lettuce.core.RedisClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -39,7 +42,6 @@ class MatchControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
-
     @MockitoBean
     private RecordMatchResultUseCase recordMatchResultUseCase;
     @MockitoBean
@@ -51,7 +53,9 @@ class MatchControllerTest {
     @MockitoBean
     private UserDetailsServiceImpl userDetailsService;
     @MockitoBean
-    private org.springframework.cache.CacheManager cacheManager;
+    private CacheManager cacheManager;
+    @MockitoBean
+    private ProxyManager<String> rateLimitProxyManager;
 
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 

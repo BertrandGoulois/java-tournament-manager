@@ -1,7 +1,7 @@
 package com.tournament.tournament_manager.config.security;
 
-import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.Bucket;
+import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -16,25 +16,28 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import static io.github.bucket4j.Bandwidth.builder;
+
 /**
- * Filtre de rate limiting par IP sur les endpoints sensibles.
+ * Filtre de rate limiting par IP sur les endpoints sensibles, avec état distribué via Redis.
+ *
+ * <p>Les buckets sont stockés dans Redis via {@link ProxyManager}, ce qui garantit
+ * que le rate limiting fonctionne correctement même sur plusieurs instances de l'application.
  *
  * <p>Limites appliquées :
  * <ul>
- *   <li>{@code POST /api/auth/login} — 5 tentatives par minute</li>
- *   <li>{@code POST /api/players} — 10 créations par minute</li>
+ *   <li>{@code POST /api/auth/login} — 5 tentatives par minute (fenêtre glissante)</li>
+ *   <li>{@code POST /api/players} — 10 créations par minute (fenêtre glissante)</li>
  * </ul>
  */
 @Component
 public class RateLimitingFilter extends OncePerRequestFilter {
 
-    private final Map<String, Bucket> loginBuckets = new ConcurrentHashMap<>();
-    private final Map<String, Bucket> createPlayerBuckets = new ConcurrentHashMap<>();
+    private final ProxyManager<String> proxyManager;
 
     @Value("${rate-limiting.login.capacity:5}")
     private int loginCapacity = 5;
@@ -47,22 +50,8 @@ public class RateLimitingFilter extends OncePerRequestFilter {
 
     private Set<String> trustedProxies = new HashSet<>();
 
-    private Bucket newLoginBucket() {
-        return Bucket.builder()
-                .addLimit(Bandwidth.builder()
-                        .capacity(loginCapacity)
-                        .refillGreedy(loginCapacity, Duration.ofMinutes(1))
-                        .build())
-                .build();
-    }
-
-    private Bucket newCreatePlayerBucket() {
-        return Bucket.builder()
-                .addLimit(Bandwidth.builder()
-                        .capacity(playerCapacity)
-                        .refillGreedy(playerCapacity, Duration.ofMinutes(1))
-                        .build())
-                .build();
+    public RateLimitingFilter(ProxyManager<String> proxyManager) {
+        this.proxyManager = proxyManager;
     }
 
     @PostConstruct
@@ -71,6 +60,24 @@ public class RateLimitingFilter extends OncePerRequestFilter {
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .collect(Collectors.toSet());
+    }
+
+    private Supplier<BucketConfiguration> loginBucketConfig() {
+        return () -> BucketConfiguration.builder()
+                .addLimit(builder()
+                        .capacity(loginCapacity)
+                        .refillGreedy(loginCapacity, Duration.ofMinutes(1))
+                        .build())
+                .build();
+    }
+
+    private Supplier<BucketConfiguration> createPlayerBucketConfig() {
+        return () -> BucketConfiguration.builder()
+                .addLimit(builder()
+                        .capacity(playerCapacity)
+                        .refillGreedy(playerCapacity, Duration.ofMinutes(1))
+                        .build())
+                .build();
     }
 
     @Override
@@ -83,7 +90,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         String method = request.getMethod();
 
         if ("POST".equals(method) && "/api/auth/login".equals(path)) {
-            Bucket bucket = loginBuckets.computeIfAbsent(ip, k -> newLoginBucket());
+            var bucket = proxyManager.builder().build("rate-limit:login:" + ip, loginBucketConfig());
             if (!bucket.tryConsume(1)) {
                 response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
                 response.getWriter().write("Trop de tentatives de connexion. Réessayez dans 1 minute.");
@@ -92,7 +99,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         }
 
         if ("POST".equals(method) && "/api/players".equals(path)) {
-            Bucket bucket = createPlayerBuckets.computeIfAbsent(ip, k -> newCreatePlayerBucket());
+            var bucket = proxyManager.builder().build("rate-limit:player:" + ip, createPlayerBucketConfig());
             if (!bucket.tryConsume(1)) {
                 response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
                 response.getWriter().write("Trop de créations de joueurs. Réessayez dans 1 minute.");
@@ -105,14 +112,6 @@ public class RateLimitingFilter extends OncePerRequestFilter {
 
     /**
      * Détermine l'IP cliente à utiliser pour le rate limiting.
-     *
-     * <p>Le header {@code X-Forwarded-For} n'est pris en compte que si la requête
-     * provient d'une source explicitement déclarée de confiance (reverse proxy connu),
-     * configurée via {@code rate-limiting.trusted-proxies}. Sans cela, n'importe quel
-     * client pourrait falsifier ce header pour contourner le rate limiting par IP.
-     *
-     * @param request la requête HTTP entrante
-     * @return l'IP à utiliser pour le bucket de rate limiting
      */
     private String getClientIp(HttpServletRequest request) {
         String remoteAddr = request.getRemoteAddr();

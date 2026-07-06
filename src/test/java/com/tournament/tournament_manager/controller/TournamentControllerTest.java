@@ -12,10 +12,13 @@ import com.tournament.tournament_manager.dto.request.tournament.CreateTournament
 import com.tournament.tournament_manager.dto.response.tournament.BracketResponse;
 import com.tournament.tournament_manager.dto.response.tournament.StandingsResponse;
 import com.tournament.tournament_manager.dto.response.tournament.TournamentResponse;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
+import io.lettuce.core.RedisClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -59,7 +62,9 @@ class TournamentControllerTest {
     @MockitoBean
     private UserDetailsServiceImpl userDetailsService;
     @MockitoBean
-    private org.springframework.cache.CacheManager cacheManager;
+    private CacheManager cacheManager;
+    @MockitoBean
+    private ProxyManager<String> rateLimitProxyManager;
 
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 

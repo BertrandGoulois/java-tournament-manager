@@ -11,9 +11,18 @@ import com.tournament.tournament_manager.dto.request.player.CreatePlayerRequest;
 import com.tournament.tournament_manager.dto.response.player.PlayerResponse;
 import com.tournament.tournament_manager.dto.response.player.PlayerStatsResponse;
 import com.tournament.tournament_manager.exception.PlayerNotFoundException;
+import io.github.bucket4j.Bucket;
+import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.distributed.BucketProxy;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
+import io.github.bucket4j.distributed.proxy.RemoteBucketBuilder;
+import io.lettuce.core.RedisClient;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.data.domain.Page;
@@ -25,9 +34,10 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.function.Supplier;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -51,13 +61,29 @@ class PlayerControllerTest {
     @MockitoBean
     private DeletePlayerUseCase deletePlayerUseCase;
     @MockitoBean
-    private org.springframework.cache.CacheManager cacheManager;
+    private CacheManager cacheManager;
+    @MockitoBean
+    private ProxyManager<String> rateLimitProxyManager;
 
     private final ObjectMapper objectMapper = new ObjectMapper()
             .registerModule(new JavaTimeModule());
 
     private PlayerResponse samplePlayer() {
         return new PlayerResponse(1L, "player1", "player1@mail.com", 1000, LocalDateTime.now());
+    }
+
+    @BeforeEach
+    void setUp() throws Exception {
+        @SuppressWarnings("unchecked")
+        RemoteBucketBuilder<String> bucketBuilder =
+                mock(RemoteBucketBuilder.class);
+        BucketProxy bucket = mock(BucketProxy.class);
+        doReturn(bucketBuilder).when(rateLimitProxyManager).builder();
+        doReturn(bucket).when(bucketBuilder).build(
+                ArgumentMatchers.<String>any(),
+                ArgumentMatchers.<Supplier<BucketConfiguration>>any()
+        );
+        doReturn(true).when(bucket).tryConsume(1L);
     }
 
     @Test

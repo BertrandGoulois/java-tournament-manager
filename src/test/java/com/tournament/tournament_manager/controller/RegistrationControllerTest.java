@@ -8,10 +8,13 @@ import com.tournament.tournament_manager.domain.port.in.registration.GetRegistra
 import com.tournament.tournament_manager.domain.port.in.registration.RegisterPlayerUseCase;
 import com.tournament.tournament_manager.dto.request.registration.CreateRegistrationRequest;
 import com.tournament.tournament_manager.dto.response.registration.RegistrationResponse;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
+import io.lettuce.core.RedisClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -45,7 +48,9 @@ class RegistrationControllerTest {
     @MockitoBean
     private UserDetailsServiceImpl userDetailsService;
     @MockitoBean
-    private org.springframework.cache.CacheManager cacheManager;
+    private CacheManager cacheManager;
+    @MockitoBean
+    private ProxyManager<String> rateLimitProxyManager;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
