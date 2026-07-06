@@ -51,7 +51,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         return Bucket.builder()
                 .addLimit(Bandwidth.builder()
                         .capacity(loginCapacity)
-                        .refillIntervally(loginCapacity, Duration.ofMinutes(1))
+                        .refillGreedy(loginCapacity, Duration.ofMinutes(1))
                         .build())
                 .build();
     }
@@ -60,7 +60,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         return Bucket.builder()
                 .addLimit(Bandwidth.builder()
                         .capacity(playerCapacity)
-                        .refillIntervally(playerCapacity, Duration.ofMinutes(1))
+                        .refillGreedy(playerCapacity, Duration.ofMinutes(1))
                         .build())
                 .build();
     }
