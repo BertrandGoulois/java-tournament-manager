@@ -160,6 +160,12 @@
 			<artifactId>spring-boot-starter-aspectj</artifactId>
 		</dependency>
 
+		<!-- OpenTelemetry -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-opentelemetry</artifactId>
+		</dependency>
+
 		<!-- Tests -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

@@ -22,6 +22,7 @@ API REST de gestion de tournois sportifs (élimination directe, round-robin, ou 
 - **WebSocket** / **STOMP** (notifications temps réel)
 - **OpenAI GPT-4o-mini** (génération de commentaires de matchs via LLM)
 - **Prometheus** + **Grafana** (monitoring et visualisation des métriques JVM / HTTP)
+- **OpenTelemetry** + **Jaeger** (tracing distribué, propagation du traceId à travers Kafka)
 - **JSON-RPC 2.0** (API alternative coexistant avec REST, endpoint unique `POST /api/rpc`)
 - **JUnit 5** + **Mockito** (tests unitaires)
 - **Testcontainers** (tests d'intégration)
@@ -203,6 +204,12 @@ Prometheus disponible sur : `http://localhost:9090`
 Grafana disponible sur : `http://localhost:3000` (admin / admin)
 
 > Dashboard Spring Boot 3.x Statistics (ID `19004`) disponible après import manuel dans Grafana. Visualise en temps réel : uptime, heap, CPU, GC, HikariCP, threads.
+
+**Tracing distribué :**
+
+Jaeger UI disponible sur : `http://localhost:16686`
+
+Visualise en temps réel le parcours complet de chaque requête : HTTP -> JPA -> Kafka publish -> listeners asynchrones (ELO, bracket, WebSocket, commentaire). Le `traceId` est automatiquement propagé dans les headers Kafka, reliant la requête initiale à tous ses effets de bord asynchrones. Instrumentation automatique via `spring-boot-starter-opentelemetry` (Spring Boot 4).
 
 ---
 
@@ -607,6 +614,7 @@ Authorization: Bearer <JWT token>
 - Pagination sur les listes de joueurs et tournois
 - Migrations versionnées avec Liquibase
 - Monitoring Prometheus / Grafana avec dashboard Spring Boot (métriques JVM, HTTP, HikariCP)
+- Tracing distribué OpenTelemetry + Jaeger avec propagation automatique du traceId à travers Kafka - visualisation du flux complet `HTTP -> JPA -> Kafka -> listeners` dans Jaeger UI
 - Tests de charge Gatling - scénario complet end-to-end (login, tournoi, bracket, stats)
 - Couverture de tests élevée : tests unitaires (JUnit 5 / Mockito), tests controller (MockMvc) et tests d'intégration (Testcontainers) sur les trois formats de tournoi
 - Circuit breaker Resilience4j sur l'appel OpenAI (testé : transitions CLOSED -> OPEN -> HALF_OPEN, court-circuit vérifié)

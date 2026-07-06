@@ -61,10 +61,20 @@ services:
       SPRING_PROFILES_ACTIVE: docker
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
+      MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
     depends_on:
       - postgres
       - redis
       - kafka
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: tournament-jaeger
+    ports:
+      - "16686:16686"   # UI Jaeger
+      - "4318:4318"     # OTLP HTTP
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
 
   prometheus:
     image: prom/prometheus:latest
