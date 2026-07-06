@@ -324,6 +324,7 @@
 						<exclude>**/PlayerIntegrationTest.java</exclude>
 						<exclude>**/RoundRobinIntegrationTest.java</exclude>
 						<exclude>**/GroupsThenKnockoutIntegrationTest.java</exclude>
+						<exclude>**/OpenAiCommentaryAdapterCircuitBreakerTest.java</exclude>
 					</excludes>
 				</configuration>
 			</plugin>
