@@ -15,11 +15,7 @@ import com.tournament.tournament_manager.repository.MatchRepository;
 import com.tournament.tournament_manager.service.match.RecordMatchResultService;
 import com.tournament.tournament_manager.service.player.CreatePlayerService;
 import com.tournament.tournament_manager.service.registration.RegisterPlayerService;
-import com.tournament.tournament_manager.service.tournament.CheckTournamentCompletionService;
-import com.tournament.tournament_manager.service.tournament.CreateTournamentService;
-import com.tournament.tournament_manager.service.tournament.GetStandingsService;
-import com.tournament.tournament_manager.service.tournament.GetTournamentService;
-import com.tournament.tournament_manager.service.tournament.StartTournamentService;
+import com.tournament.tournament_manager.service.tournament.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -28,7 +24,7 @@ import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Teste le flux complet d'un tournoi round-robin : création, démarrage,

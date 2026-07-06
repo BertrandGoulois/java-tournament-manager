@@ -27,7 +27,8 @@ import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Teste le flux complet d'un tournoi {@code GROUPS_THEN_KNOCKOUT} : création

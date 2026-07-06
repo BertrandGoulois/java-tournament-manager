@@ -22,6 +22,7 @@ API REST de gestion de tournois sportifs (élimination directe, round-robin, ou 
 - **WebSocket** / **STOMP** (notifications temps réel)
 - **OpenAI GPT-4o-mini** (génération de commentaires de matchs via LLM)
 - **Prometheus** + **Grafana** (monitoring et visualisation des métriques JVM / HTTP)
+- **JSON-RPC 2.0** (API alternative coexistant avec REST, endpoint unique `POST /api/rpc`)
 - **JUnit 5** + **Mockito** (tests unitaires)
 - **Testcontainers** (tests d'intégration)
 - **Gatling** (tests de charge)
@@ -37,25 +38,28 @@ Le projet suit une **architecture hexagonale** (ports & adapters) : le domaine m
 
 ```
 domain/
-  model/        → entités, enums, value objects
+  model/          -> entités, enums, value objects
   port/
-    in/         → interfaces use cases (ex. RecordMatchResultUseCase)
-    out/        → interfaces infra (ex. SaveMatchPort, LoadMatchPort)
-    out/strategy/ → interfaces de stratégie métier (ex. TournamentStartStrategy)
+    in/           -> interfaces use cases (ex. RecordMatchResultUseCase)
+    out/          -> interfaces infra (ex. SaveMatchPort, LoadMatchPort)
+    out/strategy/ -> interfaces de stratégie métier (ex. TournamentStartStrategy)
+    out/rpc/      -> interface de handler JSON-RPC (JsonRpcMethodHandler)
 
 service/
-  tournament/   → use cases liés aux tournois (création, démarrage, classement, transition groupes -> bracket)
-  bracket/      → use cases liés au bracket (avancement, consultation)
-  match/        → use cases liés aux matchs
-  player/       → use cases liés aux joueurs
-  registration/ → use cases liés aux inscriptions
-  shared/       → utilitaires partagés entre stratégies et services (BracketUtils, RoundRobinUtils)
+  tournament/     -> use cases liés aux tournois
+  bracket/        -> use cases liés au bracket
+  match/          -> use cases liés aux matchs
+  player/         -> use cases liés aux joueurs
+  registration/   -> use cases liés aux inscriptions
+  rpc/            -> dispatcher JSON-RPC (JsonRpcDispatchService)
+  shared/         -> utilitaires partagés (BracketUtils, RoundRobinUtils)
 
 infrastructure/
-  persistence/  → adapters JPA (implémentent les ports sortants)
-  messaging/    → adapter Kafka
-  ai/           → adapter OpenAI
-  strategy/     → stratégies de démarrage de tournoi (SingleEliminationStartStrategy, RoundRobinStartStrategy, GroupsThenKnockoutStartStrategy)
+  persistence/    -> adapters JPA
+  messaging/      -> adapter Kafka
+  ai/             -> adapter OpenAI
+  strategy/       -> stratégies de démarrage de tournoi
+  rpc/            -> handlers JSON-RPC par domaine (tournament/, player/, registration/, match/)
 ```
 
 ### Multi-format de tournoi
@@ -68,26 +72,34 @@ Un tournoi peut être créé selon trois formats (`TournamentFormat`) :
 
 Le démarrage du tournoi (`StartTournamentService`) délègue la génération des matchs initiaux à la stratégie correspondante, via le pattern **Strategy** : Spring injecte toutes les implémentations de `TournamentStartStrategy` et le service choisit la bonne selon `tournament.getFormat()`.
 
-- `SingleEliminationStartStrategy` → mélange aléatoire et génère le premier tour du bracket (avec byes si effectif impair)
-- `RoundRobinStartStrategy` → génère l'intégralité des confrontations en une seule fois via la **méthode du cercle** (`RoundRobinUtils`), garantissant que chaque paire de joueurs se rencontre exactement une fois
-- `GroupsThenKnockoutStartStrategy` → répartit les joueurs en `numberOfGroups` groupes égaux, puis génère un round-robin complet à l'intérieur de chaque groupe (même `RoundRobinUtils`, avec un `groupNumber` renseigné sur chaque match)
+- `SingleEliminationStartStrategy` -> mélange aléatoire et génère le premier tour du bracket (avec byes si effectif impair)
+- `RoundRobinStartStrategy` -> génère l'intégralité des confrontations en une seule fois via la **méthode du cercle** (`RoundRobinUtils`), garantissant que chaque paire de joueurs se rencontre exactement une fois
+- `GroupsThenKnockoutStartStrategy` -> répartit les joueurs en `numberOfGroups` groupes égaux, puis génère un round-robin complet à l'intérieur de chaque groupe (même `RoundRobinUtils`, avec un `groupNumber` renseigné sur chaque match)
 
 `BracketListener` route également la **progression** du tournoi selon le format et la nature du match :
 
-- `SINGLE_ELIMINATION` → avancement round par round via `AdvanceBracketService`
-- `ROUND_ROBIN` → vérification d'achèvement global dès que tous les matchs sont joués, via `CheckTournamentCompletionService`
-- `GROUPS_THEN_KNOCKOUT` → un match de phase de groupes (`groupNumber != null`) déclenche `GenerateKnockoutBracketFromGroupsService`, qui calcule les qualifiés de chaque groupe (3 points par victoire, top N par groupe) et génère le bracket final une fois tous les matchs de groupe terminés ; un match de bracket (`groupNumber == null`) réutilise directement la logique d'avancement de l'élimination directe
+- `SINGLE_ELIMINATION` -> avancement round par round via `AdvanceBracketService`
+- `ROUND_ROBIN` -> vérification d'achèvement global dès que tous les matchs sont joués, via `CheckTournamentCompletionService`
+- `GROUPS_THEN_KNOCKOUT` -> un match de phase de groupes (`groupNumber != null`) déclenche `GenerateKnockoutBracketFromGroupsService`, qui calcule les qualifiés de chaque groupe (3 points par victoire, top N par groupe) et génère le bracket final une fois tous les matchs de groupe terminés ; un match de bracket (`groupNumber == null`) réutilise directement la logique d'avancement de l'élimination directe
 
-Le **classement round-robin** (`GetStandingsService`) est calculé à la demande à partir des matchs terminés - pas de table dédiée - avec 3 points par victoire, trié par points puis par nombre de victoires. La même règle de points sert au calcul des qualifiés en phase de groupes.
+Le **classement round-robin** (`GetStandingsService`) est calculé à la demande à partir des matchs terminés - pas de table dédiée - avec 3 points par victoire, trié par points puis par nombre de victoires.
+
+### API JSON-RPC 2.0
+
+En parallèle de l'API REST, un endpoint unique `POST /api/rpc` expose les mêmes opérations métier via le protocole JSON-RPC 2.0. Le dispatcher (`JsonRpcDispatchService`) réutilise le même pattern Strategy que les stratégies de tournoi : Spring injecte automatiquement tous les handlers (`@Component` implémentant `JsonRpcMethodHandler`), indexés par nom de méthode. Aucune logique métier n'est dupliquée - chaque handler délègue directement au use case correspondant.
+
+Méthodes disponibles : `tournament.create`, `tournament.start`, `tournament.getById`, `tournament.getAll`, `tournament.delete`, `tournament.getBracket`, `tournament.getStandings`, `player.create`, `player.getById`, `player.getAll`, `player.getStats`, `player.delete`, `registration.register`, `registration.getByTournament`, `match.getById`, `match.recordResult`, `match.getCommentary`.
+
+L'authentification reste exclusivement sur REST (`/api/auth/**`) - le JWT est requis sur `/api/rpc` comme sur les autres endpoints protégés.
 
 ### Architecture événementielle (Kafka)
 
 Les side effects métier (mise à jour ELO, avancement du bracket, notifications temps réel, génération de commentaires) sont découplés du service principal via Kafka. Lorsqu'un résultat de match est enregistré, un événement `MatchFinishedEvent` est publié sur le topic `match-finished`. Quatre consumers indépendants traitent cet événement de façon asynchrone :
 
-- `elo-group` → met à jour les ratings ELO des deux joueurs
-- `bracket-group` → fait progresser le tournoi selon son format (cf. section précédente)
-- `websocket-group` → broadcast une notification temps réel à tous les clients connectés via WebSocket
-- `commentary-group` → génère un commentaire narratif via OpenAI GPT-4o-mini
+- `elo-group` -> met à jour les ratings ELO des deux joueurs
+- `bracket-group` -> fait progresser le tournoi selon son format
+- `websocket-group` -> broadcast une notification temps réel à tous les clients connectés via WebSocket
+- `commentary-group` -> génère un commentaire narratif via OpenAI GPT-4o-mini
 
 En cas d'échec répété d'un listener (3 tentatives espacées d'1 seconde), le message est redirigé vers le topic `match-finished.DLT` (Dead Letter Topic) pour inspection et rejeu manuel via Kafka UI.
 
@@ -156,7 +168,7 @@ docker-compose up -d
 ./mvnw verify
 ```
 
-> `KafkaIntegrationTest`, `PlayerIntegrationTest`, `RoundRobinIntegrationTest` et `GroupsThenKnockoutIntegrationTest` sont exclus de la CI standard (`maven-surefire-plugin`) pour rester rapide et stable. Les deux derniers valident leur flux complet respectif (création, démarrage, résultats, progression, fin de tournoi) sans dépendre d'un container Kafka : les transitions normalement déclenchées par le listener Kafka asynchrone sont appelées directement pour isoler la logique métier.
+> `KafkaIntegrationTest`, `PlayerIntegrationTest`, `RoundRobinIntegrationTest` et `GroupsThenKnockoutIntegrationTest` sont exclus de la CI standard (`maven-surefire-plugin`) pour rester rapide et stable. Les deux derniers valident leur flux complet respectif sans dépendre d'un container Kafka : les transitions normalement déclenchées par le listener Kafka asynchrone sont appelées directement pour isoler la logique métier.
 
 **Tests de charge (Gatling) :**
 
@@ -287,7 +299,7 @@ Authorization: Bearer <JWT token>
 ```
 
 - **Errors** :
-  - `409` → username ou email déjà utilisé
+  - `409` -> username ou email déjà utilisé
 
 #### Get all players
 
@@ -298,7 +310,7 @@ Authorization: Bearer <JWT token>
 
 - **GET** `/api/players/{id}`
 - **Errors** :
-  - `404` → joueur introuvable
+  - `404` -> joueur introuvable
 
 #### Delete player (soft delete)
 
@@ -359,15 +371,15 @@ Authorization: Bearer <JWT token>
 }
 ```
 
-> `format` est optionnel - `SINGLE_ELIMINATION` par défaut si omis. Valeurs possibles : `SINGLE_ELIMINATION`, `ROUND_ROBIN`, `GROUPS_THEN_KNOCKOUT`. `numberOfGroups` et `qualifiersPerGroup` ne sont requis (et utilisés) que pour `GROUPS_THEN_KNOCKOUT`.
+> `format` est optionnel - `SINGLE_ELIMINATION` par défaut si omis. Valeurs possibles : `SINGLE_ELIMINATION`, `ROUND_ROBIN`, `GROUPS_THEN_KNOCKOUT`. `numberOfGroups` et `qualifiersPerGroup` ne sont requis que pour `GROUPS_THEN_KNOCKOUT`.
 
 - **Errors** :
-  - `400` → `maxPlayers` n'est pas une puissance de 2 (uniquement pour `SINGLE_ELIMINATION` ; n'importe quel effectif ≥ 2 est accepté pour `ROUND_ROBIN`)
-  - `400` → (`GROUPS_THEN_KNOCKOUT`) `numberOfGroups` absent ou < 2
-  - `400` → (`GROUPS_THEN_KNOCKOUT`) `maxPlayers` non divisible par `numberOfGroups`
-  - `400` → (`GROUPS_THEN_KNOCKOUT`) `qualifiersPerGroup` absent, < 1, ou ≥ à la taille d'un groupe
-  - `400` → (`GROUPS_THEN_KNOCKOUT`) le nombre total de qualifiés (`numberOfGroups × qualifiersPerGroup`) n'est pas une puissance de 2 (nécessaire pour le bracket final)
-  - `409` → nom déjà utilisé
+  - `400` -> `maxPlayers` n'est pas une puissance de 2 (uniquement pour `SINGLE_ELIMINATION`)
+  - `400` -> (`GROUPS_THEN_KNOCKOUT`) `numberOfGroups` absent ou < 2
+  - `400` -> (`GROUPS_THEN_KNOCKOUT`) `maxPlayers` non divisible par `numberOfGroups`
+  - `400` -> (`GROUPS_THEN_KNOCKOUT`) `qualifiersPerGroup` absent, < 1, ou >= à la taille d'un groupe
+  - `400` -> (`GROUPS_THEN_KNOCKOUT`) le nombre total de qualifiés (`numberOfGroups x qualifiersPerGroup`) n'est pas une puissance de 2
+  - `409` -> nom déjà utilisé
 
 #### Get all tournaments
 
@@ -471,9 +483,9 @@ Authorization: Bearer <JWT token>
 ```
 
 - **Errors** :
-  - `400` → tournoi non ouvert aux inscriptions
-  - `400` → joueur déjà inscrit
-  - `400` → tournoi complet
+  - `400` -> tournoi non ouvert aux inscriptions
+  - `400` -> joueur déjà inscrit
+  - `400` -> tournoi complet
 
 #### Get tournament registrations
 
@@ -498,11 +510,11 @@ Authorization: Bearer <JWT token>
 }
 ```
 
-> Après enregistrement du résultat : publication d'un événement Kafka `match-finished`, mise à jour ELO des deux joueurs, notification WebSocket temps réel, génération de commentaire LLM, et progression du tournoi selon son format et la nature du match (avancement de bracket, vérification de fin de tournoi, ou génération du bracket final entre qualifiés).
+> Après enregistrement du résultat : publication d'un événement Kafka `match-finished`, mise à jour ELO des deux joueurs, notification WebSocket temps réel, génération de commentaire LLM, et progression du tournoi selon son format et la nature du match.
 
 - **Errors** :
-  - `400` → match déjà terminé
-  - `400` → le gagnant n'est pas un des joueurs du match
+  - `400` -> match déjà terminé
+  - `400` -> le gagnant n'est pas un des joueurs du match
 
 #### Get match commentary
 
@@ -520,6 +532,54 @@ Authorization: Bearer <JWT token>
 
 ---
 
+### JSON-RPC
+
+- **POST** `/api/rpc`
+- **Body JSON** :
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "tournament.create",
+  "params": {
+    "name": "Spring Championship",
+    "maxPlayers": 8,
+    "format": "SINGLE_ELIMINATION"
+  },
+  "id": "1"
+}
+```
+
+- **Response JSON (succès)** :
+
+```json
+{
+  "jsonrpc": "2.0",
+  "result": { },
+  "error": null,
+  "id": "1"
+}
+```
+
+- **Response JSON (erreur)** :
+
+```json
+{
+  "jsonrpc": "2.0",
+  "result": null,
+  "error": {
+    "code": -32601,
+    "message": "Method not found: unknown.method",
+    "data": null
+  },
+  "id": "1"
+}
+```
+
+> Conformément à la spec JSON-RPC 2.0, le statut HTTP est toujours `200` même en cas d'erreur applicative. Codes standards : `-32601` méthode inconnue, `-32602` paramètres invalides, `-32603` erreur interne.
+
+---
+
 ## Key Features
 
 - Architecture hexagonale (ports & adapters) - domaine métier isolé de l'infra
@@ -530,9 +590,10 @@ Authorization: Bearer <JWT token>
 - Phase de groupes configurable (nombre de groupes et de qualifiés par groupe) avec transition automatique vers un bracket final entre qualifiés
 - Classement round-robin calculé à la demande (`GET /tournaments/{id}/standings`)
 - Consultation du bracket complet par round (`GET /tournaments/{id}/bracket`)
+- API JSON-RPC 2.0 en parallèle de REST (`POST /api/rpc`) - même pattern Strategy que les stratégies de tournoi, aucune logique métier dupliquée
 - Calcul ELO après chaque match (K=32, formule standard)
 - Idempotence du calcul ELO - protection contre les doublons Kafka
-- Progression de tournoi multi-format event-driven via Kafka (avancement de bracket, détection de fin de round-robin, ou transition phase de groupes → bracket final)
+- Progression de tournoi multi-format event-driven via Kafka (avancement de bracket, détection de fin de round-robin, ou transition phase de groupes -> bracket final)
 - Génération automatique de commentaires de matchs via OpenAI GPT-4o-mini (event-driven via Kafka)
 - Dead Letter Queue Kafka pour les messages en échec (`match-finished.DLT`)
 - Kafka UI pour l'inspection et le rejeu des messages en échec
@@ -548,7 +609,7 @@ Authorization: Bearer <JWT token>
 - Monitoring Prometheus / Grafana avec dashboard Spring Boot (métriques JVM, HTTP, HikariCP)
 - Tests de charge Gatling - scénario complet end-to-end (login, tournoi, bracket, stats)
 - Couverture de tests élevée : tests unitaires (JUnit 5 / Mockito), tests controller (MockMvc) et tests d'intégration (Testcontainers) sur les trois formats de tournoi
-- Circuit breaker Resilience4j sur l'appel OpenAI (testé : transitions CLOSED → OPEN → HALF_OPEN, court-circuit vérifié)
+- Circuit breaker Resilience4j sur l'appel OpenAI (testé : transitions CLOSED -> OPEN -> HALF_OPEN, court-circuit vérifié)
 
 ---
 

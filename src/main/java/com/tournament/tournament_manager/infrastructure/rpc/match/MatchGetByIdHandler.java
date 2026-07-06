@@ -1,0 +1,30 @@
+package com.tournament.tournament_manager.infrastructure.rpc.match;
+
+import com.tournament.tournament_manager.domain.port.in.match.GetMatchUseCase;
+import com.tournament.tournament_manager.infrastructure.rpc.AbstractJsonRpcHandler;
+import org.springframework.stereotype.Component;
+
+/**
+ * Handler JSON-RPC de la méthode {@code match.getById}.
+ *
+ * <p>Attend un paramètre {@code id} (identifiant du match).
+ */
+@Component
+public class MatchGetByIdHandler extends AbstractJsonRpcHandler {
+
+    private final GetMatchUseCase getMatchUseCase;
+
+    public MatchGetByIdHandler(GetMatchUseCase getMatchUseCase) {
+        this.getMatchUseCase = getMatchUseCase;
+    }
+
+    @Override
+    public String methodName() {
+        return "match.getById";
+    }
+
+    @Override
+    public Object handle(Object params) {
+        return getMatchUseCase.getMatchById(getLong(params, "id"));
+    }
+}
