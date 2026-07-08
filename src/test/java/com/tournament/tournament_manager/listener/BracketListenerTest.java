@@ -9,11 +9,16 @@ import com.tournament.tournament_manager.domain.port.in.tournament.CheckTourname
 import com.tournament.tournament_manager.domain.port.in.tournament.GenerateKnockoutBracketFromGroupsUseCase;
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchPort;
 import com.tournament.tournament_manager.exception.MatchNotFoundException;
+import com.tournament.tournament_manager.infrastructure.strategy.progression.GroupsThenKnockoutProgressionStrategy;
+import com.tournament.tournament_manager.infrastructure.strategy.progression.RoundRobinProgressionStrategy;
+import com.tournament.tournament_manager.infrastructure.strategy.progression.SingleEliminationProgressionStrategy;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
@@ -30,8 +35,17 @@ class BracketListenerTest {
     @Mock
     private LoadMatchPort loadMatchPort;
 
-    @InjectMocks
     private BracketListener bracketListener;
+
+    @BeforeEach
+    void setUp() {
+        var strategies = List.of(
+                new SingleEliminationProgressionStrategy(advanceBracketUseCase),
+                new RoundRobinProgressionStrategy(checkTournamentCompletionUseCase),
+                new GroupsThenKnockoutProgressionStrategy(generateKnockoutBracketFromGroupsUseCase, advanceBracketUseCase)
+        );
+        bracketListener = new BracketListener(loadMatchPort, strategies);
+    }
 
     @Test
     void onMatchFinished_shouldCallAdvanceToNextRound_whenSingleElimination() {
