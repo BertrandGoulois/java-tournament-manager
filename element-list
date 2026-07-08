@@ -43,7 +43,8 @@ com.tournament.tournament_manager.infrastructure.rpc.match
 com.tournament.tournament_manager.infrastructure.rpc.player
 com.tournament.tournament_manager.infrastructure.rpc.registration
 com.tournament.tournament_manager.infrastructure.rpc.tournament
-com.tournament.tournament_manager.infrastructure.strategy
+com.tournament.tournament_manager.infrastructure.strategy.progression
+com.tournament.tournament_manager.infrastructure.strategy.start
 com.tournament.tournament_manager.listener
 com.tournament.tournament_manager.repository
 com.tournament.tournament_manager.service.auth
