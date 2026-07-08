@@ -1,5 +1,6 @@
 package com.tournament.tournament_manager.infrastructure.rpc.match;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tournament.tournament_manager.domain.port.in.match.RecordMatchResultUseCase;
 import com.tournament.tournament_manager.dto.request.match.RecordMatchResultRequest;
 import com.tournament.tournament_manager.infrastructure.rpc.AbstractJsonRpcHandler;
@@ -15,7 +16,8 @@ public class MatchRecordResultHandler extends AbstractJsonRpcHandler {
 
     private final RecordMatchResultUseCase recordMatchResultUseCase;
 
-    public MatchRecordResultHandler(RecordMatchResultUseCase recordMatchResultUseCase) {
+    public MatchRecordResultHandler(RecordMatchResultUseCase recordMatchResultUseCase, ObjectMapper objectMapper) {
+        super(objectMapper);
         this.recordMatchResultUseCase = recordMatchResultUseCase;
     }
 

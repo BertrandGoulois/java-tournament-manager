@@ -1,5 +1,6 @@
 package com.tournament.tournament_manager.infrastructure.rpc.tournament;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tournament.tournament_manager.domain.port.in.tournament.GetTournamentUseCase;
 import com.tournament.tournament_manager.infrastructure.rpc.AbstractJsonRpcHandler;
 import org.springframework.stereotype.Component;
@@ -14,7 +15,8 @@ public class TournamentGetByIdHandler extends AbstractJsonRpcHandler {
 
     private final GetTournamentUseCase getTournamentUseCase;
 
-    public TournamentGetByIdHandler(GetTournamentUseCase getTournamentUseCase) {
+    public TournamentGetByIdHandler(GetTournamentUseCase getTournamentUseCase, ObjectMapper objectMapper) {
+        super(objectMapper);
         this.getTournamentUseCase = getTournamentUseCase;
     }
 

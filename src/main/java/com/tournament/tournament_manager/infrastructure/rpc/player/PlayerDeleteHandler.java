@@ -1,5 +1,6 @@
 package com.tournament.tournament_manager.infrastructure.rpc.player;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tournament.tournament_manager.domain.port.in.player.DeletePlayerUseCase;
 import com.tournament.tournament_manager.infrastructure.rpc.AbstractJsonRpcHandler;
 import org.springframework.stereotype.Component;
@@ -14,7 +15,8 @@ public class PlayerDeleteHandler extends AbstractJsonRpcHandler {
 
     private final DeletePlayerUseCase deletePlayerUseCase;
 
-    public PlayerDeleteHandler(DeletePlayerUseCase deletePlayerUseCase) {
+    public PlayerDeleteHandler(DeletePlayerUseCase deletePlayerUseCase, ObjectMapper objectMapper) {
+        super(objectMapper);
         this.deletePlayerUseCase = deletePlayerUseCase;
     }
 

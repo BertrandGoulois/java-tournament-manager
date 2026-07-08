@@ -15,7 +15,8 @@ public class RegistrationRegisterHandler extends AbstractJsonRpcHandler {
     private final RegisterPlayerUseCase registerPlayerUseCase;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public RegistrationRegisterHandler(RegisterPlayerUseCase registerPlayerUseCase) {
+    public RegistrationRegisterHandler(RegisterPlayerUseCase registerPlayerUseCase, ObjectMapper objectMapper) {
+        super(objectMapper);
         this.registerPlayerUseCase = registerPlayerUseCase;
     }
 

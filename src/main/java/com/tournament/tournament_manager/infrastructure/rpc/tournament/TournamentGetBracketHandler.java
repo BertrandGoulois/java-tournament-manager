@@ -1,5 +1,6 @@
 package com.tournament.tournament_manager.infrastructure.rpc.tournament;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tournament.tournament_manager.domain.port.in.tournament.GetBracketUseCase;
 import com.tournament.tournament_manager.infrastructure.rpc.AbstractJsonRpcHandler;
 import org.springframework.stereotype.Component;
@@ -14,7 +15,8 @@ public class TournamentGetBracketHandler extends AbstractJsonRpcHandler {
 
     private final GetBracketUseCase getBracketUseCase;
 
-    public TournamentGetBracketHandler(GetBracketUseCase getBracketUseCase) {
+    public TournamentGetBracketHandler(GetBracketUseCase getBracketUseCase, ObjectMapper objectMapper) {
+        super(objectMapper);
         this.getBracketUseCase = getBracketUseCase;
     }
 

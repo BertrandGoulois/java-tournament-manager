@@ -15,7 +15,8 @@ public class PlayerCreateHandler extends AbstractJsonRpcHandler {
     private final CreatePlayerUseCase createPlayerUseCase;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public PlayerCreateHandler(CreatePlayerUseCase createPlayerUseCase) {
+    public PlayerCreateHandler(CreatePlayerUseCase createPlayerUseCase, ObjectMapper objectMapper) {
+        super(objectMapper);
         this.createPlayerUseCase = createPlayerUseCase;
     }
 

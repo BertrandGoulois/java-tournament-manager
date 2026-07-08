@@ -19,7 +19,8 @@ public class TournamentCreateHandler extends AbstractJsonRpcHandler {
     private final CreateTournamentUseCase createTournamentUseCase;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public TournamentCreateHandler(CreateTournamentUseCase createTournamentUseCase) {
+    public TournamentCreateHandler(CreateTournamentUseCase createTournamentUseCase, ObjectMapper objectMapper) {
+        super(objectMapper);
         this.createTournamentUseCase = createTournamentUseCase;
     }
 
