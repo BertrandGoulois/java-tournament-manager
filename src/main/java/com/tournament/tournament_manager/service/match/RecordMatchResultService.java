@@ -11,12 +11,14 @@ import com.tournament.tournament_manager.dto.request.match.RecordMatchResultRequ
 import com.tournament.tournament_manager.dto.response.match.MatchResponse;
 import com.tournament.tournament_manager.exception.InvalidException;
 import com.tournament.tournament_manager.exception.MatchNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Cas d'utilisation : enregistrement du résultat d'un match.
  */
+@Slf4j
 @Service
 @Transactional
 public class RecordMatchResultService implements RecordMatchResultUseCase {
@@ -33,26 +35,21 @@ public class RecordMatchResultService implements RecordMatchResultUseCase {
         this.publishMatchEventPort = publishMatchEventPort;
     }
 
-    /**
-     * Enregistre le résultat d'un match et publie l'événement de fin de match.
-     *
-     * @param matchId identifiant du match
-     * @param request contient l'identifiant du vainqueur
-     * @return la représentation du match mis à jour
-     * @throws MatchNotFoundException si le match n'existe pas
-     * @throws InvalidException       si le match est déjà terminé
-     * @throws InvalidException       si le vainqueur déclaré n'est pas un joueur du match
-     */
     @Override
     public MatchResponse recordMatchResult(Long matchId, RecordMatchResultRequest request) {
         Match match = loadMatchPort.loadMatch(matchId);
 
         if (match.getStatus() == MatchStatus.FINISHED) {
+            log.warn("Tentative d'enregistrement d'un résultat sur un match déjà terminé [matchId={}]", matchId);
             throw new InvalidException("Match already finished");
         }
 
         if (!request.winnerId().equals(match.getPlayer1().getId()) &&
                 !request.winnerId().equals(match.getPlayer2().getId())) {
+            log.warn("Vainqueur invalide [matchId={}, winnerId={}, player1={}, player2={}]",
+                    matchId, request.winnerId(),
+                    match.getPlayer1().getId(),
+                    match.getPlayer2() != null ? match.getPlayer2().getId() : null);
             throw new InvalidException("Winner is not a player of this match");
         }
 
@@ -63,6 +60,11 @@ public class RecordMatchResultService implements RecordMatchResultUseCase {
 
         Match saved = saveMatchPort.saveMatch(match);
         publishMatchEventPort.publishMatchFinished(new MatchFinishedEvent(saved.getId()));
+
+        log.info("Résultat enregistré [matchId={}, tournamentId={}, winner='{}']",
+                saved.getId(),
+                saved.getTournament().getId(),
+                saved.getWinner().getUsername());
 
         return toResponse(saved);
     }

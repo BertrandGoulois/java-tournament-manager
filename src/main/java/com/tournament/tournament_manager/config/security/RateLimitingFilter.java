@@ -7,6 +7,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -34,6 +35,7 @@ import static io.github.bucket4j.Bandwidth.builder;
  *   <li>{@code POST /api/players} — 10 créations par minute (fenêtre glissante)</li>
  * </ul>
  */
+@Slf4j
 @Component
 public class RateLimitingFilter extends OncePerRequestFilter {
 
@@ -92,6 +94,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         if ("POST".equals(method) && "/api/auth/login".equals(path)) {
             var bucket = proxyManager.builder().build("rate-limit:login:" + ip, loginBucketConfig());
             if (!bucket.tryConsume(1)) {
+                log.warn("Rate limit dépassé sur /api/auth/login [ip={}]", ip);
                 response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
                 response.getWriter().write("Trop de tentatives de connexion. Réessayez dans 1 minute.");
                 return;
@@ -101,6 +104,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
         if ("POST".equals(method) && "/api/players".equals(path)) {
             var bucket = proxyManager.builder().build("rate-limit:player:" + ip, createPlayerBucketConfig());
             if (!bucket.tryConsume(1)) {
+                log.warn("Rate limit dépassé sur /api/players [ip={}]", ip);
                 response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
                 response.getWriter().write("Trop de créations de joueurs. Réessayez dans 1 minute.");
                 return;

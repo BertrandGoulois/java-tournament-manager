@@ -2,6 +2,7 @@ package com.tournament.tournament_manager.listener;
 
 import com.tournament.tournament_manager.config.kafka.KafkaConfig;
 import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
@@ -15,6 +16,7 @@ import static com.tournament.tournament_manager.config.kafka.KafkaConfig.MATCH_F
  * <p>Publie l'événement sur le topic STOMP {@code /topic/matches},
  * auquel les clients peuvent s'abonner pour recevoir les mises à jour en temps réel.
  */
+@Slf4j
 @Component
 public class WebSocketListener {
 
@@ -31,6 +33,7 @@ public class WebSocketListener {
      */
     @KafkaListener(topics = MATCH_FINISHED_TOPIC, groupId = KafkaConfig.WEBSOCKET_GROUP)
     public void onMatchFinished(MatchFinishedEvent event) {
+        log.info("Notification WebSocket envoyée [matchId={}]", event.matchId());
         messagingTemplate.convertAndSend("/topic/matches", event);
     }
 }

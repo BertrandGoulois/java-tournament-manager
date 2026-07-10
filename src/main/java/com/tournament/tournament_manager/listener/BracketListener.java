@@ -7,6 +7,7 @@ import com.tournament.tournament_manager.domain.model.entities.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchPort;
 import com.tournament.tournament_manager.domain.port.out.strategy.TournamentProgressionStrategy;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
  * il suffit de créer une nouvelle implémentation {@code @Component} —
  * ce listener n'a pas besoin d'être modifié.
  */
+@Slf4j
 @Component
 public class BracketListener {
 
@@ -45,8 +47,12 @@ public class BracketListener {
 
         TournamentProgressionStrategy strategy = strategies.get(tournament.getFormat());
         if (strategy == null) {
+            log.error("Aucune stratégie de progression pour le format [matchId={}, format={}]",
+                    event.matchId(), tournament.getFormat());
             throw new IllegalStateException("No progression strategy registered for format: " + tournament.getFormat());
         }
+        log.info("Progression du tournoi [matchId={}, tournamentId={}, format={}]",
+                event.matchId(), tournament.getId(), tournament.getFormat());
         strategy.onMatchFinished(match, tournament);
     }
 }

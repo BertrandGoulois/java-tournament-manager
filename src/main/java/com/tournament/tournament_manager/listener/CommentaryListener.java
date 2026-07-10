@@ -6,8 +6,7 @@ import com.tournament.tournament_manager.domain.model.entities.Match;
 import com.tournament.tournament_manager.domain.port.out.match.GenerateCommentaryPort;
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchPort;
 import com.tournament.tournament_manager.domain.port.out.match.SaveCommentaryPort;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
@@ -19,10 +18,9 @@ import org.springframework.stereotype.Component;
  * et persisté en base pour consultation ultérieure.
  * Les matchs de bye (sans {@code player2}) sont ignorés.
  */
+@Slf4j
 @Component
 public class CommentaryListener {
-
-    private static final Logger log = LoggerFactory.getLogger(CommentaryListener.class);
 
     private final LoadMatchPort loadMatchPort;
     private final GenerateCommentaryPort generateCommentaryPort;

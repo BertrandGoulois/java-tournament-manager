@@ -2,8 +2,7 @@ package com.tournament.tournament_manager.service;
 
 import com.tournament.tournament_manager.repository.PlayerRepository;
 import com.tournament.tournament_manager.repository.TournamentRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -21,10 +20,9 @@ import java.time.LocalDateTime;
  * <p>Le job tourne tous les jours à 2h du matin. La durée de rétention
  * est configurable via {@code purge.retention-days} (défaut : 30 jours).
  */
+@Slf4j
 @Service
 public class PurgeService {
-
-    private static final Logger log = LoggerFactory.getLogger(PurgeService.class);
 
     private final PlayerRepository playerRepository;
     private final TournamentRepository tournamentRepository;

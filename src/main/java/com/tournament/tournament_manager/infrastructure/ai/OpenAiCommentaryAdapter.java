@@ -6,6 +6,7 @@ import com.openai.models.chat.completions.ChatCompletionCreateParams;
 import com.tournament.tournament_manager.domain.port.out.match.GenerateCommentaryPort;
 import com.tournament.tournament_manager.exception.OpenAiUnavailableException;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 /**
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Component;
  * sans solliciter l'API OpenAI, afin d'éviter de saturer l'application en cas
  * d'indisponibilité prolongée du service externe.
  */
+@Slf4j
 @Component
 public class OpenAiCommentaryAdapter implements GenerateCommentaryPort {
 
@@ -35,6 +37,7 @@ public class OpenAiCommentaryAdapter implements GenerateCommentaryPort {
     @Override
     @CircuitBreaker(name = "openai", fallbackMethod = "fallbackGenerateCommentary")
     public String generateCommentary(String prompt) {
+        log.debug("Appel OpenAI pour génération de commentaire");
         ChatCompletionCreateParams params = ChatCompletionCreateParams.builder()
                 .model("gpt-4o-mini")
                 .addUserMessage(prompt)
@@ -59,6 +62,7 @@ public class OpenAiCommentaryAdapter implements GenerateCommentaryPort {
      * @param t      la cause de l'échec
      */
     private String fallbackGenerateCommentary(String prompt, Throwable t) {
+        log.warn("Circuit breaker OpenAI déclenché - commentaire non généré. Cause : {}", t.getMessage());
         throw new OpenAiUnavailableException("Service de commentaire IA indisponible", t);
     }
 }

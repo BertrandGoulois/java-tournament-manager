@@ -2,8 +2,7 @@ package com.tournament.tournament_manager.listener;
 
 import com.tournament.tournament_manager.config.kafka.KafkaConfig;
 import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
@@ -14,10 +13,9 @@ import org.springframework.stereotype.Component;
  * dans les listeners principaux. Le message est loggé pour permettre
  * l'investigation et le rejeu manuel via Kafka UI.
  */
+@Slf4j
 @Component
 public class DLTListener {
-
-    private static final Logger log = LoggerFactory.getLogger(DLTListener.class);
 
     /**
      * Reçoit les messages en échec et les logue pour investigation.
