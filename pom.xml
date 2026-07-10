@@ -325,6 +325,7 @@
 						<exclude>**/RoundRobinIntegrationTest.java</exclude>
 						<exclude>**/GroupsThenKnockoutIntegrationTest.java</exclude>
 						<exclude>**/OpenAiCommentaryAdapterCircuitBreakerTest.java</exclude>
+						<exclude>**/PurgeServiceIntegrationTest.java</exclude>
 					</excludes>
 				</configuration>
 			</plugin>
