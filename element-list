@@ -34,7 +34,8 @@ com.tournament.tournament_manager.dto.response.player
 com.tournament.tournament_manager.dto.response.registration
 com.tournament.tournament_manager.dto.response.rpc
 com.tournament.tournament_manager.dto.response.tournament
-com.tournament.tournament_manager.exception
+com.tournament.tournament_manager.exception.domain
+com.tournament.tournament_manager.exception.handler
 com.tournament.tournament_manager.infrastructure.ai
 com.tournament.tournament_manager.infrastructure.messaging
 com.tournament.tournament_manager.infrastructure.persistence
