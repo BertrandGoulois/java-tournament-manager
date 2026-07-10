@@ -1,4 +1,4 @@
-package com.tournament.tournament_manager.exception;
+package com.tournament.tournament_manager.exception.domain;
 
 /**
  * Levée lorsque le service de génération de commentaire OpenAI est indisponible,

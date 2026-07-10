@@ -1,6 +1,7 @@
 package com.tournament.tournament_manager.domain.port.in.player;
 
 import com.tournament.tournament_manager.dto.response.player.PlayerResponse;
+import com.tournament.tournament_manager.exception.domain.PlayerNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -13,7 +14,7 @@ public interface GetPlayerUseCase {
      *
      * @param id identifiant du joueur
      * @return la représentation du joueur
-     * @throws com.tournament.tournament_manager.exception.PlayerNotFoundException si le joueur n'existe pas
+     * @throws PlayerNotFoundException si le joueur n'existe pas
      */
     PlayerResponse getPlayerById(Long id);
 

@@ -1,6 +1,7 @@
 package com.tournament.tournament_manager.domain.port.out.tournament;
 
 import com.tournament.tournament_manager.domain.model.entities.Tournament;
+import com.tournament.tournament_manager.exception.domain.TournamentNotFoundException;
 
 /**
  * Port sortant : chargement d'un tournoi depuis la persistance.
@@ -12,7 +13,7 @@ public interface LoadTournamentPort {
      *
      * @param id identifiant du tournoi
      * @return le tournoi correspondant
-     * @throws com.tournament.tournament_manager.exception.TournamentNotFoundException si le tournoi n'existe pas
+     * @throws TournamentNotFoundException si le tournoi n'existe pas
      */
     Tournament loadTournament(Long id);
 }

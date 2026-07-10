@@ -1,4 +1,4 @@
-package com.tournament.tournament_manager.exception;
+package com.tournament.tournament_manager.exception.domain;
 
 /**
  * Levée quand un match est introuvable par son identifiant.

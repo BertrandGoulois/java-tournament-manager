@@ -11,9 +11,9 @@ import com.tournament.tournament_manager.domain.port.out.registration.SaveRegist
 import com.tournament.tournament_manager.domain.port.out.tournament.LoadTournamentPort;
 import com.tournament.tournament_manager.dto.request.registration.CreateRegistrationRequest;
 import com.tournament.tournament_manager.dto.response.registration.RegistrationResponse;
-import com.tournament.tournament_manager.exception.InvalidException;
-import com.tournament.tournament_manager.exception.PlayerNotFoundException;
-import com.tournament.tournament_manager.exception.TournamentNotFoundException;
+import com.tournament.tournament_manager.exception.domain.InvalidException;
+import com.tournament.tournament_manager.exception.domain.PlayerNotFoundException;
+import com.tournament.tournament_manager.exception.domain.TournamentNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

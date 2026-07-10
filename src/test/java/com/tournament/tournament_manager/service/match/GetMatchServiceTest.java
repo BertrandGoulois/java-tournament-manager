@@ -6,7 +6,7 @@ import com.tournament.tournament_manager.domain.model.entities.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchPort;
 import com.tournament.tournament_manager.dto.response.match.MatchResponse;
-import com.tournament.tournament_manager.exception.MatchNotFoundException;
+import com.tournament.tournament_manager.exception.domain.MatchNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

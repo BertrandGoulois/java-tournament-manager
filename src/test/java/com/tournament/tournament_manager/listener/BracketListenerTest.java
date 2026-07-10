@@ -8,7 +8,7 @@ import com.tournament.tournament_manager.domain.port.in.tournament.AdvanceBracke
 import com.tournament.tournament_manager.domain.port.in.tournament.CheckTournamentCompletionUseCase;
 import com.tournament.tournament_manager.domain.port.in.tournament.GenerateKnockoutBracketFromGroupsUseCase;
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchPort;
-import com.tournament.tournament_manager.exception.MatchNotFoundException;
+import com.tournament.tournament_manager.exception.domain.MatchNotFoundException;
 import com.tournament.tournament_manager.infrastructure.strategy.progression.GroupsThenKnockoutProgressionStrategy;
 import com.tournament.tournament_manager.infrastructure.strategy.progression.RoundRobinProgressionStrategy;
 import com.tournament.tournament_manager.infrastructure.strategy.progression.SingleEliminationProgressionStrategy;

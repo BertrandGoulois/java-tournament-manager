@@ -3,7 +3,7 @@ package com.tournament.tournament_manager.infrastructure.persistence;
 import com.tournament.tournament_manager.domain.model.entities.EloHistory;
 import com.tournament.tournament_manager.domain.model.entities.Player;
 import com.tournament.tournament_manager.domain.port.out.player.*;
-import com.tournament.tournament_manager.exception.PlayerNotFoundException;
+import com.tournament.tournament_manager.exception.domain.PlayerNotFoundException;
 import com.tournament.tournament_manager.repository.EloHistoryRepository;
 import com.tournament.tournament_manager.repository.MatchRepository;
 import com.tournament.tournament_manager.repository.PlayerRepository;

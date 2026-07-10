@@ -3,7 +3,7 @@ package com.tournament.tournament_manager.infrastructure.ai;
 import com.openai.client.OpenAIClient;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
 import com.tournament.tournament_manager.TestcontainersConfiguration;
-import com.tournament.tournament_manager.exception.OpenAiUnavailableException;
+import com.tournament.tournament_manager.exception.domain.OpenAiUnavailableException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import org.junit.jupiter.api.BeforeEach;

@@ -7,7 +7,7 @@ import com.tournament.tournament_manager.domain.port.out.player.CountMatchesByPl
 import com.tournament.tournament_manager.domain.port.out.player.LoadEloHistoryPort;
 import com.tournament.tournament_manager.domain.port.out.player.LoadPlayerPort;
 import com.tournament.tournament_manager.dto.response.player.PlayerStatsResponse;
-import com.tournament.tournament_manager.exception.PlayerNotFoundException;
+import com.tournament.tournament_manager.exception.domain.PlayerNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

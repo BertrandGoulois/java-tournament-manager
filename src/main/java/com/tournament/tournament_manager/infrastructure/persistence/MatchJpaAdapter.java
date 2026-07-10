@@ -2,7 +2,7 @@ package com.tournament.tournament_manager.infrastructure.persistence;
 
 import com.tournament.tournament_manager.domain.model.entities.Match;
 import com.tournament.tournament_manager.domain.port.out.match.*;
-import com.tournament.tournament_manager.exception.MatchNotFoundException;
+import com.tournament.tournament_manager.exception.domain.MatchNotFoundException;
 import com.tournament.tournament_manager.repository.MatchRepository;
 import org.springframework.stereotype.Component;
 

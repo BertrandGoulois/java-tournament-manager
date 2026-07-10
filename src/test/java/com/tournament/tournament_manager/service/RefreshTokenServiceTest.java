@@ -6,7 +6,7 @@ import com.tournament.tournament_manager.domain.port.out.auth.DeleteRefreshToken
 import com.tournament.tournament_manager.domain.port.out.auth.LoadRefreshTokenPort;
 import com.tournament.tournament_manager.domain.port.out.auth.SaveRefreshTokenPort;
 import com.tournament.tournament_manager.dto.response.auth.AuthResponse;
-import com.tournament.tournament_manager.exception.InvalidException;
+import com.tournament.tournament_manager.exception.domain.InvalidException;
 import com.tournament.tournament_manager.service.token.RefreshTokenService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

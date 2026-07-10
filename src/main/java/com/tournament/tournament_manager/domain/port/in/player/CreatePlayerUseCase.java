@@ -2,6 +2,7 @@ package com.tournament.tournament_manager.domain.port.in.player;
 
 import com.tournament.tournament_manager.dto.request.player.CreatePlayerRequest;
 import com.tournament.tournament_manager.dto.response.player.PlayerResponse;
+import com.tournament.tournament_manager.exception.domain.PlayerAlreadyExistsException;
 
 /**
  * Port entrant : cas d'utilisation pour créer un joueur.
@@ -12,7 +13,7 @@ public interface CreatePlayerUseCase {
      *
      * @param request contient le username et l'email du joueur
      * @return la représentation du joueur créé
-     * @throws com.tournament.tournament_manager.exception.PlayerAlreadyExistsException si le username ou l'email est déjà utilisé
+     * @throws PlayerAlreadyExistsException si le username ou l'email est déjà utilisé
      */
     PlayerResponse createPlayer(CreatePlayerRequest request);
 }

@@ -3,7 +3,7 @@ package com.tournament.tournament_manager.integration;
 import com.tournament.tournament_manager.TestcontainersConfiguration;
 import com.tournament.tournament_manager.dto.request.player.CreatePlayerRequest;
 import com.tournament.tournament_manager.dto.response.player.PlayerResponse;
-import com.tournament.tournament_manager.exception.PlayerNotFoundException;
+import com.tournament.tournament_manager.exception.domain.PlayerNotFoundException;
 import com.tournament.tournament_manager.repository.PlayerRepository;
 import com.tournament.tournament_manager.service.player.CreatePlayerService;
 import com.tournament.tournament_manager.service.player.GetPlayerService;

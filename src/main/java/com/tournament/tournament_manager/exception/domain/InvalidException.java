@@ -1,4 +1,4 @@
-package com.tournament.tournament_manager.exception;
+package com.tournament.tournament_manager.exception.domain;
 
 /**
  * Exception de base pour les opérations métier invalides.

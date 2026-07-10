@@ -1,6 +1,7 @@
 package com.tournament.tournament_manager.domain.port.in.tournament;
 
 import com.tournament.tournament_manager.dto.response.tournament.TournamentResponse;
+import com.tournament.tournament_manager.exception.domain.TournamentNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -14,7 +15,7 @@ public interface GetTournamentUseCase {
      *
      * @param id identifiant du tournoi
      * @return la représentation du tournoi
-     * @throws com.tournament.tournament_manager.exception.TournamentNotFoundException si le tournoi n'existe pas
+     * @throws TournamentNotFoundException si le tournoi n'existe pas
      */
     TournamentResponse getTournamentById(Long id);
 

@@ -5,7 +5,7 @@ import com.tournament.tournament_manager.domain.port.out.player.ExistsPlayerPort
 import com.tournament.tournament_manager.domain.port.out.player.SavePlayerPort;
 import com.tournament.tournament_manager.dto.request.player.CreatePlayerRequest;
 import com.tournament.tournament_manager.dto.response.player.PlayerResponse;
-import com.tournament.tournament_manager.exception.PlayerAlreadyExistsException;
+import com.tournament.tournament_manager.exception.domain.PlayerAlreadyExistsException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

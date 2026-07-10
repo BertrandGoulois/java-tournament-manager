@@ -8,7 +8,7 @@ import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchesByTournamentPort;
 import com.tournament.tournament_manager.domain.port.out.tournament.LoadTournamentPort;
 import com.tournament.tournament_manager.dto.response.tournament.BracketResponse;
-import com.tournament.tournament_manager.exception.TournamentNotFoundException;
+import com.tournament.tournament_manager.exception.domain.TournamentNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

@@ -1,4 +1,4 @@
-package com.tournament.tournament_manager.exception;
+package com.tournament.tournament_manager.exception.domain;
 
 /**
  * Levée quand un tournoi existe déjà avec le même nom.

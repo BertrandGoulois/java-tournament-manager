@@ -7,8 +7,8 @@ import com.tournament.tournament_manager.domain.port.out.tournament.ExistsTourna
 import com.tournament.tournament_manager.domain.port.out.tournament.SaveTournamentPort;
 import com.tournament.tournament_manager.dto.request.tournament.CreateTournamentRequest;
 import com.tournament.tournament_manager.dto.response.tournament.TournamentResponse;
-import com.tournament.tournament_manager.exception.InvalidTournamentException;
-import com.tournament.tournament_manager.exception.TournamentAlreadyExistsException;
+import com.tournament.tournament_manager.exception.domain.InvalidTournamentException;
+import com.tournament.tournament_manager.exception.domain.TournamentAlreadyExistsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

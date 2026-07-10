@@ -9,9 +9,9 @@ import com.tournament.tournament_manager.domain.port.out.registration.LoadRegist
 import com.tournament.tournament_manager.domain.port.out.strategy.TournamentStartStrategy;
 import com.tournament.tournament_manager.domain.port.out.tournament.LoadTournamentPort;
 import com.tournament.tournament_manager.domain.port.out.tournament.SaveTournamentPort;
-import com.tournament.tournament_manager.exception.InvalidException;
-import com.tournament.tournament_manager.exception.NotFoundException;
-import com.tournament.tournament_manager.exception.TournamentNotFoundException;
+import com.tournament.tournament_manager.exception.domain.InvalidException;
+import com.tournament.tournament_manager.exception.domain.NotFoundException;
+import com.tournament.tournament_manager.exception.domain.TournamentNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

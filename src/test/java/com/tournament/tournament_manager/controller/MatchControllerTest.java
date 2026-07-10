@@ -12,9 +12,8 @@ import com.tournament.tournament_manager.domain.port.in.match.RecordMatchResultU
 import com.tournament.tournament_manager.dto.request.match.RecordMatchResultRequest;
 import com.tournament.tournament_manager.dto.response.match.MatchCommentaryResponse;
 import com.tournament.tournament_manager.dto.response.match.MatchResponse;
-import com.tournament.tournament_manager.exception.MatchNotFoundException;
+import com.tournament.tournament_manager.exception.domain.MatchNotFoundException;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
-import io.lettuce.core.RedisClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
