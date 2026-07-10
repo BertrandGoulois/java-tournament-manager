@@ -47,6 +47,7 @@ com.tournament.tournament_manager.infrastructure.strategy.progression
 com.tournament.tournament_manager.infrastructure.strategy.start
 com.tournament.tournament_manager.listener
 com.tournament.tournament_manager.repository
+com.tournament.tournament_manager.service
 com.tournament.tournament_manager.service.auth
 com.tournament.tournament_manager.service.bracket
 com.tournament.tournament_manager.service.elo
