@@ -1,6 +1,7 @@
 package com.tournament.tournament_manager.integration;
 
 import com.tournament.tournament_manager.TestcontainersConfiguration;
+import com.tournament.tournament_manager.application.tournament.*;
 import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
 import com.tournament.tournament_manager.dto.request.match.RecordMatchResultRequest;
@@ -11,11 +12,10 @@ import com.tournament.tournament_manager.dto.response.match.MatchResponse;
 import com.tournament.tournament_manager.dto.response.player.PlayerResponse;
 import com.tournament.tournament_manager.dto.response.tournament.StandingsResponse;
 import com.tournament.tournament_manager.dto.response.tournament.TournamentResponse;
-import com.tournament.tournament_manager.repository.MatchRepository;
-import com.tournament.tournament_manager.service.match.RecordMatchResultService;
-import com.tournament.tournament_manager.service.player.CreatePlayerService;
-import com.tournament.tournament_manager.service.registration.RegisterPlayerService;
-import com.tournament.tournament_manager.service.tournament.*;
+import com.tournament.tournament_manager.infrastructure.output.persistence.repository.MatchRepository;
+import com.tournament.tournament_manager.application.match.RecordMatchResultService;
+import com.tournament.tournament_manager.application.player.CreatePlayerService;
+import com.tournament.tournament_manager.application.registration.RegisterPlayerService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

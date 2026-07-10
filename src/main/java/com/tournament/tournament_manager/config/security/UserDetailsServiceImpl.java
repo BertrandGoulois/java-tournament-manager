@@ -1,6 +1,6 @@
 package com.tournament.tournament_manager.config.security;
 
-import com.tournament.tournament_manager.repository.UserRepository;
+import com.tournament.tournament_manager.infrastructure.output.persistence.repository.UserRepository;
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;

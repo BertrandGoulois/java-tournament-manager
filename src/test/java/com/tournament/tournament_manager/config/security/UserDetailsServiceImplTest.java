@@ -2,7 +2,7 @@ package com.tournament.tournament_manager.config.security;
 
 import com.tournament.tournament_manager.domain.model.entities.User;
 import com.tournament.tournament_manager.domain.model.enums.Role;
-import com.tournament.tournament_manager.repository.UserRepository;
+import com.tournament.tournament_manager.infrastructure.output.persistence.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
