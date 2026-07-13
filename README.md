@@ -86,7 +86,7 @@ src/main/java/com/tournament/tournament_manager/
 
 Exemple : `PUT /api/matches/1/result` - du client jusqu'à la réponse HTTP.
 
-![Flux REST](docs/sequence.svg)
+![Flux REST](docs/sequence.png)
 
 1. **RateLimitingFilter** (`config/security/`) - vérifie le bucket Redis par IP → `429` si dépassé
 2. **JwtAuthenticationFilter** (`config/security/`) - valide le JWT → `401` si invalide
