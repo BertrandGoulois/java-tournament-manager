@@ -86,54 +86,23 @@ src/main/java/com/tournament/tournament_manager/
 
 Exemple : `PUT /api/matches/1/result` - du client jusqu'à la réponse HTTP.
 
-```mermaid
-sequenceDiagram
-    participant Client
-    participant RateLimit as RateLimitingFilter<br/>(config/security)
-    participant JWT as JwtAuthenticationFilter<br/>(config/security)
-    participant Security as Spring Security<br/>(SecurityConfig)
-    participant Controller as MatchController<br/>(infrastructure/input/rest)
-    participant PortIn as RecordMatchResultUseCase<br/>(domain/port/in)
-    participant Service as RecordMatchResultService<br/>(application/match)
-    participant PortOutJPA as SaveMatchPort<br/>(domain/port/out)
-    participant JpaAdapter as MatchJpaAdapter<br/>(infrastructure/output/persistence/adapter)
-    participant Repo as MatchRepository<br/>(infrastructure/output/persistence/repository)
-    participant DB as PostgreSQL
-    participant PortOutKafka as PublishMatchEventPort<br/>(domain/port/out)
-    participant KafkaAdapter as MatchKafkaAdapter<br/>(infrastructure/output/messaging)
-    participant Kafka as Kafka topic<br/>match-finished
-    participant ExHandler as GlobalExceptionHandler<br/>(exception/handler)
+![Flux REST](docs/sequence.svg)
 
-    Client->>RateLimit: PUT /api/matches/1/result
-    alt limite dépassée
-        RateLimit-->>Client: 429 Too Many Requests
-    end
-    RateLimit->>JWT: passe au filtre suivant
-    alt token invalide
-        JWT-->>Client: 401 Unauthorized
-    end
-    JWT->>Security: authentifié
-    alt rôle insuffisant
-        Security-->>Client: 403 Forbidden
-    end
-    Security->>Controller: RecordMatchResultRequest
-    Controller->>PortIn: recordMatchResult(matchId, request)
-    PortIn->>Service: implémentation du use case
-    Service->>PortOutJPA: saveMatch(match)
-    PortOutJPA->>JpaAdapter: implémentation JPA
-    JpaAdapter->>Repo: save(matchEntity)
-    Repo->>DB: INSERT / UPDATE
-    DB-->>Repo: ok
-    Repo-->>JpaAdapter: Match sauvegardé
-    JpaAdapter-->>Service: Match
-    Service->>PortOutKafka: publishMatchFinished(event)
-    PortOutKafka->>KafkaAdapter: implémentation Kafka
-    KafkaAdapter->>Kafka: MatchFinishedEvent publié
-    Note over Kafka: 4 listeners consomment en asynchrone
-    Service-->>Controller: MatchResponse
-    Controller-->>Client: 200 OK + MatchResponse JSON
-    Note over ExHandler: intercepte toute exception - ErrorResponse JSON
-```
+1. **RateLimitingFilter** (`config/security/`) - vérifie le bucket Redis par IP → `429` si dépassé
+2. **JwtAuthenticationFilter** (`config/security/`) - valide le JWT → `401` si invalide
+3. **Spring Security** (`SecurityConfig`) - vérifie le rôle ADMIN → `403` si insuffisant
+4. **MatchController** (`infrastructure/input/rest/`) - adapter primaire, désérialise la requête en `RecordMatchResultRequest`
+5. **RecordMatchResultUseCase** (`domain/port/in/`) - interface du port entrant, définit le contrat
+6. **RecordMatchResultService** (`application/match/`) - implémente le port entrant, logique métier pure
+7. **SaveMatchPort** (`domain/port/out/`) - interface du port sortant "sauvegarder un match"
+8. **MatchJpaAdapter** (`infrastructure/output/persistence/adapter/`) - implémente `SaveMatchPort`, traduit vers JPA
+9. **MatchRepository** (`infrastructure/output/persistence/repository/`) - Spring Data JPA
+10. **PostgreSQL** - persistance physique
+11. **PublishMatchEventPort** (`domain/port/out/`) - interface du port sortant "publier un événement"
+12. **MatchKafkaAdapter** (`infrastructure/output/messaging/`) - implémente `PublishMatchEventPort`, publie sur Kafka
+13. **Kafka** `match-finished` - les 4 listeners consomment en asynchrone (ELO, Bracket, WebSocket, Commentary)
+14. **GlobalExceptionHandler** (`exception/handler/`) - intercepte toute exception → `ErrorResponse` JSON uniforme
+15. **MatchController** - retourne `200 OK` + `MatchResponse` JSON au client
 
 ### Architecture hexagonale
 
