@@ -1,7 +1,9 @@
 package com.tournament.tournament_manager.config.security;
 
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -61,7 +63,17 @@ public class SecurityConfig {
                                 "/actuator/prometheus",
                                 "/actuator/health"
                         ).permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/tournaments").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/tournaments/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/tournaments/*/start").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/matches/*/result").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/players/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/rpc").hasRole("ADMIN")
                         .anyRequest().authenticated()
+                )
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) ->
+                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)

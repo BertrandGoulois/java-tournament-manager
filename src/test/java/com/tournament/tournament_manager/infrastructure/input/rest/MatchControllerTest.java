@@ -121,4 +121,31 @@ class MatchControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.commentary").value("Super match !"));
     }
+
+    @Test
+    void recordMatchResult_shouldReturn403_whenPlayerRole() throws Exception {
+        mockMvc.perform(put("/api/matches/1/result")
+                        .with(user("player").roles("PLAYER"))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new RecordMatchResultRequest(1L))))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void recordMatchResult_shouldReturn401_whenNotAuthenticated() throws Exception {
+        mockMvc.perform(put("/api/matches/1/result")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new RecordMatchResultRequest(1L))))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getMatchById_shouldReturn200_whenPlayerRole() throws Exception {
+        when(getMatchUseCase.getMatchById(1L)).thenReturn(sampleMatch());
+        mockMvc.perform(get("/api/matches/1")
+                        .with(user("player").roles("PLAYER")))
+                .andExpect(status().isOk());
+    }
 }

@@ -3,6 +3,8 @@ package com.tournament.tournament_manager.infrastructure.input.rest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.tournament.tournament_manager.config.security.JwtAuthenticationFilter;
+import com.tournament.tournament_manager.config.security.SecurityConfig;
+import com.tournament.tournament_manager.config.security.UserDetailsServiceImpl;
 import com.tournament.tournament_manager.domain.port.in.player.CreatePlayerUseCase;
 import com.tournament.tournament_manager.domain.port.in.player.DeletePlayerUseCase;
 import com.tournament.tournament_manager.domain.port.in.player.GetPlayerStatsUseCase;
@@ -23,6 +25,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -42,14 +45,15 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(value = PlayerController.class, excludeFilters = {
-        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = JwtAuthenticationFilter.class)
-})
+@WebMvcTest(PlayerController.class)
+@Import(SecurityConfig.class)
 class PlayerControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
+    @MockitoBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
     @MockitoBean
     private CreatePlayerUseCase createPlayerUseCase;
     @MockitoBean
@@ -62,6 +66,8 @@ class PlayerControllerTest {
     private CacheManager cacheManager;
     @MockitoBean
     private ProxyManager<String> rateLimitProxyManager;
+    @MockitoBean
+    private UserDetailsServiceImpl userDetailsService;
 
     private final ObjectMapper objectMapper = new ObjectMapper()
             .registerModule(new JavaTimeModule());
@@ -72,9 +78,14 @@ class PlayerControllerTest {
 
     @BeforeEach
     void setUp() throws Exception {
+        doAnswer(invocation -> {
+            jakarta.servlet.FilterChain chain = invocation.getArgument(2);
+            chain.doFilter(invocation.getArgument(0), invocation.getArgument(1));
+            return null;
+        }).when(jwtAuthenticationFilter).doFilter(any(), any(), any());
+
         @SuppressWarnings("unchecked")
-        RemoteBucketBuilder<String> bucketBuilder =
-                mock(RemoteBucketBuilder.class);
+        RemoteBucketBuilder<String> bucketBuilder = mock(RemoteBucketBuilder.class);
         BucketProxy bucket = mock(BucketProxy.class);
         doReturn(bucketBuilder).when(rateLimitProxyManager).builder();
         doReturn(bucket).when(bucketBuilder).build(
@@ -158,5 +169,37 @@ class PlayerControllerTest {
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf()))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void deletePlayer_shouldReturn403_whenPlayerRole() throws Exception {
+        mockMvc.perform(delete("/api/players/1")
+                        .with(user("player").roles("PLAYER"))
+                        .with(csrf()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void deletePlayer_shouldReturn401_whenNotAuthenticated() throws Exception {
+        mockMvc.perform(delete("/api/players/1")
+                        .with(csrf()))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getAllPlayers_shouldReturn200_whenPlayerRole() throws Exception {
+        Page<PlayerResponse> page = new PageImpl<>(List.of(samplePlayer()));
+        when(getPlayerUseCase.getAllPlayers(any(Pageable.class))).thenReturn(page);
+        mockMvc.perform(get("/api/players")
+                        .with(user("player").roles("PLAYER")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void getPlayerById_shouldReturn200_whenPlayerRole() throws Exception {
+        when(getPlayerUseCase.getPlayerById(1L)).thenReturn(samplePlayer());
+        mockMvc.perform(get("/api/players/1")
+                        .with(user("player").roles("PLAYER")))
+                .andExpect(status().isOk());
     }
 }

@@ -159,4 +159,49 @@ class TournamentControllerTest {
                         .with(csrf()))
                 .andExpect(status().isNoContent());
     }
+
+    @Test
+    void createTournament_shouldReturn403_whenPlayerRole() throws Exception {
+        mockMvc.perform(post("/api/tournaments")
+                        .with(user("player").roles("PLAYER"))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new CreateTournamentRequest("Test", 8, TournamentFormat.SINGLE_ELIMINATION, null, null))))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void createTournament_shouldReturn401_whenNotAuthenticated() throws Exception {
+        mockMvc.perform(post("/api/tournaments")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new CreateTournamentRequest("Test", 8, TournamentFormat.SINGLE_ELIMINATION, null, null))))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void deleteTournament_shouldReturn403_whenPlayerRole() throws Exception {
+        mockMvc.perform(delete("/api/tournaments/1")
+                        .with(user("player").roles("PLAYER"))
+                        .with(csrf()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void startTournament_shouldReturn403_whenPlayerRole() throws Exception {
+        mockMvc.perform(post("/api/tournaments/1/start")
+                        .with(user("player").roles("PLAYER"))
+                        .with(csrf()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void getAllTournaments_shouldReturn200_whenPlayerRole() throws Exception {
+        when(getTournamentUseCase.getAllTournaments(any())).thenReturn(Page.empty());
+        mockMvc.perform(get("/api/tournaments")
+                        .with(user("player").roles("PLAYER")))
+                .andExpect(status().isOk());
+    }
 }
