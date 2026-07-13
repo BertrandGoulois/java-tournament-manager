@@ -27,7 +27,7 @@ API REST de gestion de tournois sportifs (élimination directe, round-robin, ou 
 - **JUnit 5** + **Mockito** (tests unitaires)
 - **Testcontainers** (tests d'intégration)
 - **Gatling** (tests de charge)
-- **Springdoc / Swagger UI** (documentation API)
+- **Springdoc / Swagger UI** (documentation API interactive)
 - **Lombok**
 - **Resilience4j** (circuit breaker sur l'appel OpenAI)
 - **Bucket4j** + **Redis** (rate limiting distribué, buckets partagés entre instances via Lettuce)
@@ -80,6 +80,134 @@ src/main/java/com/tournament/tournament_manager/
 └── exception/
     ├── domain/             -> exceptions métier (NotFoundException, InvalidException, ...)
     └── handler/            -> GlobalExceptionHandler, ErrorResponse
+```
+
+### Vue d'ensemble de l'infrastructure
+
+```mermaid
+graph TB
+    subgraph Client
+        HTTP[Client HTTP / Swagger]
+        WS[Client WebSocket]
+    end
+
+    subgraph Infrastructure Input
+        REST[REST Controllers]
+        RPC[JSON-RPC Controller]
+        SCHED[Scheduler - PurgeService]
+    end
+
+    subgraph Application
+        UC[Use Cases]
+        STRAT[Strategies Start + Progression]
+    end
+
+    subgraph Infrastructure Output
+        JPA[JPA Adapters]
+        KAFKA_PUB[Kafka Publisher]
+        OPENAI[OpenAI Adapter]
+        REDIS_RL[Redis - Rate Limiting]
+        REDIS_CACHE[Redis - Cache Stats]
+    end
+
+    subgraph Kafka
+        TOPIC[match-finished topic]
+        DLT[match-finished.DLT]
+    end
+
+    subgraph Listeners
+        ELO[EloListener]
+        BRACKET[BracketListener]
+        WEBSOCKET[WebSocketListener]
+        COMMENTARY[CommentaryListener]
+    end
+
+    subgraph External Services
+        PG[(PostgreSQL)]
+        PROM[Prometheus]
+        GRAFANA[Grafana]
+        JAEGER[Jaeger]
+        AI[OpenAI GPT-4o-mini]
+    end
+
+    HTTP --> REST
+    HTTP --> RPC
+    REST --> UC
+    RPC --> UC
+    UC --> STRAT
+    UC --> JPA
+    UC --> KAFKA_PUB
+    UC --> REDIS_CACHE
+    REST -.-> REDIS_RL
+    JPA --> PG
+    KAFKA_PUB --> TOPIC
+    TOPIC --> ELO
+    TOPIC --> BRACKET
+    TOPIC --> WEBSOCKET
+    TOPIC --> COMMENTARY
+    COMMENTARY --> OPENAI
+    OPENAI --> AI
+    WEBSOCKET --> WS
+    ELO --> JPA
+    BRACKET --> UC
+    SCHED --> JPA
+    UC -.->|traces| JAEGER
+    UC -.->|métriques| PROM
+    PROM --> GRAFANA
+    TOPIC -- échec x3 --> DLT
+```
+
+### Flux d'un appel REST
+
+Exemple : `PUT /api/matches/1/result` - du client jusqu'à la réponse HTTP.
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant RateLimit as RateLimitingFilter<br/>(config/security)
+    participant JWT as JwtAuthenticationFilter<br/>(config/security)
+    participant Security as Spring Security<br/>(SecurityConfig)
+    participant Controller as MatchController<br/>(infrastructure/input/rest)
+    participant PortIn as RecordMatchResultUseCase<br/>(domain/port/in)
+    participant Service as RecordMatchResultService<br/>(application/match)
+    participant PortOutJPA as SaveMatchPort<br/>(domain/port/out)
+    participant JpaAdapter as MatchJpaAdapter<br/>(infrastructure/output/persistence/adapter)
+    participant Repo as MatchRepository<br/>(infrastructure/output/persistence/repository)
+    participant DB as PostgreSQL
+    participant PortOutKafka as PublishMatchEventPort<br/>(domain/port/out)
+    participant KafkaAdapter as MatchKafkaAdapter<br/>(infrastructure/output/messaging)
+    participant Kafka as Kafka topic<br/>match-finished
+    participant ExHandler as GlobalExceptionHandler<br/>(exception/handler)
+
+    Client->>RateLimit: PUT /api/matches/1/result
+    alt limite dépassée
+        RateLimit-->>Client: 429 Too Many Requests
+    end
+    RateLimit->>JWT: passe au filtre suivant
+    alt token invalide
+        JWT-->>Client: 401 Unauthorized
+    end
+    JWT->>Security: authentifié
+    alt rôle insuffisant
+        Security-->>Client: 403 Forbidden
+    end
+    Security->>Controller: RecordMatchResultRequest
+    Controller->>PortIn: recordMatchResult(matchId, request)
+    PortIn->>Service: implémentation du use case
+    Service->>PortOutJPA: saveMatch(match)
+    PortOutJPA->>JpaAdapter: implémentation JPA
+    JpaAdapter->>Repo: save(matchEntity)
+    Repo->>DB: INSERT / UPDATE
+    DB-->>Repo: ok
+    Repo-->>JpaAdapter: Match sauvegardé
+    JpaAdapter-->>Service: Match
+    Service->>PortOutKafka: publishMatchFinished(event)
+    PortOutKafka->>KafkaAdapter: implémentation Kafka
+    KafkaAdapter->>Kafka: MatchFinishedEvent publié
+    Note over Kafka: 4 listeners consomment en asynchrone
+    Service-->>Controller: MatchResponse
+    Controller-->>Client: 200 OK + MatchResponse JSON
+    Note over ExHandler: intercepte toute exception - ErrorResponse JSON
 ```
 
 ### Architecture hexagonale
@@ -427,9 +555,9 @@ docker-compose up -d
 }
 ```
 
-> Statut HTTP toujours `200` même en cas d'erreur applicative (spec JSON-RPC 2.0). Codes : `-32601` méthode inconnue, `-32602` paramètres invalides, `-32603` erreur interne.
+> Statut HTTP toujours `200` même en cas d'erreur applicative (spec JSON-RPC 2.0). Codes : `-32601` methode inconnue, `-32602` parametres invalides, `-32603` erreur interne.
 
-### Réponses d'erreur
+### Reponses d'erreur
 
 Toutes les erreurs REST retournent un JSON uniforme :
 
@@ -448,27 +576,29 @@ Toutes les erreurs REST retournent un JSON uniforme :
 
 - Architecture hexagonale (ports & adapters) - `domain/`, `application/`, `infrastructure/input/`, `infrastructure/output/`
 - Use cases atomiques : une classe par use case
-- Pattern Strategy à deux niveaux : démarrage (`TournamentStartStrategy`) et progression (`TournamentProgressionStrategy`) - extensible sans modifier le code existant
+- Pattern Strategy a deux niveaux : demarrage (`TournamentStartStrategy`) et progression (`TournamentProgressionStrategy`) - extensible sans modifier le code existant
 - Support multi-format (`SINGLE_ELIMINATION`, `ROUND_ROBIN`, `GROUPS_THEN_KNOCKOUT`)
-- Génération round-robin via méthode du cercle (chaque paire se rencontre exactement une fois)
+- Generation round-robin via methode du cercle (chaque paire se rencontre exactement une fois)
 - Phase de groupes configurable avec transition automatique vers bracket final
-- Classement round-robin calculé à la demande (`GET /tournaments/{id}/standings`)
-- API JSON-RPC 2.0 en parallèle de REST - même pattern Strategy pour le dispatch
-- Réponses d'erreur uniformes via `GlobalExceptionHandler` + `ErrorResponse`
+- Classement round-robin calcule a la demande (`GET /tournaments/{id}/standings`)
+- API JSON-RPC 2.0 en parallele de REST - meme pattern Strategy pour le dispatch
+- Reponses d'erreur uniformes via `GlobalExceptionHandler` + `ErrorResponse`
+- Documentation API interactive via Swagger UI (`@Operation`, `@ApiResponse`, `@Tag`) avec schéma d'erreur uniforme
 - Calcul ELO après chaque match (K=32, formule standard), idempotent
 - Progression de tournoi multi-format event-driven via Kafka
-- Génération automatique de commentaires via OpenAI GPT-4o-mini
+- Generation automatique de commentaires via OpenAI GPT-4o-mini
 - Dead Letter Queue Kafka (`match-finished.DLT`) + Kafka UI pour rejeu manuel
-- Notifications temps réel via WebSocket
+- Notifications temps reel via WebSocket
 - Cache Redis sur les statistiques joueur
-- Authentification JWT avec refresh token et révocation
+- Authentification JWT avec refresh token et revocation
 - Rate limiting distribué (Bucket4j + Redis, fenêtre glissante `refillGreedy`) - partagé entre instances
+- Restrictions par role ADMIN/PLAYER sur les endpoints (401 non authentifie, 403 non autorise)
 - Purge périodique des soft deletes (`@Scheduled`, rétention configurable)
 - Tracing distribué OpenTelemetry + Jaeger - propagation du traceId à travers Kafka
 - Monitoring Prometheus / Grafana
 - Tests de charge Gatling - scénario end-to-end 500 utilisateurs simultanés
 - Couverture élevée : unitaires (JUnit 5 / Mockito), controller (MockMvc), intégration (Testcontainers)
-- Circuit breaker Resilience4j sur OpenAI (CLOSED -> OPEN -> HALF_OPEN testé)
+- Circuit breaker Resilience4j sur OpenAI (CLOSED -> OPEN -> HALF_OPEN teste)
 
 ---
 
@@ -476,4 +606,4 @@ Toutes les erreurs REST retournent un JSON uniforme :
 
 - Métriques business custom dans Grafana (nb tournois créés, matchs joués...)
 - Pagination cursor-based pour les grandes tables
-- Reverse proxy nginx pour validation complète de `X-Forwarded-For` en production
+- Reverse proxy nginx pour validation complete de `X-Forwarded-For` en production

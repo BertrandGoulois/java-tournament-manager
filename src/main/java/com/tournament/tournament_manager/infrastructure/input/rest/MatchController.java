@@ -6,16 +6,24 @@ import com.tournament.tournament_manager.domain.port.in.match.RecordMatchResultU
 import com.tournament.tournament_manager.dto.request.match.RecordMatchResultRequest;
 import com.tournament.tournament_manager.dto.response.match.MatchCommentaryResponse;
 import com.tournament.tournament_manager.dto.response.match.MatchResponse;
+import com.tournament.tournament_manager.exception.handler.ErrorResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
  * Point d'entrée HTTP pour la gestion des matchs.
- * Délègue aux ports entrants {@link RecordMatchResultUseCase} et {@link GetMatchUseCase}.
  */
 @RestController
 @RequestMapping("/api/matches")
+@Tag(name = "Matches", description = "Gestion des matchs (résultats, commentaires)")
 public class MatchController {
 
     private final RecordMatchResultUseCase recordMatchResultUseCase;
@@ -30,41 +38,46 @@ public class MatchController {
         this.getMatchCommentaryUseCase = getMatchCommentaryUseCase;
     }
 
-    /**
-     * Enregistre le résultat d'un match et déclenche la chaîne Kafka
-     * (mise à jour ELO, avancement du bracket, notification WebSocket).
-     *
-     * @param id      identifiant du match
-     * @param request contient l'identifiant du vainqueur
-     * @return {@code 200 OK} avec le match mis à jour
-     */
+    @Operation(summary = "Enregistrer le résultat d'un match",
+            description = "Enregistre le vainqueur et déclenche la chaîne d'événements Kafka : " +
+                    "mise à jour ELO, progression du tournoi, notification WebSocket, génération de commentaire LLM. Réservé aux ADMIN.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Résultat enregistré"),
+            @ApiResponse(responseCode = "400", description = "Match déjà terminé ou vainqueur invalide",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Match introuvable",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @PutMapping("/{id}/result")
     public ResponseEntity<MatchResponse> recordMatchResult(
-            @PathVariable Long id,
+            @Parameter(description = "ID du match") @PathVariable Long id,
             @Valid @RequestBody RecordMatchResultRequest request) {
         return ResponseEntity.ok(recordMatchResultUseCase.recordMatchResult(id, request));
     }
 
-    /**
-     * Retourne un match par son identifiant.
-     *
-     * @param id identifiant du match
-     * @return {@code 200 OK} avec le match
-     */
+    @Operation(summary = "Obtenir un match par ID")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Match trouvé"),
+            @ApiResponse(responseCode = "404", description = "Match introuvable",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @GetMapping("/{id}")
-    public ResponseEntity<MatchResponse> getMatchById(@PathVariable Long id) {
+    public ResponseEntity<MatchResponse> getMatchById(
+            @Parameter(description = "ID du match") @PathVariable Long id) {
         return ResponseEntity.ok(getMatchUseCase.getMatchById(id));
     }
 
-    /**
-     * Retourne le commentaire narratif d'un match généré par LLM.
-     * Le commentaire est généré de façon asynchrone après la fin du match.
-     *
-     * @param id identifiant du match
-     * @return {@code 200 OK} avec le commentaire
-     */
+    @Operation(summary = "Obtenir le commentaire d'un match",
+            description = "Retourne le commentaire narratif généré de façon asynchrone par OpenAI GPT-4o-mini après la fin du match. " +
+                    "Retourne 'Commentaire en cours de génération...' si le LLM n'a pas encore répondu.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Commentaire du match"),
+            @ApiResponse(responseCode = "404", description = "Match introuvable",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @GetMapping("/{id}/commentary")
-    public ResponseEntity<MatchCommentaryResponse> getMatchCommentary(@PathVariable Long id) {
+    public ResponseEntity<MatchCommentaryResponse> getMatchCommentary(
+            @Parameter(description = "ID du match") @PathVariable Long id) {
         return ResponseEntity.ok(getMatchCommentaryUseCase.getMatchCommentary(id));
     }
 }
