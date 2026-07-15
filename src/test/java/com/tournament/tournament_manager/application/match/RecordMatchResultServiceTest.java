@@ -10,9 +10,11 @@ import com.tournament.tournament_manager.domain.port.out.match.SaveMatchPort;
 import com.tournament.tournament_manager.dto.request.match.RecordMatchResultRequest;
 import com.tournament.tournament_manager.exception.domain.InvalidException;
 import com.tournament.tournament_manager.exception.domain.MatchNotFoundException;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -23,6 +25,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class RecordMatchResultServiceTest {
 
+    private MeterRegistry meterRegistry = new SimpleMeterRegistry();
     @Mock
     private LoadMatchPort loadMatchPort;
     @Mock
@@ -30,8 +33,12 @@ class RecordMatchResultServiceTest {
     @Mock
     private PublishMatchEventPort publishMatchEventPort;
 
-    @InjectMocks
     private RecordMatchResultService recordMatchResultService;
+
+    @BeforeEach
+    void setUp() {
+        recordMatchResultService = new RecordMatchResultService(loadMatchPort, saveMatchPort, publishMatchEventPort, meterRegistry);
+    }
 
     @Test
     void recordMatchResult_shouldThrow_whenMatchNotFound() {

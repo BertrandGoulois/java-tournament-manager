@@ -7,9 +7,11 @@ import com.tournament.tournament_manager.domain.port.out.tournament.SaveTourname
 import com.tournament.tournament_manager.dto.request.tournament.CreateTournamentRequest;
 import com.tournament.tournament_manager.exception.domain.InvalidTournamentException;
 import com.tournament.tournament_manager.exception.domain.TournamentAlreadyExistsException;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -26,8 +28,14 @@ class CreateTournamentServiceTest {
     @Mock
     private ExistsTournamentPort existsTournamentPort;
 
-    @InjectMocks
+    private MeterRegistry meterRegistry = new SimpleMeterRegistry();
+
     private CreateTournamentService createTournamentService;
+
+    @BeforeEach
+    void setUp() {
+        createTournamentService = new CreateTournamentService(saveTournamentPort, existsTournamentPort, meterRegistry);
+    }
 
     @Test
     void createTournament_shouldThrow_whenNameAlreadyExists() {

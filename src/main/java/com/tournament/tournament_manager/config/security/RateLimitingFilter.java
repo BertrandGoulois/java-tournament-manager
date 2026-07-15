@@ -2,12 +2,15 @@ package com.tournament.tournament_manager.config.security;
 
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -41,6 +44,11 @@ public class RateLimitingFilter extends OncePerRequestFilter {
 
     private final ProxyManager<String> proxyManager;
 
+    @Autowired(required = false)
+    private MeterRegistry meterRegistry;
+
+    private Counter rateLimitBlockedCounter;
+
     @Value("${rate-limiting.login.capacity:5}")
     private int loginCapacity = 5;
 
@@ -62,6 +70,12 @@ public class RateLimitingFilter extends OncePerRequestFilter {
                 .map(String::trim)
                 .filter(s -> !s.isEmpty())
                 .collect(Collectors.toSet());
+
+        if (meterRegistry != null) {
+            rateLimitBlockedCounter = Counter.builder("rate.limit.blocked")
+                    .description("Nombre de requêtes bloquées par le rate limiting")
+                    .register(meterRegistry);
+        }
     }
 
     private Supplier<BucketConfiguration> loginBucketConfig() {
@@ -95,6 +109,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
             var bucket = proxyManager.builder().build("rate-limit:login:" + ip, loginBucketConfig());
             if (!bucket.tryConsume(1)) {
                 log.warn("Rate limit dépassé sur /api/auth/login [ip={}]", ip);
+                if (rateLimitBlockedCounter != null) rateLimitBlockedCounter.increment();
                 response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
                 response.getWriter().write("Trop de tentatives de connexion. Réessayez dans 1 minute.");
                 return;
@@ -105,6 +120,7 @@ public class RateLimitingFilter extends OncePerRequestFilter {
             var bucket = proxyManager.builder().build("rate-limit:player:" + ip, createPlayerBucketConfig());
             if (!bucket.tryConsume(1)) {
                 log.warn("Rate limit dépassé sur /api/players [ip={}]", ip);
+                if (rateLimitBlockedCounter != null) rateLimitBlockedCounter.increment();
                 response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
                 response.getWriter().write("Trop de créations de joueurs. Réessayez dans 1 minute.");
                 return;

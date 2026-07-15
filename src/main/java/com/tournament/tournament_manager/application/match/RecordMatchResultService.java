@@ -10,6 +10,8 @@ import com.tournament.tournament_manager.domain.port.out.match.SaveMatchPort;
 import com.tournament.tournament_manager.dto.request.match.RecordMatchResultRequest;
 import com.tournament.tournament_manager.dto.response.match.MatchResponse;
 import com.tournament.tournament_manager.exception.domain.InvalidException;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,13 +27,18 @@ public class RecordMatchResultService implements RecordMatchResultUseCase {
     private final LoadMatchPort loadMatchPort;
     private final SaveMatchPort saveMatchPort;
     private final PublishMatchEventPort publishMatchEventPort;
+    private final Counter matchResultRecordedCounter;
 
     public RecordMatchResultService(LoadMatchPort loadMatchPort,
                                     SaveMatchPort saveMatchPort,
-                                    PublishMatchEventPort publishMatchEventPort) {
+                                    PublishMatchEventPort publishMatchEventPort,
+                                    MeterRegistry meterRegistry) {
         this.loadMatchPort = loadMatchPort;
         this.saveMatchPort = saveMatchPort;
         this.publishMatchEventPort = publishMatchEventPort;
+        this.matchResultRecordedCounter = Counter.builder("match.result.recorded")
+                .description("Nombre de résultats de match enregistrés")
+                .register(meterRegistry);
     }
 
     @Override
@@ -65,6 +72,7 @@ public class RecordMatchResultService implements RecordMatchResultUseCase {
                 saved.getTournament().getId(),
                 saved.getWinner().getUsername());
 
+        matchResultRecordedCounter.increment();
         return toResponse(saved);
     }
 

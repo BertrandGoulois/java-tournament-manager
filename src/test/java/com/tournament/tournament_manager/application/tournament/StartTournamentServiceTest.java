@@ -12,6 +12,8 @@ import com.tournament.tournament_manager.domain.port.out.tournament.SaveTourname
 import com.tournament.tournament_manager.exception.domain.InvalidException;
 import com.tournament.tournament_manager.exception.domain.NotFoundException;
 import com.tournament.tournament_manager.exception.domain.TournamentNotFoundException;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,6 +29,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class StartTournamentServiceTest {
 
+    private MeterRegistry meterRegistry = new SimpleMeterRegistry();
     @Mock
     private LoadTournamentPort loadTournamentPort;
     @Mock
@@ -46,7 +49,8 @@ class StartTournamentServiceTest {
                 loadTournamentPort,
                 saveTournamentPort,
                 loadRegistrationPort,
-                List.of(singleEliminationStrategy)
+                List.of(singleEliminationStrategy),
+                meterRegistry
         );
     }
 

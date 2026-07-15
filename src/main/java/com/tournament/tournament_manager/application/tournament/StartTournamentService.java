@@ -11,6 +11,8 @@ import com.tournament.tournament_manager.domain.port.out.strategy.TournamentStar
 import com.tournament.tournament_manager.domain.port.out.tournament.LoadTournamentPort;
 import com.tournament.tournament_manager.domain.port.out.tournament.SaveTournamentPort;
 import com.tournament.tournament_manager.exception.domain.InvalidException;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,16 +36,21 @@ public class StartTournamentService implements StartTournamentUseCase {
     private final SaveTournamentPort saveTournamentPort;
     private final LoadRegistrationPort loadRegistrationPort;
     private final Map<TournamentFormat, TournamentStartStrategy> strategies;
+    private final Counter tournamentStartedCounter;
 
     public StartTournamentService(LoadTournamentPort loadTournamentPort,
                                   SaveTournamentPort saveTournamentPort,
                                   LoadRegistrationPort loadRegistrationPort,
-                                  List<TournamentStartStrategy> strategyList) {
+                                  List<TournamentStartStrategy> strategyList,
+                                  MeterRegistry meterRegistry) {
         this.loadTournamentPort = loadTournamentPort;
         this.saveTournamentPort = saveTournamentPort;
         this.loadRegistrationPort = loadRegistrationPort;
         this.strategies = strategyList.stream()
                 .collect(Collectors.toMap(TournamentStartStrategy::supportedFormat, s -> s));
+        this.tournamentStartedCounter = Counter.builder("tournament.started")
+                .description("Nombre de tournois démarrés")
+                .register(meterRegistry);
     }
 
     @Override
@@ -79,6 +86,7 @@ public class StartTournamentService implements StartTournamentUseCase {
         tournament.setStatus(TournamentStatus.IN_PROGRESS);
         saveTournamentPort.saveTournament(tournament);
 
+        tournamentStartedCounter.increment();
         log.info("Tournoi démarré avec succès [id={}, nom='{}']", tournamentId, tournament.getName());
     }
 }

@@ -9,6 +9,8 @@ import com.tournament.tournament_manager.dto.request.tournament.CreateTournament
 import com.tournament.tournament_manager.dto.response.tournament.TournamentResponse;
 import com.tournament.tournament_manager.exception.domain.InvalidTournamentException;
 import com.tournament.tournament_manager.exception.domain.TournamentAlreadyExistsException;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,11 +23,16 @@ public class CreateTournamentService implements CreateTournamentUseCase {
 
     private final SaveTournamentPort saveTournamentPort;
     private final ExistsTournamentPort existsTournamentPort;
+    private final Counter tournamentCreatedCounter;
 
     public CreateTournamentService(SaveTournamentPort saveTournamentPort,
-                                   ExistsTournamentPort existsTournamentPort) {
+                                   ExistsTournamentPort existsTournamentPort,
+                                   MeterRegistry meterRegistry) {
         this.saveTournamentPort = saveTournamentPort;
         this.existsTournamentPort = existsTournamentPort;
+        this.tournamentCreatedCounter = Counter.builder("tournament.created")
+                .description("Nombre de tournois créés")
+                .register(meterRegistry);
     }
 
     @Override
@@ -54,15 +61,12 @@ public class CreateTournamentService implements CreateTournamentUseCase {
         tournament.setFormat(format);
         tournament.setNumberOfGroups(numberOfGroups);
         tournament.setQualifiersPerGroup(qualifiersPerGroup);
-        return toResponse(saveTournamentPort.saveTournament(tournament));
+        TournamentResponse response = toResponse(saveTournamentPort.saveTournament(tournament));
+
+        tournamentCreatedCounter.increment();
+        return response;
     }
 
-    /**
-     * Valide et retourne le nombre de groupes pour un tournoi {@code GROUPS_THEN_KNOCKOUT}.
-     *
-     * @throws InvalidTournamentException si le nombre de groupes est absent, &lt; 2,
-     *                                    ou si l'effectif n'est pas divisible également entre les groupes
-     */
     private int validateAndResolveNumberOfGroups(CreateTournamentRequest request) {
         Integer numberOfGroups = request.numberOfGroups();
         if (numberOfGroups == null || numberOfGroups < 2) {
@@ -76,13 +80,6 @@ public class CreateTournamentService implements CreateTournamentUseCase {
         return numberOfGroups;
     }
 
-    /**
-     * Valide et retourne le nombre de qualifiés par groupe pour un tournoi {@code GROUPS_THEN_KNOCKOUT}.
-     *
-     * @throws InvalidTournamentException si la valeur est absente, supérieure ou égale à la taille
-     *                                    d'un groupe, ou si le total des qualifiés n'est pas une
-     *                                    puissance de 2 (nécessaire pour le bracket qui suit)
-     */
     private int validateAndResolveQualifiersPerGroup(CreateTournamentRequest request, int numberOfGroups) {
         Integer qualifiersPerGroup = request.qualifiersPerGroup();
         int groupSize = request.maxPlayers() / numberOfGroups;

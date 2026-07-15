@@ -7,6 +7,8 @@ import com.tournament.tournament_manager.domain.port.out.player.SavePlayerPort;
 import com.tournament.tournament_manager.dto.request.player.CreatePlayerRequest;
 import com.tournament.tournament_manager.dto.response.player.PlayerResponse;
 import com.tournament.tournament_manager.exception.domain.PlayerAlreadyExistsException;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,11 +21,16 @@ public class CreatePlayerService implements CreatePlayerUseCase {
 
     private final SavePlayerPort savePlayerPort;
     private final ExistsPlayerPort existsPlayerPort;
+    private final Counter playerCreatedCounter;
 
     public CreatePlayerService(SavePlayerPort savePlayerPort,
-                               ExistsPlayerPort existsPlayerPort) {
+                               ExistsPlayerPort existsPlayerPort,
+                               MeterRegistry meterRegistry) {
         this.savePlayerPort = savePlayerPort;
         this.existsPlayerPort = existsPlayerPort;
+        this.playerCreatedCounter = Counter.builder("player.created")
+                .description("Nombre de joueurs créés")
+                .register(meterRegistry);
     }
 
     @Override
@@ -37,6 +44,7 @@ public class CreatePlayerService implements CreatePlayerUseCase {
         Player player = new Player();
         player.setUsername(request.username());
         player.setEmail(request.email());
+        playerCreatedCounter.increment();
         return toResponse(savePlayerPort.savePlayer(player));
     }
 

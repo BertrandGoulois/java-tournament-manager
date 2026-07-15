@@ -6,9 +6,11 @@ import com.tournament.tournament_manager.domain.port.out.player.SavePlayerPort;
 import com.tournament.tournament_manager.dto.request.player.CreatePlayerRequest;
 import com.tournament.tournament_manager.dto.response.player.PlayerResponse;
 import com.tournament.tournament_manager.exception.domain.PlayerAlreadyExistsException;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -20,13 +22,18 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class CreatePlayerServiceTest {
 
+    private MeterRegistry meterRegistry = new SimpleMeterRegistry();
     @Mock
     private SavePlayerPort savePlayerPort;
     @Mock
     private ExistsPlayerPort existsPlayerPort;
 
-    @InjectMocks
     private CreatePlayerService createPlayerService;
+
+    @BeforeEach
+    void setUp(){
+        createPlayerService = new CreatePlayerService(savePlayerPort, existsPlayerPort, meterRegistry);
+    }
 
     @Test
     void createPlayer_shouldReturnPlayerResponse_whenValid() {
