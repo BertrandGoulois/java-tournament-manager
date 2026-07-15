@@ -202,4 +202,34 @@ class PlayerControllerTest {
                         .with(user("player").roles("PLAYER")))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    void createPlayer_shouldReturn400_whenUsernameTooShort() throws Exception {
+        mockMvc.perform(post("/api/players")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new CreatePlayerRequest("ab", "valid@mail.com"))))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createPlayer_shouldReturn400_whenUsernameHasSpecialChars() throws Exception {
+        mockMvc.perform(post("/api/players")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new CreatePlayerRequest("player@#$", "valid@mail.com"))))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createPlayer_shouldReturn400_whenUsernameTooLong() throws Exception {
+        mockMvc.perform(post("/api/players")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new CreatePlayerRequest("a".repeat(31), "valid@mail.com"))))
+                .andExpect(status().isBadRequest());
+    }
 }

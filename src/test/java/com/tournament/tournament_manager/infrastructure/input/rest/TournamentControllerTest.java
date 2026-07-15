@@ -204,4 +204,26 @@ class TournamentControllerTest {
                         .with(user("player").roles("PLAYER")))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    void createTournament_shouldReturn400_whenNameTooShort() throws Exception {
+        mockMvc.perform(post("/api/tournaments")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new CreateTournamentRequest("ab", 8, TournamentFormat.SINGLE_ELIMINATION, null, null))))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void createTournament_shouldReturn400_whenMaxPlayersExceedsLimit() throws Exception {
+        mockMvc.perform(post("/api/tournaments")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new CreateTournamentRequest("Valid Name", 256, TournamentFormat.SINGLE_ELIMINATION, null, null))))
+                .andExpect(status().isBadRequest());
+    }
 }
