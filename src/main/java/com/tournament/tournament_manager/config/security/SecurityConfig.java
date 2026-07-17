@@ -61,7 +61,8 @@ public class SecurityConfig {
                                 "/ws-test.html",
                                 "/error",
                                 "/actuator/prometheus",
-                                "/actuator/health"
+                                "/actuator/health",
+                                "/actuator/metrics/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/tournaments").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/tournaments/**").hasRole("ADMIN")

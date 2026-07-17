@@ -7,6 +7,7 @@ import com.tournament.tournament_manager.exception.domain.OpenAiUnavailableExcep
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -66,6 +67,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.SERVICE_UNAVAILABLE)
                 .body(ErrorResponse.of(503, "Service Unavailable", "Le service de commentaire IA est temporairement indisponible"));
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleBadCredentials(Exception ex) {
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(ErrorResponse.of(401, "Unauthorized", "Identifiants invalides"));
     }
 
     @ExceptionHandler(Exception.class)
