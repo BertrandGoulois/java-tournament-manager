@@ -31,6 +31,7 @@ API REST de gestion de tournois sportifs (élimination directe, round-robin, ou 
 - **Lombok**
 - **Resilience4j** (circuit breaker sur l'appel OpenAI)
 - **Bucket4j** + **Redis** (rate limiting distribué, buckets partagés entre instances via Lettuce)
+- **Nginx** (reverse proxy, point d'entrée unique sur le port 80, `X-Forwarded-For` fiable)
 
 ---
 
@@ -155,7 +156,7 @@ En cas d'échec répété (3 tentatives espacées d'1 seconde), le message est r
 
 > L'appel OpenAI est protégé par un circuit breaker Resilience4j. En cas d'échec, le fallback logue l'incident sans bloquer les autres listeners.
 
-**Test WebSocket** : page de démonstration disponible sur `http://localhost:8080/ws-test.html`.
+**Test WebSocket** : page de démonstration disponible sur `http://localhost/ws-test.html`.
 
 ### Purge des soft deletes
 
@@ -228,9 +229,9 @@ docker-compose up -d
 
 | Service | URL |
 |---|---|
-| API | `http://localhost:8080` |
-| Swagger UI | `http://localhost:8080/swagger-ui/index.html` |
-| WebSocket test | `http://localhost:8080/ws-test.html` |
+| API | `http://localhost` (via Nginx) |
+| Swagger UI | `http://localhost/swagger-ui/index.html` |
+| WebSocket test | `http://localhost/ws-test.html` |
 | Kafka UI | `http://localhost:8090` |
 | Prometheus | `http://localhost:9090` |
 | Grafana | `http://localhost:3000` (admin / admin) |
@@ -491,6 +492,7 @@ Toutes les erreurs REST retournent un JSON uniforme :
 - Tracing distribué OpenTelemetry + Jaeger - propagation du traceId à travers Kafka
 - Monitoring Prometheus / Grafana
 - Métriques business custom via Micrometer exposées à Prometheus : `tournament.created`, `tournament.started`, `match.result.recorded`, `player.created`, `rate.limit.blocked`
+- Reverse proxy Nginx en point entree unique (port 80) - app non exposee directement, X-Forwarded-For pose de facon fiable pour le rate limiting
 - Tests de charge Gatling - scénario end-to-end 500 utilisateurs simultanés
 - Couverture élevée : unitaires (JUnit 5 / Mockito), controller (MockMvc), intégration (Testcontainers)
 - Circuit breaker Resilience4j sur OpenAI (CLOSED -> OPEN -> HALF_OPEN teste)
@@ -501,4 +503,3 @@ Toutes les erreurs REST retournent un JSON uniforme :
 
 - Métriques business custom dans Grafana (nb tournois créés, matchs joués...)
 - Pagination cursor-based pour les grandes tables
-- Reverse proxy nginx pour validation complete de `X-Forwarded-For` en production
