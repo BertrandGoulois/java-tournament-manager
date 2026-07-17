@@ -1,5 +1,7 @@
 package com.tournament.tournament_manager.exception.handler;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.time.LocalDateTime;
 
 /**
@@ -11,7 +13,7 @@ import java.time.LocalDateTime;
  * @param timestamp l'horodatage de l'erreur
  */
 public record ErrorResponse(
-        int status,
+        @Schema(example = "404") int status,
         String error,
         String message,
         LocalDateTime timestamp

@@ -1,5 +1,7 @@
 package com.tournament.tournament_manager.dto.response.rpc;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 /**
  * Erreur conforme à la spécification JSON-RPC 2.0.
  *
@@ -9,7 +11,7 @@ package com.tournament.tournament_manager.dto.response.rpc;
  * @param data    détail optionnel (ex. message de l'exception métier)
  */
 public record JsonRpcError(
-        int code,
+        @Schema(example = "-32601") int code,
         String message,
         Object data
 ) {

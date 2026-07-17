@@ -1,6 +1,7 @@
 package com.tournament.tournament_manager.dto.request.tournament;
 
 import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -13,10 +14,16 @@ public record CreateTournamentRequest(
 
         @Min(value = 4, message = "Le tournoi doit avoir au moins 4 joueurs")
         @Max(value = 128, message = "Le tournoi ne peut pas dépasser 128 joueurs")
+        @Schema(example = "8")
         int maxPlayers,
 
+        @Schema(example = "SINGLE_ELIMINATION", description = "Format du tournoi. SINGLE_ELIMINATION par défaut si omis.")
         TournamentFormat format,
+
+        @Schema(example = "2", description = "Nombre de groupes. Requis uniquement pour GROUPS_THEN_KNOCKOUT.")
         Integer numberOfGroups,
+
+        @Schema(example = "2", description = "Qualifiés par groupe. Requis uniquement pour GROUPS_THEN_KNOCKOUT.")
         Integer qualifiersPerGroup
 ) {
     public TournamentFormat format() {

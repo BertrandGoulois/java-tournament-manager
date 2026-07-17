@@ -1,11 +1,13 @@
 package com.tournament.tournament_manager.dto.response.player;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.time.LocalDateTime;
 
 public record PlayerResponse(
-        Long id,
+        @Schema(example = "1") Long id,
         String username,
         String email,
-        int eloRating,
+        @Schema(example = "1000") int eloRating,
         LocalDateTime createdAt
 ) {}

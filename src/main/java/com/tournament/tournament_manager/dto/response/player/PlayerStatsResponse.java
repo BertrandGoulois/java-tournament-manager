@@ -1,15 +1,17 @@
 package com.tournament.tournament_manager.dto.response.player;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.io.Serializable;
 import java.util.List;
 
 public record PlayerStatsResponse (
-       Long id,
+       @Schema(example = "1") Long id,
        String username,
-       int eloRating,
-       int matchesPlayed,
-       int wins,
-       int losses,
-       double winRate,
+       @Schema(example = "1000") int eloRating,
+       @Schema(example = "10") int matchesPlayed,
+       @Schema(example = "7") int wins,
+       @Schema(example = "3") int losses,
+       @Schema(example = "70.0") double winRate,
        List<EloHistoryResponse> eloHistory
 ) implements Serializable {}
