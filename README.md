@@ -490,6 +490,7 @@ Toutes les erreurs REST retournent un JSON uniforme :
 - Purge périodique des soft deletes (`@Scheduled`, rétention configurable)
 - Tracing distribué OpenTelemetry + Jaeger - propagation du traceId à travers Kafka
 - Monitoring Prometheus / Grafana
+- Métriques business custom via Micrometer exposées à Prometheus : `tournament.created`, `tournament.started`, `match.result.recorded`, `player.created`, `rate.limit.blocked`
 - Tests de charge Gatling - scénario end-to-end 500 utilisateurs simultanés
 - Couverture élevée : unitaires (JUnit 5 / Mockito), controller (MockMvc), intégration (Testcontainers)
 - Circuit breaker Resilience4j sur OpenAI (CLOSED -> OPEN -> HALF_OPEN teste)
