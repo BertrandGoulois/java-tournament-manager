@@ -22,6 +22,7 @@ API REST de gestion de tournois sportifs (élimination directe, round-robin, ou 
 - **WebSocket** / **STOMP** (notifications temps réel)
 - **OpenAI GPT-4o-mini** (génération de commentaires de matchs via LLM)
 - **Prometheus** + **Grafana** (monitoring et visualisation des métriques JVM / HTTP)
+- **Grafana** (dashboards versionnés via provisioning : métriques business + JVM, chargés automatiquement au démarrage)
 - **OpenTelemetry** + **Jaeger** (tracing distribué, propagation du traceId à travers Kafka)
 - **JSON-RPC 2.0** (API alternative coexistant avec REST, endpoint unique `POST /api/rpc`)
 - **JUnit 5** + **Mockito** (tests unitaires)
@@ -490,8 +491,7 @@ Toutes les erreurs REST retournent un JSON uniforme :
 - Restrictions par role ADMIN/PLAYER sur les endpoints (401 non authentifie, 403 non autorise)
 - Purge périodique des soft deletes (`@Scheduled`, rétention configurable)
 - Tracing distribué OpenTelemetry + Jaeger - propagation du traceId à travers Kafka
-- Monitoring Prometheus / Grafana
-- Métriques business custom via Micrometer exposées à Prometheus : `tournament.created`, `tournament.started`, `match.result.recorded`, `player.created`, `rate.limit.blocked`
+- Monitoring Prometheus / Grafana avec dashboards versionnés (métriques business : `tournament.created`, `tournament.started`, `match.result.recorded`, `player.created`, `rate.limit.blocked` ; métriques JVM : heap, CPU, threads, HikariCP, GC)
 - Reverse proxy Nginx en point entree unique (port 80) - app non exposee directement, X-Forwarded-For pose de facon fiable pour le rate limiting
 - Tests de charge Gatling - scénario end-to-end 500 utilisateurs simultanés
 - Couverture élevée : unitaires (JUnit 5 / Mockito), controller (MockMvc), intégration (Testcontainers)
