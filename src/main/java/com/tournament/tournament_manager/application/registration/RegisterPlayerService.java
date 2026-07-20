@@ -13,12 +13,14 @@ import com.tournament.tournament_manager.domain.port.out.tournament.LoadTourname
 import com.tournament.tournament_manager.dto.request.registration.CreateRegistrationRequest;
 import com.tournament.tournament_manager.dto.response.registration.RegistrationResponse;
 import com.tournament.tournament_manager.exception.domain.InvalidException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Cas d'utilisation : inscription d'un joueur à un tournoi.
  */
+@Slf4j
 @Service
 @Transactional
 public class RegisterPlayerService implements RegisterPlayerUseCase {
@@ -47,21 +49,29 @@ public class RegisterPlayerService implements RegisterPlayerUseCase {
         Tournament tournament = loadTournamentPort.loadTournament(request.tournamentId());
 
         if (tournament.getStatus() != TournamentStatus.OPEN) {
+            log.warn("Tentative d'inscription à un tournoi non ouvert [tournamentId={}, status={}]",
+                    request.tournamentId(), tournament.getStatus());
             throw new InvalidException("Tournament is not open for registration");
         }
         if (existsRegistrationPort.existsByPlayerIdAndTournamentId(
                 request.playerId(), request.tournamentId())) {
+            log.warn("Joueur déjà inscrit [playerId={}, tournamentId={}]",
+                    request.playerId(), request.tournamentId());
             throw new InvalidException("Player already registered in this tournament");
         }
         if (countRegistrationPort.countByTournamentId(request.tournamentId())
                 >= tournament.getMaxPlayers()) {
+            log.warn("Tournoi complet [tournamentId={}]", request.tournamentId());
             throw new InvalidException("Tournament is full");
         }
 
         Registration registration = new Registration();
         registration.setPlayer(player);
         registration.setTournament(tournament);
-        return toResponse(saveRegistrationPort.saveRegistration(registration));
+        RegistrationResponse response = toResponse(saveRegistrationPort.saveRegistration(registration));
+        log.info("Joueur inscrit [playerId={}, tournamentId={}]",
+                request.playerId(), request.tournamentId());
+        return response;
     }
 
     private RegistrationResponse toResponse(Registration registration) {

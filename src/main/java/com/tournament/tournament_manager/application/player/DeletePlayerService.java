@@ -4,6 +4,7 @@ import com.tournament.tournament_manager.domain.model.entities.Player;
 import com.tournament.tournament_manager.domain.port.in.player.DeletePlayerUseCase;
 import com.tournament.tournament_manager.domain.port.out.player.LoadPlayerPort;
 import com.tournament.tournament_manager.domain.port.out.player.SoftDeletePlayerPort;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 /**
  * Cas d'utilisation : suppression (soft delete) d'un joueur.
  */
+@Slf4j
 @Service
 @Transactional
 public class DeletePlayerService implements DeletePlayerUseCase {
@@ -31,5 +33,6 @@ public class DeletePlayerService implements DeletePlayerUseCase {
         player.setDeleted(true);
         player.setDeletedAt(LocalDateTime.now());
         softDeletePlayerPort.softDeletePlayer(player);
+        log.info("Joueur supprimé (soft delete) [id={}, username='{}']", id, player.getUsername());
     }
 }

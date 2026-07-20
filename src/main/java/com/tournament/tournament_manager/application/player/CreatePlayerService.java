@@ -9,12 +9,14 @@ import com.tournament.tournament_manager.dto.response.player.PlayerResponse;
 import com.tournament.tournament_manager.exception.domain.PlayerAlreadyExistsException;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Cas d'utilisation : création d'un joueur.
  */
+@Slf4j
 @Service
 @Transactional
 public class CreatePlayerService implements CreatePlayerUseCase {
@@ -36,16 +38,20 @@ public class CreatePlayerService implements CreatePlayerUseCase {
     @Override
     public PlayerResponse createPlayer(CreatePlayerRequest request) {
         if (existsPlayerPort.existsByUsername(request.username())) {
+            log.warn("Tentative de création avec un username déjà utilisé [username='{}']", request.username());
             throw new PlayerAlreadyExistsException("username", request.username());
         }
         if (existsPlayerPort.existsByEmail(request.email())) {
+            log.warn("Tentative de création avec un email déjà utilisé [email='{}']", request.email());
             throw new PlayerAlreadyExistsException("email", request.email());
         }
         Player player = new Player();
         player.setUsername(request.username());
         player.setEmail(request.email());
         playerCreatedCounter.increment();
-        return toResponse(savePlayerPort.savePlayer(player));
+        PlayerResponse response = toResponse(savePlayerPort.savePlayer(player));
+        log.info("Joueur créé [id={}, username='{}']", response.id(), response.username());
+        return response;
     }
 
     private PlayerResponse toResponse(Player player) {

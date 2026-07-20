@@ -4,6 +4,7 @@ import com.tournament.tournament_manager.domain.model.entities.Tournament;
 import com.tournament.tournament_manager.domain.port.in.tournament.DeleteTournamentUseCase;
 import com.tournament.tournament_manager.domain.port.out.tournament.LoadTournamentPort;
 import com.tournament.tournament_manager.domain.port.out.tournament.SoftDeleteTournamentPort;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 /**
  * Cas d'utilisation : suppression (soft delete) d'un tournoi.
  */
+@Slf4j
 @Service
 @Transactional
 public class DeleteTournamentService implements DeleteTournamentUseCase {
@@ -31,5 +33,6 @@ public class DeleteTournamentService implements DeleteTournamentUseCase {
         tournament.setDeleted(true);
         tournament.setDeletedAt(LocalDateTime.now());
         softDeleteTournamentPort.softDeleteTournament(tournament);
+        log.info("Tournoi supprimé (soft delete) [id={}, nom='{}']", id, tournament.getName());
     }
 }
