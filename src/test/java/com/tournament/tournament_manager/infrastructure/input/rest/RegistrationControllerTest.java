@@ -97,4 +97,38 @@ class RegistrationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(1));
     }
+
+    @Test
+    void createRegistration_shouldReturn401_whenNotAuthenticated() throws Exception {
+        mockMvc.perform(post("/api/registrations")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new CreateRegistrationRequest(1L, 1L))))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getTournamentRegistrations_shouldReturn401_whenNotAuthenticated() throws Exception {
+        mockMvc.perform(get("/api/registrations/1"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void getTournamentRegistrations_shouldReturn200_whenPlayerRole() throws Exception {
+        when(getRegistrationsUseCase.getTournamentRegistrations(1L)).thenReturn(List.of(sampleRegistration()));
+        mockMvc.perform(get("/api/registrations/1")
+                        .with(user("player").roles("PLAYER")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void createRegistration_shouldReturn200_whenPlayerRole() throws Exception {
+        when(registerPlayerUseCase.registerPlayer(any())).thenReturn(sampleRegistration());
+        mockMvc.perform(post("/api/registrations")
+                        .with(user("player").roles("PLAYER"))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new CreateRegistrationRequest(1L, 1L))))
+                .andExpect(status().isCreated());
+    }
 }
