@@ -13,7 +13,7 @@ import static io.gatling.javaapi.http.HttpDsl.http;
 public class TournamentSimulation extends Simulation {
 
     HttpProtocolBuilder httpProtocol = http
-            .baseUrl("http://localhost:8080")
+            .baseUrl("http://localhost:80")
             .acceptHeader("application/json")
             .contentTypeHeader("application/json");
 
