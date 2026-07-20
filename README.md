@@ -22,7 +22,6 @@ API REST de gestion de tournois sportifs (élimination directe, round-robin, ou 
 - **WebSocket** / **STOMP** (notifications temps réel)
 - **OpenAI GPT-4o-mini** (génération de commentaires de matchs via LLM)
 - **Prometheus** + **Grafana** (monitoring et visualisation des métriques JVM / HTTP)
-- **Grafana** (dashboards versionnés via provisioning : métriques business + JVM, chargés automatiquement au démarrage)
 - **OpenTelemetry** + **Jaeger** (tracing distribué, propagation du traceId à travers Kafka)
 - **JSON-RPC 2.0** (API alternative coexistant avec REST, endpoint unique `POST /api/rpc`)
 - **JUnit 5** + **Mockito** (tests unitaires)
@@ -453,7 +452,7 @@ docker-compose up -d
 
 > Statut HTTP toujours `200` même en cas d'erreur applicative (spec JSON-RPC 2.0). Codes : `-32601` methode inconnue, `-32602` parametres invalides, `-32603` erreur interne.
 
-### Reponses d'erreur
+### Réponses d'erreur
 
 Toutes les erreurs REST retournent un JSON uniforme :
 
@@ -472,34 +471,33 @@ Toutes les erreurs REST retournent un JSON uniforme :
 
 - Architecture hexagonale (ports & adapters) - `domain/`, `application/`, `infrastructure/input/`, `infrastructure/output/`
 - Use cases atomiques : une classe par use case
-- Pattern Strategy a deux niveaux : demarrage (`TournamentStartStrategy`) et progression (`TournamentProgressionStrategy`) - extensible sans modifier le code existant
+- Pattern Strategy à deux niveaux : démarrage (`TournamentStartStrategy`) et progression (`TournamentProgressionStrategy`) - extensible sans modifier le code existant
 - Support multi-format (`SINGLE_ELIMINATION`, `ROUND_ROBIN`, `GROUPS_THEN_KNOCKOUT`)
-- Generation round-robin via methode du cercle (chaque paire se rencontre exactement une fois)
+- Génération round-robin via methode du cercle (chaque paire se rencontre exactement une fois)
 - Phase de groupes configurable avec transition automatique vers bracket final
-- Classement round-robin calcule a la demande (`GET /tournaments/{id}/standings`)
-- API JSON-RPC 2.0 en parallele de REST - meme pattern Strategy pour le dispatch
-- Reponses d'erreur uniformes via `GlobalExceptionHandler` + `ErrorResponse`
+- Classement round-robin calculé a la demande (`GET /tournaments/{id}/standings`)
+- API JSON-RPC 2.0 en parallèle de REST - même pattern Strategy pour le dispatch
+- Réponses d'erreur uniformes via `GlobalExceptionHandler` + `ErrorResponse`
 - Documentation API interactive via Swagger UI (`@Operation`, `@ApiResponse`, `@Tag`) avec schéma d'erreur uniforme
 - Calcul ELO après chaque match (K=32, formule standard), idempotent
 - Progression de tournoi multi-format event-driven via Kafka
-- Generation automatique de commentaires via OpenAI GPT-4o-mini
+- Génération automatique de commentaires via OpenAI GPT-4o-mini
 - Dead Letter Queue Kafka (`match-finished.DLT`) + Kafka UI pour rejeu manuel
-- Notifications temps reel via WebSocket
+- Notifications temps réel via WebSocket
 - Cache Redis sur les statistiques joueur
 - Authentification JWT avec refresh token et revocation
 - Rate limiting distribué (Bucket4j + Redis, fenêtre glissante `refillGreedy`) - partagé entre instances
-- Restrictions par role ADMIN/PLAYER sur les endpoints (401 non authentifie, 403 non autorise)
+- Restrictions par rôle ADMIN/PLAYER sur les endpoints (401 non authentifié, 403 non autorisé)
 - Purge périodique des soft deletes (`@Scheduled`, rétention configurable)
 - Tracing distribué OpenTelemetry + Jaeger - propagation du traceId à travers Kafka
 - Monitoring Prometheus / Grafana avec dashboards versionnés (métriques business : `tournament.created`, `tournament.started`, `match.result.recorded`, `player.created`, `rate.limit.blocked` ; métriques JVM : heap, CPU, threads, HikariCP, GC)
-- Reverse proxy Nginx en point entree unique (port 80) - app non exposee directement, X-Forwarded-For pose de facon fiable pour le rate limiting
-- Tests de charge Gatling - scénario end-to-end 500 utilisateurs simultanés
+- Reverse proxy Nginx en point d'entrée unique (port 80) - app non exposée directement, X-Forwarded-For posé de façon fiable pour le rate limiting
+- Tests de charge Gatling - scénario end-to-end 500 utilisateurs simultanés, 99.9% de succès, 330ms au 95e percentile
 - Couverture élevée : unitaires (JUnit 5 / Mockito), controller (MockMvc), intégration (Testcontainers)
-- Circuit breaker Resilience4j sur OpenAI (CLOSED -> OPEN -> HALF_OPEN teste)
+- Circuit breaker Resilience4j sur OpenAI (CLOSED -> OPEN -> HALF_OPEN testé)
 
 ---
 
 ## Evolutions possibles
 
-- Métriques business custom dans Grafana (nb tournois créés, matchs joués...)
 - Pagination cursor-based pour les grandes tables
