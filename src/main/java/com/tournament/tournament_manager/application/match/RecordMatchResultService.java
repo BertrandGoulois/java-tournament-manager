@@ -51,7 +51,7 @@ public class RecordMatchResultService implements RecordMatchResultUseCase {
         }
 
         if (!request.winnerId().equals(match.getPlayer1().getId()) &&
-                !request.winnerId().equals(match.getPlayer2().getId())) {
+                (match.getPlayer2() == null || !request.winnerId().equals(match.getPlayer2().getId()))) {
             log.warn("Vainqueur invalide [matchId={}, winnerId={}, player1={}, player2={}]",
                     matchId, request.winnerId(),
                     match.getPlayer1().getId(),

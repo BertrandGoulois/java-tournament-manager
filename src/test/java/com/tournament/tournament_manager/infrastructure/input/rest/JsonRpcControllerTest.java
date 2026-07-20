@@ -105,4 +105,37 @@ class JsonRpcControllerTest {
                 .andExpect(jsonPath("$.error.code").value(-32601))
                 .andExpect(jsonPath("$.id").value("2"));
     }
+
+    @Test
+    void handle_shouldReturn401_whenNotAuthenticated() throws Exception {
+        mockMvc.perform(post("/api/rpc")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            {
+                                "jsonrpc": "2.0",
+                                "method": "tournament.create",
+                                "params": {},
+                                "id": "1"
+                            }
+                            """))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void handle_shouldReturn403_whenPlayerRole() throws Exception {
+        mockMvc.perform(post("/api/rpc")
+                        .with(user("player").roles("PLAYER"))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            {
+                                "jsonrpc": "2.0",
+                                "method": "tournament.create",
+                                "params": {},
+                                "id": "1"
+                            }
+                            """))
+                .andExpect(status().isForbidden());
+    }
 }

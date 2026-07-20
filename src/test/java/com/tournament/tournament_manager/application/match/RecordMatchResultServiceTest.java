@@ -104,4 +104,17 @@ class RecordMatchResultServiceTest {
         recordMatchResultService.recordMatchResult(1L, new RecordMatchResultRequest(2L));
         assertEquals(player2, match.getWinner());
     }
+
+    @Test
+    void recordMatchResult_shouldThrow_whenWinnerIsNullPlayer2Bye() {
+        Player player1 = new Player();
+        player1.setId(1L);
+        Match match = new Match();
+        match.setStatus(MatchStatus.PENDING);
+        match.setPlayer1(player1);
+        match.setPlayer2(null); // bye
+        when(loadMatchPort.loadMatch(1L)).thenReturn(match);
+        assertThrows(InvalidException.class,
+                () -> recordMatchResultService.recordMatchResult(1L, new RecordMatchResultRequest(99L)));
+    }
 }
