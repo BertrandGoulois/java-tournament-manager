@@ -10,11 +10,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,18 +43,23 @@ class GetRegistrationsServiceTest {
         registration.setPlayer(player);
         registration.setTournament(tournament);
 
-        when(loadRegistrationPort.loadByTournamentId(1L)).thenReturn(List.of(registration));
+        Pageable pageable = PageRequest.of(0, 20);
 
-        List<RegistrationResponse> responses = getRegistrationsService.getTournamentRegistrations(1L);
+        when(loadRegistrationPort.loadByTournamentId(eq(1L), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(registration), pageable, 1));
 
-        assertEquals(1, responses.size());
-        assertEquals(1L, responses.get(0).id());
+        Page<RegistrationResponse> responses =
+                getRegistrationsService.getTournamentRegistrations(1L, pageable);
+
+        assertEquals(1, responses.getContent().size());
+        assertEquals(1L, responses.getContent().getFirst().id());
     }
 
     @Test
     void getTournamentRegistrations_shouldReturnEmptyList_whenNoRegistrations() {
-        when(loadRegistrationPort.loadByTournamentId(1L)).thenReturn(List.of());
-        List<RegistrationResponse> responses = getRegistrationsService.getTournamentRegistrations(1L);
+        Pageable pageable = PageRequest.of(0, 20);
+        when(loadRegistrationPort.loadByTournamentId(1L, pageable)).thenReturn(Page.empty(pageable));
+        Page<RegistrationResponse> responses = getRegistrationsService.getTournamentRegistrations(1L, pageable);
         assertTrue(responses.isEmpty());
     }
 }

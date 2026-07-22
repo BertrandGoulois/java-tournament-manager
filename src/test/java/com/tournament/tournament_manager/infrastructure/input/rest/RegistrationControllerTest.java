@@ -15,6 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -22,6 +25,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -91,11 +95,13 @@ class RegistrationControllerTest {
 
     @Test
     void getTournamentRegistrations_shouldReturn200() throws Exception {
-        when(getRegistrationsUseCase.getTournamentRegistrations(1L)).thenReturn(List.of(sampleRegistration()));
+        Pageable pageable = PageRequest.of(0, 20);
+
+        when(getRegistrationsUseCase.getTournamentRegistrations(eq(1L), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(sampleRegistration()), pageable, 1));
 
         mockMvc.perform(get("/api/registrations/1").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1));
+                .andExpect(jsonPath("$.content[0].id").value(1));
     }
 
     @Test
@@ -115,7 +121,8 @@ class RegistrationControllerTest {
 
     @Test
     void getTournamentRegistrations_shouldReturn200_whenPlayerRole() throws Exception {
-        when(getRegistrationsUseCase.getTournamentRegistrations(1L)).thenReturn(List.of(sampleRegistration()));
+        Pageable pageable = PageRequest.of(0, 20);
+        when(getRegistrationsUseCase.getTournamentRegistrations(eq(1L), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(sampleRegistration()), pageable, 1));
         mockMvc.perform(get("/api/registrations/1")
                         .with(user("player").roles("PLAYER")))
                 .andExpect(status().isOk());

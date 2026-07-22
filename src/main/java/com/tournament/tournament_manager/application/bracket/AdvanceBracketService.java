@@ -37,7 +37,6 @@ public class AdvanceBracketService implements AdvanceBracketUseCase {
     }
 
     @Override
-    @Transactional
     public void advanceToNextRound(Tournament tournament, int currentRound) {
         List<Match> currentMatches = loadMatchByTournamentPort
                 .loadByTournamentIdAndRound(tournament.getId(), currentRound);

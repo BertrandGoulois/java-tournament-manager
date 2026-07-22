@@ -6,6 +6,8 @@ import com.tournament.tournament_manager.domain.port.out.registration.ExistsRegi
 import com.tournament.tournament_manager.domain.port.out.registration.LoadRegistrationPort;
 import com.tournament.tournament_manager.domain.port.out.registration.SaveRegistrationPort;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.RegistrationRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -26,6 +28,11 @@ public class RegistrationJpaAdapter implements LoadRegistrationPort, SaveRegistr
     @Override
     public List<Registration> loadByTournamentId(Long tournamentId) {
         return registrationRepository.findByTournamentId(tournamentId);
+    }
+
+    @Override
+    public Page<Registration> loadByTournamentId(Long tournamentId, Pageable pageable) {
+        return registrationRepository.findByTournamentId(tournamentId, pageable);
     }
 
     @Override

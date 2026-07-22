@@ -33,6 +33,9 @@ public class BracketUtils {
     }
 
     public static int calculateFirstRound(int playerCount) {
+        if (playerCount <= 0) {
+            throw new IllegalArgumentException("playerCount must be positive, got: " + playerCount);
+        }
         int round = 1;
         while (round < playerCount) {
             round *= 2;

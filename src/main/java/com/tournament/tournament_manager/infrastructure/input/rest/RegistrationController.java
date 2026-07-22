@@ -13,6 +13,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -58,8 +60,8 @@ public class RegistrationController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @GetMapping("/{tournamentId}")
-    public ResponseEntity<List<RegistrationResponse>> getTournamentRegistrations(
-            @Parameter(description = "ID du tournoi") @PathVariable Long tournamentId) {
-        return ResponseEntity.ok(getRegistrationsUseCase.getTournamentRegistrations(tournamentId));
+    public ResponseEntity<Page<RegistrationResponse>> getTournamentRegistrations(
+            @Parameter(description = "ID du tournoi") @PathVariable Long tournamentId, Pageable pageable) {
+        return ResponseEntity.ok(getRegistrationsUseCase.getTournamentRegistrations(tournamentId, pageable));
     }
 }

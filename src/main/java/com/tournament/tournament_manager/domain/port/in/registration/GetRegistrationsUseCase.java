@@ -1,8 +1,8 @@
 package com.tournament.tournament_manager.domain.port.in.registration;
 
 import com.tournament.tournament_manager.dto.response.registration.RegistrationResponse;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 /**
  * Port entrant : cas d'utilisation pour consulter les inscriptions d'un tournoi.
@@ -10,10 +10,11 @@ import java.util.List;
 public interface GetRegistrationsUseCase {
 
     /**
-     * Retourne la liste des inscriptions d'un tournoi.
+     * Retourne la liste paginée des inscriptions d'un tournoi.
      *
      * @param tournamentId identifiant du tournoi
-     * @return liste des inscriptions, vide si aucun joueur inscrit
+     * @param pageable     paramètres de pagination
+     * @return page des inscriptions
      */
-    List<RegistrationResponse> getTournamentRegistrations(Long tournamentId);
+    Page<RegistrationResponse> getTournamentRegistrations(Long tournamentId, Pageable pageable);
 }
