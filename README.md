@@ -450,7 +450,7 @@ docker-compose up -d
 }
 ```
 
-> Statut HTTP toujours `200` même en cas d'erreur applicative (spec JSON-RPC 2.0). Codes : `-32601` methode inconnue, `-32602` parametres invalides, `-32603` erreur interne.
+> Statut HTTP toujours `200` même en cas d'erreur applicative (spec JSON-RPC 2.0). Codes : `-32601` méthode inconnue, `-32602` paramètres invalides, `-32603` erreur interne.
 
 ### Réponses d'erreur
 
@@ -473,9 +473,9 @@ Toutes les erreurs REST retournent un JSON uniforme :
 - Use cases atomiques : une classe par use case
 - Pattern Strategy à deux niveaux : démarrage (`TournamentStartStrategy`) et progression (`TournamentProgressionStrategy`) - extensible sans modifier le code existant
 - Support multi-format (`SINGLE_ELIMINATION`, `ROUND_ROBIN`, `GROUPS_THEN_KNOCKOUT`)
-- Génération round-robin via methode du cercle (chaque paire se rencontre exactement une fois)
+- Génération round-robin via méthode du cercle (chaque paire se rencontre exactement une fois)
 - Phase de groupes configurable avec transition automatique vers bracket final
-- Classement round-robin calculé a la demande (`GET /tournaments/{id}/standings`)
+- Classement round-robin calculé à la demande (`GET /tournaments/{id}/standings`)
 - API JSON-RPC 2.0 en parallèle de REST - même pattern Strategy pour le dispatch
 - Réponses d'erreur uniformes via `GlobalExceptionHandler` + `ErrorResponse`
 - Documentation API interactive via Swagger UI (`@Operation`, `@ApiResponse`, `@Tag`) avec schéma d'erreur uniforme
@@ -485,7 +485,7 @@ Toutes les erreurs REST retournent un JSON uniforme :
 - Dead Letter Queue Kafka (`match-finished.DLT`) + Kafka UI pour rejeu manuel
 - Notifications temps réel via WebSocket
 - Cache Redis sur les statistiques joueur
-- Authentification JWT avec refresh token et revocation
+- Authentification JWT avec refresh token et révocation
 - Rate limiting distribué (Bucket4j + Redis, fenêtre glissante `refillGreedy`) - partagé entre instances
 - Restrictions par rôle ADMIN/PLAYER sur les endpoints (401 non authentifié, 403 non autorisé)
 - Purge périodique des soft deletes (`@Scheduled`, rétention configurable)
@@ -494,10 +494,12 @@ Toutes les erreurs REST retournent un JSON uniforme :
 - Reverse proxy Nginx en point d'entrée unique (port 80) - app non exposée directement, X-Forwarded-For posé de façon fiable pour le rate limiting
 - Tests de charge Gatling - scénario end-to-end 500 utilisateurs simultanés, 99.9% de succès, 330ms au 95e percentile
 - Couverture élevée : unitaires (JUnit 5 / Mockito), controller (MockMvc), intégration (Testcontainers)
+- Logs structurés JSON pour production (format logstash, activé en profil docker)
+- Token JWT expiré → 401 avec message explicite (intercepté dans `JwtAuthenticationFilter`)
+- Pagination sur toutes les listes (joueurs, tournois, inscriptions) avec `Pageable` Spring
 - Circuit breaker Resilience4j sur OpenAI (CLOSED -> OPEN -> HALF_OPEN testé)
 
 ---
 
 ## Evolutions possibles
 
-- Pagination cursor-based pour les grandes tables
