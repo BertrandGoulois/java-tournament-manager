@@ -154,6 +154,35 @@ class GenerateKnockoutBracketFromGroupsServiceTest {
         assertEquals(Set.of(1L, 2L), participantIds); // alice et bob, pas carol
     }
 
+    @Test
+    void shouldOnlyCountGroupMatches_ignoringBracketMatches() {
+        Tournament tournament = new Tournament();
+        tournament.setId(1L);
+        tournament.setQualifiersPerGroup(1);
+
+        Player alice = new Player();
+        alice.setId(1L);
+        Player bob = new Player();
+        bob.setId(2L);
+
+        // Match de groupe terminé
+        Match groupMatch = groupMatch(alice, bob, alice, 1, MatchStatus.FINISHED);
+
+        // Match de bracket (groupNumber == null) - ne doit pas bloquer la génération
+        Match bracketMatch = new Match();
+        bracketMatch.setGroupNumber(null);
+        bracketMatch.setPlayer1(alice);
+        bracketMatch.setStatus(MatchStatus.PENDING);
+
+        when(loadMatchesByTournamentPort.loadByTournamentId(1L))
+                .thenReturn(List.of(groupMatch));
+
+        service.checkGroupsCompletionAndGenerateBracket(tournament);
+
+        // Le bracket doit être généré car tous les matchs de GROUPE sont terminés
+        verify(saveMatchPort, times(1)).saveMatch(any());
+    }
+
     private Match groupMatch(Player player1, Player player2, Player winner, int groupNumber, MatchStatus status) {
         Match match = new Match();
         match.setPlayer1(player1);

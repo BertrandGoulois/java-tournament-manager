@@ -104,4 +104,35 @@ class AdvanceBracketServiceTest {
         verify(saveMatchPort, atLeast(1)).saveMatch(captor.capture());
         assertTrue(captor.getAllValues().stream().anyMatch(m -> m.getPlayer2() == null));
     }
+
+    @Test
+    void advanceToNextRound_shouldCreateByeMatch_withThreeWinnersAtRound4() {
+        Tournament tournament = new Tournament();
+        tournament.setId(1L);
+
+        Player player1 = new Player();
+        Player player2 = new Player();
+        Player player3 = new Player();
+
+        Match m1 = new Match();
+        m1.setStatus(MatchStatus.FINISHED);
+        m1.setWinner(player1);
+
+        Match m2 = new Match();
+        m2.setStatus(MatchStatus.FINISHED);
+        m2.setWinner(player2);
+
+        Match m3 = new Match();
+        m3.setStatus(MatchStatus.FINISHED);
+        m3.setWinner(player3);
+
+        when(loadMatchByTournamentPort.loadByTournamentIdAndRound(1L, 4))
+                .thenReturn(List.of(m1, m2, m3));
+
+        ArgumentCaptor<Match> captor = ArgumentCaptor.forClass(Match.class);
+        advanceBracketService.advanceToNextRound(tournament, 4);
+
+        verify(saveMatchPort, atLeast(1)).saveMatch(captor.capture());
+        assertTrue(captor.getAllValues().stream().anyMatch(m -> m.getPlayer2() == null));
+    }
 }

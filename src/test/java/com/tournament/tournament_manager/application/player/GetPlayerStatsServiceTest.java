@@ -3,6 +3,7 @@ package com.tournament.tournament_manager.application.player;
 import com.tournament.tournament_manager.domain.model.entities.EloHistory;
 import com.tournament.tournament_manager.domain.model.entities.Match;
 import com.tournament.tournament_manager.domain.model.entities.Player;
+import com.tournament.tournament_manager.domain.model.valueobjects.EloRating;
 import com.tournament.tournament_manager.domain.port.out.player.CountMatchesByPlayerPort;
 import com.tournament.tournament_manager.domain.port.out.player.LoadEloHistoryPort;
 import com.tournament.tournament_manager.domain.port.out.player.LoadPlayerPort;
@@ -65,23 +66,74 @@ class GetPlayerStatsServiceTest {
     void getPlayerStats_shouldReturnZeroWinRate_whenNoMatchesPlayed() {
         Player player = new Player();
         player.setId(1L);
-        player.setUsername("toto");
-        player.setEmail("toto@mail.com");
+        player.setUsername("player1");
+        player.setEloRating(new EloRating(1000));
 
         when(loadPlayerPort.loadPlayer(1L)).thenReturn(player);
         when(countMatchesByPlayerPort.countByPlayer(1L)).thenReturn(0L);
         when(countMatchesByPlayerPort.countWinsByPlayer(1L)).thenReturn(0L);
         when(loadEloHistoryPort.loadByPlayerIdOrderByDateDesc(1L)).thenReturn(List.of());
 
-        PlayerStatsResponse stats = getPlayerStatsService.getPlayerStats(1L);
+        PlayerStatsResponse response = getPlayerStatsService.getPlayerStats(1L);
 
-        assertEquals(0, stats.matchesPlayed());
-        assertEquals(0.0, stats.winRate());
+        assertEquals(0.0, response.winRate());
+        assertEquals(0, response.matchesPlayed());
+        assertEquals(0, response.wins());
+        assertEquals(0, response.losses());
     }
 
     @Test
     void getPlayerStats_shouldThrow_whenNotFound() {
         when(loadPlayerPort.loadPlayer(99L)).thenThrow(new PlayerNotFoundException(99L));
         assertThrows(PlayerNotFoundException.class, () -> getPlayerStatsService.getPlayerStats(99L));
+    }
+
+    @Test
+    void getPlayerStats_shouldReturnCorrectWinRate_whenMatchesPlayed() {
+        Player player = new Player();
+        player.setId(1L);
+        player.setUsername("player1");
+        player.setEloRating(new EloRating(1000));
+
+        when(loadPlayerPort.loadPlayer(1L)).thenReturn(player);
+        when(countMatchesByPlayerPort.countByPlayer(1L)).thenReturn(3L);
+        when(countMatchesByPlayerPort.countWinsByPlayer(1L)).thenReturn(2L);
+        when(loadEloHistoryPort.loadByPlayerIdOrderByDateDesc(1L)).thenReturn(List.of());
+
+        PlayerStatsResponse response = getPlayerStatsService.getPlayerStats(1L);
+
+        assertEquals(66.67, response.winRate());
+        assertEquals(3, response.matchesPlayed());
+        assertEquals(2, response.wins());
+        assertEquals(1, response.losses());
+    }
+
+    @Test
+    void getPlayerStats_shouldMapEloHistoryCorrectly() {
+        Player player = new Player();
+        player.setId(1L);
+        player.setUsername("player1");
+        player.setEloRating(new EloRating(1000));
+
+        Match match = new Match();
+        match.setId(5L);
+
+        com.tournament.tournament_manager.domain.model.entities.EloHistory history =
+                new com.tournament.tournament_manager.domain.model.entities.EloHistory();
+        history.setEloChange(16);
+        history.setEloAfter(1016);
+        history.setMatch(match);
+
+        when(loadPlayerPort.loadPlayer(1L)).thenReturn(player);
+        when(countMatchesByPlayerPort.countByPlayer(1L)).thenReturn(1L);
+        when(countMatchesByPlayerPort.countWinsByPlayer(1L)).thenReturn(1L);
+        when(loadEloHistoryPort.loadByPlayerIdOrderByDateDesc(1L)).thenReturn(List.of(history));
+
+        PlayerStatsResponse response = getPlayerStatsService.getPlayerStats(1L);
+
+        assertEquals(1, response.eloHistory().size());
+        assertEquals(16, response.eloHistory().get(0).eloChange());
+        assertEquals(1016, response.eloHistory().get(0).eloAfter());
+        assertEquals(5L, response.eloHistory().get(0).matchId());
     }
 }

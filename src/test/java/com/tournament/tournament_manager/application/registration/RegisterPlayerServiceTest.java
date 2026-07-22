@@ -16,6 +16,7 @@ import com.tournament.tournament_manager.exception.domain.PlayerNotFoundExceptio
 import com.tournament.tournament_manager.exception.domain.TournamentNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -115,5 +116,90 @@ class RegisterPlayerServiceTest {
         RegistrationResponse response = registerPlayerService.registerPlayer(
                 new CreateRegistrationRequest(1L, 1L));
         assertEquals(1L, response.id());
+    }
+
+    @Test
+    void registerPlayer_shouldReturnCorrectPlayerId() {
+        Player player = new Player();
+        player.setId(1L);
+        Tournament tournament = new Tournament();
+        tournament.setId(1L);
+        tournament.setStatus(TournamentStatus.OPEN);
+        tournament.setMaxPlayers(8);
+        Registration registration = new Registration();
+        registration.setId(1L);
+        registration.setPlayer(player);
+        registration.setTournament(tournament);
+
+        when(loadPlayerPort.loadPlayer(1L)).thenReturn(player);
+        when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
+        when(existsRegistrationPort.existsByPlayerIdAndTournamentId(1L, 1L)).thenReturn(false);
+        when(countRegistrationPort.countByTournamentId(1L)).thenReturn(0L);
+        when(saveRegistrationPort.saveRegistration(any())).thenReturn(registration);
+
+        RegistrationResponse response = registerPlayerService.registerPlayer(
+                new CreateRegistrationRequest(1L, 1L));
+
+        assertEquals(1L, response.playerId());
+        assertEquals(1L, response.tournamentId());
+    }
+
+    @Test
+    void registerPlayer_shouldThrow_whenTournamentStatusIsInProgress() {
+        Player player = new Player();
+        player.setId(1L);
+        Tournament tournament = new Tournament();
+        tournament.setId(1L);
+        tournament.setStatus(TournamentStatus.IN_PROGRESS);
+
+        when(loadPlayerPort.loadPlayer(1L)).thenReturn(player);
+        when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
+
+        assertThrows(InvalidException.class,
+                () -> registerPlayerService.registerPlayer(new CreateRegistrationRequest(1L, 1L)));
+    }
+
+    @Test
+    void registerPlayer_shouldThrow_whenTournamentStatusIsFinished() {
+        Player player = new Player();
+        player.setId(1L);
+        Tournament tournament = new Tournament();
+        tournament.setId(1L);
+        tournament.setStatus(TournamentStatus.FINISHED);
+
+        when(loadPlayerPort.loadPlayer(1L)).thenReturn(player);
+        when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
+
+        assertThrows(InvalidException.class,
+                () -> registerPlayerService.registerPlayer(new CreateRegistrationRequest(1L, 1L)));
+    }
+
+    @Test
+    void registerPlayer_shouldSaveRegistrationWithCorrectPlayerAndTournament() {
+        Player player = new Player();
+        player.setId(1L);
+        Tournament tournament = new Tournament();
+        tournament.setId(1L);
+        tournament.setStatus(TournamentStatus.OPEN);
+        tournament.setMaxPlayers(8);
+
+        Registration saved = new Registration();
+        saved.setId(1L);
+        saved.setPlayer(player);
+        saved.setTournament(tournament);
+
+        when(loadPlayerPort.loadPlayer(1L)).thenReturn(player);
+        when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
+        when(existsRegistrationPort.existsByPlayerIdAndTournamentId(1L, 1L)).thenReturn(false);
+        when(countRegistrationPort.countByTournamentId(1L)).thenReturn(0L);
+
+        ArgumentCaptor<Registration> captor = ArgumentCaptor.forClass(
+                com.tournament.tournament_manager.domain.model.entities.Registration.class);
+        when(saveRegistrationPort.saveRegistration(captor.capture())).thenReturn(saved);
+
+        registerPlayerService.registerPlayer(new CreateRegistrationRequest(1L, 1L));
+
+        assertEquals(player, captor.getValue().getPlayer());
+        assertEquals(tournament, captor.getValue().getTournament());
     }
 }

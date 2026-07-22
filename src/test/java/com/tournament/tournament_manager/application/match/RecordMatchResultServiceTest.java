@@ -18,8 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -116,5 +115,109 @@ class RecordMatchResultServiceTest {
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         assertThrows(InvalidException.class,
                 () -> recordMatchResultService.recordMatchResult(1L, new RecordMatchResultRequest(99L)));
+    }
+
+    @Test
+    void recordMatchResult_shouldSetMatchStatusToFinished() {
+        Player player1 = new Player();
+        player1.setId(1L);
+        Player player2 = new Player();
+        player2.setId(2L);
+        Match match = new Match();
+        match.setTournament(new Tournament());
+        match.setStatus(MatchStatus.PENDING);
+        match.setPlayer1(player1);
+        match.setPlayer2(player2);
+        when(loadMatchPort.loadMatch(1L)).thenReturn(match);
+        when(saveMatchPort.saveMatch(any())).thenReturn(match);
+
+        recordMatchResultService.recordMatchResult(1L, new RecordMatchResultRequest(1L));
+
+        assertEquals(MatchStatus.FINISHED, match.getStatus());
+    }
+
+    @Test
+    void recordMatchResult_shouldSetPlayer1AsWinner_whenWinnerIsPlayer1() {
+        Player player1 = new Player();
+        player1.setId(1L);
+        Player player2 = new Player();
+        player2.setId(2L);
+        Match match = new Match();
+        match.setTournament(new Tournament());
+        match.setStatus(MatchStatus.PENDING);
+        match.setPlayer1(player1);
+        match.setPlayer2(player2);
+        when(loadMatchPort.loadMatch(1L)).thenReturn(match);
+        when(saveMatchPort.saveMatch(any())).thenReturn(match);
+
+        recordMatchResultService.recordMatchResult(1L, new RecordMatchResultRequest(1L));
+
+        assertEquals(player1, match.getWinner());
+    }
+
+    @Test
+    void recordMatchResult_shouldReturnResponse_withCorrectFields() {
+        Player player1 = new Player();
+        player1.setId(1L);
+        Player player2 = new Player();
+        player2.setId(2L);
+        Tournament tournament = new Tournament();
+        tournament.setId(10L);
+        Match match = new Match();
+        match.setId(5L);
+        match.setTournament(tournament);
+        match.setStatus(MatchStatus.PENDING);
+        match.setPlayer1(player1);
+        match.setPlayer2(player2);
+        when(loadMatchPort.loadMatch(5L)).thenReturn(match);
+        when(saveMatchPort.saveMatch(any())).thenReturn(match);
+
+        var response = recordMatchResultService.recordMatchResult(5L, new RecordMatchResultRequest(1L));
+
+        assertEquals(5L, response.id());
+        assertEquals(10L, response.tournamentId());
+        assertEquals(1L, response.player1Id());
+        assertEquals(2L, response.player2Id());
+        assertEquals(MatchStatus.FINISHED, response.status());
+    }
+
+    @Test
+    void recordMatchResult_shouldReturnNullPlayer2Id_whenPlayer2IsNull() {
+        Player player1 = new Player();
+        player1.setId(1L);
+        Tournament tournament = new Tournament();
+        tournament.setId(1L);
+        Match match = new Match();
+        match.setId(1L);
+        match.setTournament(tournament);
+        match.setStatus(MatchStatus.PENDING);
+        match.setPlayer1(player1);
+        match.setPlayer2(null);
+        match.setWinner(player1);
+        when(loadMatchPort.loadMatch(1L)).thenReturn(match);
+        when(saveMatchPort.saveMatch(any())).thenReturn(match);
+
+        var response = recordMatchResultService.recordMatchResult(1L, new RecordMatchResultRequest(1L));
+
+        assertEquals(null, response.player2Id());
+        assertEquals(1L, response.winnerId());
+    }
+
+    @Test
+    void recordMatchResult_shouldNotThrow_whenPlayer2NullAndWinnerIsPlayer1() {
+        Player player1 = new Player();
+        player1.setId(1L);
+        Tournament tournament = new Tournament();
+        tournament.setId(1L);
+        Match match = new Match();
+        match.setId(1L);
+        match.setTournament(tournament);
+        match.setStatus(MatchStatus.PENDING);
+        match.setPlayer1(player1);
+        match.setPlayer2(null);
+        when(loadMatchPort.loadMatch(1L)).thenReturn(match);
+        when(saveMatchPort.saveMatch(any())).thenReturn(match);
+
+        assertDoesNotThrow(() -> recordMatchResultService.recordMatchResult(1L, new RecordMatchResultRequest(1L)));
     }
 }

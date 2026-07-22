@@ -1,5 +1,6 @@
 package com.tournament.tournament_manager.application.elo;
 
+import com.tournament.tournament_manager.domain.model.entities.EloHistory;
 import com.tournament.tournament_manager.domain.model.entities.Match;
 import com.tournament.tournament_manager.domain.model.entities.Player;
 import com.tournament.tournament_manager.domain.model.valueobjects.EloRating;
@@ -7,10 +8,14 @@ import com.tournament.tournament_manager.domain.port.out.elo.SaveAllPlayersPort;
 import com.tournament.tournament_manager.domain.port.out.elo.SaveEloHistoryPort;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -24,8 +29,13 @@ class EloServiceTest {
     @InjectMocks
     private EloService eloService;
 
+    /**
+     * Deux joueurs ELO 1000 : expected = 0.5
+     * newEloWinner = 1000 + 32 * (1 - 0.5) = 1016
+     * newEloLoser  = 1000 + 32 * (0 - 0.5) = 984
+     */
     @Test
-    void updateElo_shouldIncreaseWinnerElo() {
+    void updateElo_shouldCalculateExactValues_whenEqualRating() {
         Player winner = new Player();
         winner.setEloRating(new EloRating(1000));
         Player loser = new Player();
@@ -38,8 +48,74 @@ class EloServiceTest {
 
         eloService.updateElo(match);
 
-        assert winner.getEloRating().value() > 1000;
-        assert loser.getEloRating().value() < 1000;
+        assertEquals(1016, winner.getEloRating().value());
+        assertEquals(984, loser.getEloRating().value());
+    }
+
+    /**
+     * Winner ELO 1000, Loser ELO 1400
+     * expectedWinner = 1 / (1 + 10^((1400-1000)/400)) = 1 / (1 + 10) = 0.0909...
+     * newEloWinner = 1000 + 32 * (1 - 0.0909) = 1000 + 29.09 = 1029
+     * newEloLoser  = 1400 + 32 * (0 - 0.9090) = 1400 - 29.09 = 1371
+     */
+    @Test
+    void updateElo_shouldGiveMoreElo_whenBeatingStrongerOpponent() {
+        Player winner = new Player();
+        winner.setEloRating(new EloRating(1000));
+        Player loser = new Player();
+        loser.setEloRating(new EloRating(1400));
+
+        Match match = new Match();
+        match.setPlayer1(winner);
+        match.setPlayer2(loser);
+        match.setWinner(winner);
+
+        eloService.updateElo(match);
+
+        assertEquals(1029, winner.getEloRating().value());
+        assertEquals(1371, loser.getEloRating().value());
+    }
+
+    /**
+     * Winner ELO 1400, Loser ELO 1000
+     * expectedWinner = 1 / (1 + 10^((1000-1400)/400)) = 1 / (1 + 0.0909) = 0.9166...
+     * newEloWinner = 1400 + 32 * (1 - 0.9166) = 1400 + 2.67 = 1403
+     * newEloLoser  = 1000 + 32 * (0 - 0.0833) = 1000 - 2.67 = 997
+     */
+    @Test
+    void updateElo_shouldGiveLessElo_whenBeatingWeakerOpponent() {
+        Player winner = new Player();
+        winner.setEloRating(new EloRating(1400));
+        Player loser = new Player();
+        loser.setEloRating(new EloRating(1000));
+
+        Match match = new Match();
+        match.setPlayer1(winner);
+        match.setPlayer2(loser);
+        match.setWinner(winner);
+
+        eloService.updateElo(match);
+
+        assertEquals(1403, winner.getEloRating().value());
+        assertEquals(997, loser.getEloRating().value());
+    }
+
+    @Test
+    void updateElo_shouldCalculateExactValues_whenPlayer2IsWinner() {
+        Player player1 = new Player();
+        player1.setEloRating(new EloRating(1000));
+        Player player2 = new Player();
+        player2.setEloRating(new EloRating(1000));
+
+        Match match = new Match();
+        match.setPlayer1(player1);
+        match.setPlayer2(player2);
+        match.setWinner(player2);
+
+        eloService.updateElo(match);
+
+        assertEquals(984, player1.getEloRating().value());
+        assertEquals(1016, player2.getEloRating().value());
     }
 
     @Test
@@ -77,37 +153,57 @@ class EloServiceTest {
     }
 
     @Test
-    void updateElo_shouldGiveMoreEloWhenBeatingStrongerOpponent() {
+    void updateElo_shouldSaveCorrectEloHistory() {
         Player winner = new Player();
         winner.setEloRating(new EloRating(1000));
-        Player strongLoser = new Player();
-        strongLoser.setEloRating(new EloRating(1400));
+        Player loser = new Player();
+        loser.setEloRating(new EloRating(1000));
 
         Match match = new Match();
         match.setPlayer1(winner);
-        match.setPlayer2(strongLoser);
+        match.setPlayer2(loser);
         match.setWinner(winner);
+
+        ArgumentCaptor<EloHistory> captor =
+                ArgumentCaptor.forClass(EloHistory.class);
 
         eloService.updateElo(match);
 
-        assert winner.getEloRating().value() > 1016;
+        verify(saveEloHistoryPort, times(2)).saveEloHistory(captor.capture());
+        List<EloHistory> histories = captor.getAllValues();
+
+        // Premier appel = winner
+        assertEquals(16, histories.get(0).getEloChange());
+        assertEquals(1016, histories.get(0).getEloAfter());
+
+        // Deuxième appel = loser
+        assertEquals(-16, histories.get(1).getEloChange());
+        assertEquals(984, histories.get(1).getEloAfter());
     }
 
     @Test
-    void updateElo_shouldUpdateElo_whenPlayer2IsWinner() {
-        Player player1 = new Player();
-        player1.setEloRating(new EloRating(1000));
-        Player player2 = new Player();
-        player2.setEloRating(new EloRating(1000));
+    void updateElo_shouldSaveEloHistoryWithCorrectPlayerAndMatch() {
+        Player winner = new Player();
+        winner.setEloRating(new EloRating(1000));
+        Player loser = new Player();
+        loser.setEloRating(new EloRating(1000));
 
         Match match = new Match();
-        match.setPlayer1(player1);
-        match.setPlayer2(player2);
-        match.setWinner(player2);
+        match.setPlayer1(winner);
+        match.setPlayer2(loser);
+        match.setWinner(winner);
+
+        ArgumentCaptor<com.tournament.tournament_manager.domain.model.entities.EloHistory> captor =
+                ArgumentCaptor.forClass(com.tournament.tournament_manager.domain.model.entities.EloHistory.class);
 
         eloService.updateElo(match);
 
-        assert player2.getEloRating().value() > 1000;
-        assert player1.getEloRating().value() < 1000;
+        verify(saveEloHistoryPort, times(2)).saveEloHistory(captor.capture());
+        List<com.tournament.tournament_manager.domain.model.entities.EloHistory> histories = captor.getAllValues();
+
+        assertEquals(winner, histories.get(0).getPlayer());
+        assertEquals(match, histories.get(0).getMatch());
+        assertEquals(loser, histories.get(1).getPlayer());
+        assertEquals(match, histories.get(1).getMatch());
     }
 }

@@ -341,6 +341,36 @@
 					</jvmArgs>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.pitest</groupId>
+				<artifactId>pitest-maven</artifactId>
+				<version>1.18.2</version>
+				<dependencies>
+					<dependency>
+						<groupId>org.pitest</groupId>
+						<artifactId>pitest-junit5-plugin</artifactId>
+						<version>1.2.3</version>
+					</dependency>
+				</dependencies>
+				<configuration>
+					<targetClasses>
+						<param>com.tournament.tournament_manager.application.*</param>
+					</targetClasses>
+					<targetTests>
+						<param>com.tournament.tournament_manager.application.*</param>
+					</targetTests>
+					<excludedClasses>
+						<param>com.tournament.tournament_manager.application.shared.*</param>
+					</excludedClasses>
+					<mutators>
+						<mutator>DEFAULTS</mutator>
+					</mutators>
+					<outputFormats>
+						<outputFormat>HTML</outputFormat>
+					</outputFormats>
+					<timestampedReports>false</timestampedReports>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 </project>

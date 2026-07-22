@@ -9,6 +9,7 @@ import com.tournament.tournament_manager.dto.response.auth.AuthResponse;
 import com.tournament.tournament_manager.exception.domain.InvalidException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -114,5 +115,22 @@ class RefreshTokenServiceTest {
         when(loadRefreshTokenPort.loadByToken("invalid")).thenReturn(Optional.empty());
 
         assertThrows(InvalidException.class, () -> refreshTokenService.revoke("invalid"));
+    }
+
+    @Test
+    void generateRefreshToken_shouldSaveTokenWithCorrectUsernameAndExpiry() {
+        RefreshToken saved = new RefreshToken();
+        saved.setToken("new-token");
+
+        ArgumentCaptor<RefreshToken> captor = ArgumentCaptor.forClass(RefreshToken.class);
+        when(saveRefreshTokenPort.saveRefreshToken(captor.capture())).thenReturn(saved);
+
+        refreshTokenService.generateRefreshToken("admin");
+
+        RefreshToken captured = captor.getValue();
+        assertEquals("admin", captured.getUsername());
+        assertNotNull(captured.getToken());
+        assertNotNull(captured.getExpiryDate());
+        assertTrue(captured.getExpiryDate().isAfter(LocalDateTime.now().minusSeconds(1)));
     }
 }

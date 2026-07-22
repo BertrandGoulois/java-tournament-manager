@@ -50,4 +50,11 @@ class GetMatchCommentaryServiceTest {
         assertThrows(MatchNotFoundException.class,
                 () -> getMatchCommentaryService.getMatchCommentary(99L));
     }
+
+    @Test
+    void fallbackCommentary_shouldReturnUnavailableMessage() {
+        MatchCommentaryResponse response = getMatchCommentaryService.fallbackCommentary(1L, new RuntimeException("Circuit breaker open"));
+        assertEquals(1L, response.matchId());
+        assertEquals("Commentaire temporairement indisponible.", response.commentary());
+    }
 }

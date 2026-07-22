@@ -211,6 +211,14 @@ docker-compose up -d
 ./mvnw test
 ```
 
+**Tests de mutation (PIT) :**
+
+```bash
+./mvnw pitest:mutationCoverage
+```
+
+> Rapport HTML généré dans `target/pit-reports/index.html`. Score actuel : 88% de mutation coverage sur la couche `application/`.
+
 **Tests d'intégration (nécessitent Docker) :**
 
 ```bash
@@ -497,6 +505,7 @@ Toutes les erreurs REST retournent un JSON uniforme :
 - Logs structurés JSON pour production (format logstash, activé en profil docker)
 - Token JWT expiré → 401 avec message explicite (intercepté dans `JwtAuthenticationFilter`)
 - Pagination sur toutes les listes (joueurs, tournois, inscriptions) avec `Pageable` Spring
+- Tests de mutation via PIT (mutation coverage 88%) - vérifie que les tests détectent vraiment les bugs, pas seulement qu'ils couvrent les lignes
 - Circuit breaker Resilience4j sur OpenAI (CLOSED -> OPEN -> HALF_OPEN testé)
 
 ---

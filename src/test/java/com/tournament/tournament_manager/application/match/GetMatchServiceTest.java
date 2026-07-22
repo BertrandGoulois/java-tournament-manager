@@ -68,4 +68,29 @@ class GetMatchServiceTest {
         assertNull(response.player2Id());
         assertNull(response.winnerId());
     }
+
+    @Test
+    void getMatchById_shouldReturnPlayer2Id_whenPlayer2IsNotNull() {
+        Player player1 = new Player();
+        player1.setId(1L);
+        Player player2 = new Player();
+        player2.setId(2L);
+        Player winner = new Player();
+        winner.setId(1L);
+        Tournament tournament = new Tournament();
+        tournament.setId(1L);
+        Match match = new Match();
+        match.setId(1L);
+        match.setStatus(MatchStatus.FINISHED);
+        match.setPlayer1(player1);
+        match.setPlayer2(player2);
+        match.setWinner(winner);
+        match.setTournament(tournament);
+        when(loadMatchPort.loadMatch(1L)).thenReturn(match);
+
+        MatchResponse response = getMatchService.getMatchById(1L);
+
+        assertEquals(2L, response.player2Id());
+        assertEquals(1L, response.winnerId());
+    }
 }

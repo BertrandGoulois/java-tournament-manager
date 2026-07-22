@@ -12,6 +12,7 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -122,5 +123,70 @@ class CreateTournamentServiceTest {
 
         assertEquals(2, response.numberOfGroups());
         assertEquals(2, response.qualifiersPerGroup());
+    }
+
+    @Test
+    void createTournament_shouldSaveTournamentWithCorrectFields() {
+        when(existsTournamentPort.existsByName("Spring Cup")).thenReturn(false);
+
+        ArgumentCaptor<Tournament> captor = ArgumentCaptor.forClass(Tournament.class);
+        Tournament saved = new Tournament();
+        saved.setId(1L);
+        saved.setName("Spring Cup");
+        saved.setMaxPlayers(8);
+        saved.setFormat(TournamentFormat.SINGLE_ELIMINATION);
+        when(saveTournamentPort.saveTournament(captor.capture())).thenReturn(saved);
+
+        createTournamentService.createTournament(
+                new CreateTournamentRequest("Spring Cup", 8, TournamentFormat.SINGLE_ELIMINATION, null, null));
+
+        Tournament captured = captor.getValue();
+        assertEquals("Spring Cup", captured.getName());
+        assertEquals(8, captured.getMaxPlayers());
+        assertEquals(TournamentFormat.SINGLE_ELIMINATION, captured.getFormat());
+    }
+
+    @Test
+    void createTournament_shouldSaveGroupsTournamentWithCorrectFields() {
+        when(existsTournamentPort.existsByName("Groups Cup")).thenReturn(false);
+
+        ArgumentCaptor<Tournament> captor = ArgumentCaptor.forClass(Tournament.class);
+        Tournament saved = new Tournament();
+        saved.setId(1L);
+        saved.setName("Groups Cup");
+        saved.setMaxPlayers(8);
+        saved.setFormat(TournamentFormat.GROUPS_THEN_KNOCKOUT);
+        saved.setNumberOfGroups(2);
+        saved.setQualifiersPerGroup(2);
+        when(saveTournamentPort.saveTournament(captor.capture())).thenReturn(saved);
+
+        createTournamentService.createTournament(
+                new CreateTournamentRequest("Groups Cup", 8, TournamentFormat.GROUPS_THEN_KNOCKOUT, 2, 2));
+
+        Tournament captured = captor.getValue();
+        assertEquals("Groups Cup", captured.getName());
+        assertEquals(8, captured.getMaxPlayers());
+        assertEquals(TournamentFormat.GROUPS_THEN_KNOCKOUT, captured.getFormat());
+        assertEquals(2, captured.getNumberOfGroups());
+        assertEquals(2, captured.getQualifiersPerGroup());
+    }
+
+    @Test
+    void createTournament_shouldThrow_whenNumberOfGroupsIsOne() {
+        when(existsTournamentPort.existsByName("Test")).thenReturn(false);
+
+        assertThrows(InvalidTournamentException.class,
+                () -> createTournamentService.createTournament(
+                        new CreateTournamentRequest("Test", 8, TournamentFormat.GROUPS_THEN_KNOCKOUT, 1, 2)));
+    }
+
+    @Test
+    void createTournament_shouldThrow_whenQualifiersPerGroupEqualsGroupSize() {
+        when(existsTournamentPort.existsByName("Test")).thenReturn(false);
+
+        // 8 joueurs / 2 groupes = groupSize 4, qualifiersPerGroup = 4 (>=groupSize) -> doit throw
+        assertThrows(InvalidTournamentException.class,
+                () -> createTournamentService.createTournament(
+                        new CreateTournamentRequest("Test", 8, TournamentFormat.GROUPS_THEN_KNOCKOUT, 2, 4)));
     }
 }
