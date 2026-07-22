@@ -1,15 +1,16 @@
 package com.tournament.tournament_manager.application.auth;
 
+import com.tournament.tournament_manager.application.token.RefreshTokenService;
 import com.tournament.tournament_manager.config.security.JwtService;
 import com.tournament.tournament_manager.dto.request.auth.LoginRequest;
 import com.tournament.tournament_manager.dto.response.auth.AuthResponse;
-import com.tournament.tournament_manager.application.token.RefreshTokenService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -53,10 +54,10 @@ class AuthServiceTest {
     void login_shouldThrow_whenInvalidCredentials() {
         LoginRequest request = new LoginRequest("admin", "wrongpassword");
         when(authenticationManager.authenticate(any())).thenThrow(
-                new org.springframework.security.authentication.BadCredentialsException("Bad credentials")
+                new BadCredentialsException("Bad credentials")
         );
 
-        assertThrows(org.springframework.security.authentication.BadCredentialsException.class,
+        assertThrows(BadCredentialsException.class,
                 () -> authService.login(request));
     }
 }

@@ -1,6 +1,7 @@
 package com.tournament.tournament_manager.infrastructure.input.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tournament.tournament_manager.application.auth.AuthService;
 import com.tournament.tournament_manager.config.security.JwtAuthenticationFilter;
 import com.tournament.tournament_manager.config.security.SecurityConfig;
 import com.tournament.tournament_manager.config.security.UserDetailsServiceImpl;
@@ -8,17 +9,18 @@ import com.tournament.tournament_manager.domain.port.in.auth.RefreshTokenUseCase
 import com.tournament.tournament_manager.dto.request.auth.LoginRequest;
 import com.tournament.tournament_manager.dto.request.auth.RefreshTokenRequest;
 import com.tournament.tournament_manager.dto.response.auth.AuthResponse;
-import com.tournament.tournament_manager.application.auth.AuthService;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.distributed.BucketProxy;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.distributed.proxy.RemoteBucketBuilder;
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.servlet.FilterChain;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -50,13 +52,16 @@ class AuthControllerTest {
     private UserDetailsServiceImpl userDetailsService;
 
     @MockitoBean
-    private org.springframework.cache.CacheManager cacheManager;
+    private CacheManager cacheManager;
 
     @MockitoBean
     private RefreshTokenUseCase refreshTokenUseCase;
 
     @MockitoBean
     private ProxyManager<String> rateLimitProxyManager;
+
+    @MockitoBean
+    private MeterRegistry meterRegistry;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 

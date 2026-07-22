@@ -9,6 +9,7 @@ import com.tournament.tournament_manager.domain.port.in.registration.RegisterPla
 import com.tournament.tournament_manager.dto.request.registration.CreateRegistrationRequest;
 import com.tournament.tournament_manager.dto.response.registration.RegistrationResponse;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,6 +55,8 @@ class RegistrationControllerTest {
     private CacheManager cacheManager;
     @MockitoBean
     private ProxyManager<String> rateLimitProxyManager;
+    @MockitoBean
+    private MeterRegistry meterRegistry;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 

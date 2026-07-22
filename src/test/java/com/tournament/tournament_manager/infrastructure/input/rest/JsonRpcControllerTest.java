@@ -1,13 +1,14 @@
 package com.tournament.tournament_manager.infrastructure.input.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tournament.tournament_manager.application.rpc.JsonRpcDispatchService;
 import com.tournament.tournament_manager.config.security.JwtAuthenticationFilter;
 import com.tournament.tournament_manager.config.security.SecurityConfig;
 import com.tournament.tournament_manager.config.security.UserDetailsServiceImpl;
 import com.tournament.tournament_manager.dto.response.rpc.JsonRpcError;
 import com.tournament.tournament_manager.dto.response.rpc.JsonRpcResponse;
-import com.tournament.tournament_manager.application.rpc.JsonRpcDispatchService;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +45,8 @@ class JsonRpcControllerTest {
     private CacheManager cacheManager;
     @MockitoBean
     private ProxyManager<String> rateLimitProxyManager;
+    @MockitoBean
+    private MeterRegistry meterRegistry;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 

@@ -13,6 +13,7 @@ import com.tournament.tournament_manager.dto.response.tournament.BracketResponse
 import com.tournament.tournament_manager.dto.response.tournament.StandingsResponse;
 import com.tournament.tournament_manager.dto.response.tournament.TournamentResponse;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,6 +65,8 @@ class TournamentControllerTest {
     private CacheManager cacheManager;
     @MockitoBean
     private ProxyManager<String> rateLimitProxyManager;
+    @MockitoBean
+    private MeterRegistry meterRegistry;
 
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 

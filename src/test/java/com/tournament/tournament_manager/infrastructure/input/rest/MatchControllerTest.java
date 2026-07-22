@@ -14,6 +14,7 @@ import com.tournament.tournament_manager.dto.response.match.MatchCommentaryRespo
 import com.tournament.tournament_manager.dto.response.match.MatchResponse;
 import com.tournament.tournament_manager.exception.domain.MatchNotFoundException;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +56,8 @@ class MatchControllerTest {
     private CacheManager cacheManager;
     @MockitoBean
     private ProxyManager<String> rateLimitProxyManager;
+    @MockitoBean
+    private MeterRegistry meterRegistry;
 
     private final ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 

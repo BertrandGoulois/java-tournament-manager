@@ -7,6 +7,8 @@ import io.lettuce.core.RedisClient;
 import io.lettuce.core.codec.ByteArrayCodec;
 import io.lettuce.core.codec.RedisCodec;
 import io.lettuce.core.codec.StringCodec;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import jakarta.servlet.FilterChain;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -47,7 +49,8 @@ class RateLimitingFilterTest {
                                         .basedOnTimeForRefillingBucketUpToMax(java.time.Duration.ofMinutes(2)))
                         .build();
 
-        filter = new RateLimitingFilter(proxyManager);
+        MeterRegistry meterRegistry = new SimpleMeterRegistry();
+        filter = new RateLimitingFilter(proxyManager, meterRegistry);
         filter.init();
         filterChain = mock(FilterChain.class);
     }
