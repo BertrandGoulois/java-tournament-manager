@@ -31,11 +31,34 @@ jobs:
         with:
           generate-branches-badge: true
           jacoco-csv-file: target/site/jacoco/jacoco.csv
-          
+
       - name: Commit and push badge
         uses: EndBug/add-and-commit@v9
         with:
           default_author: github_actions
           message: 'ci: update coverage badge'
           add: '.github/badges/*.svg'
-      
+
+  integration-tests:
+    runs-on: ubuntu-latest
+    # Non-bloquant : ces tests (Testcontainers Postgres/Kafka) étaient flaky
+    # en CI. On les réactive en observation ici avant de les remettre dans le
+    # job principal une fois leur stabilité confirmée sur plusieurs runs.
+    continue-on-error: true
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Grant execute permission for mvnw
+        run: chmod +x mvnw
+
+      - name: Run integration tests
+        run: ./mvnw test -Pintegration-tests
+

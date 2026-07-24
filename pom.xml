@@ -133,7 +133,7 @@
 			<version>8.10.1</version>
 		</dependency>
 
-        <!-- OpenAI -->
+		<!-- OpenAI -->
 		<dependency>
 			<groupId>com.openai</groupId>
 			<artifactId>openai-java</artifactId>
@@ -319,6 +319,13 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
+					<!--
+						Ces tests (Testcontainers Postgres/Kafka) sont exclus du job
+						principal car historiquement flaky en CI. Ils tournent dans un
+						job CI séparé, non-bloquant, via le profil "integration-tests"
+						(voir <profiles> plus bas), le temps de vérifier que le retry
+						automatique suffit à les stabiliser.
+					-->
 					<excludes>
 						<exclude>**/KafkaIntegrationTest.java</exclude>
 						<exclude>**/PlayerIntegrationTest.java</exclude>
@@ -373,4 +380,56 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<!--
+			Profil dédié aux 6 tests d'intégration Testcontainers exclus du job
+			CI principal. Activé explicitement via -Pintegration-tests, dans un
+			job GitHub Actions séparé et non-bloquant (continue-on-error: true).
+			Inclut le retry automatique (rerunFailingTestsCount) pour absorber
+			la flakiness pendant la phase d'observation.
+		-->
+		<profile>
+			<id>integration-tests</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<configuration>
+							<excludes combine.self="override"/>
+							<includes>
+								<include>**/KafkaIntegrationTest.java</include>
+								<include>**/PlayerIntegrationTest.java</include>
+								<include>**/RoundRobinIntegrationTest.java</include>
+								<include>**/GroupsThenKnockoutIntegrationTest.java</include>
+								<include>**/OpenAiCommentaryAdapterCircuitBreakerTest.java</include>
+								<include>**/PurgeServiceIntegrationTest.java</include>
+							</includes>
+							<rerunFailingTestsCount>2</rerunFailingTestsCount>
+							<forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
+							<reuseForks>false</reuseForks>
+							<!--
+								Ces tests chargent un vrai contexte Spring (@SpringBootTest),
+								qui active le profil "local" par defaut et a donc besoin de
+								JWT_SECRET, POSTGRES_PASSWORD et OPENAI_API_KEY. Ce sont des
+								valeurs factices, utilisees uniquement pendant l'execution des
+								tests par ce plugin, jamais commitees comme valeur par defaut
+								de l'application, jamais valides en dehors de ce contexte.
+								POSTGRES_PASSWORD est de toute facon ecrase au runtime par
+								Testcontainers (@ServiceConnection) ; OPENAI_API_KEY n'a besoin
+								que d'etre syntaxiquement present pour que le bean OpenAiConfig
+								se construise (le circuit breaker mocke l'appel reel).
+							-->
+							<environmentVariables>
+								<JWT_SECRET>dGVzdC1vbmx5LWR1bW15LWp3dC1zZWNyZXQtbm90LWZvci1wcm9k</JWT_SECRET>
+								<POSTGRES_PASSWORD>test-only-unused-password</POSTGRES_PASSWORD>
+								<OPENAI_API_KEY>test-only-dummy-key-not-real</OPENAI_API_KEY>
+							</environmentVariables>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>
