@@ -5,6 +5,7 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.DynamicPropertyRegistrar;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -40,5 +41,25 @@ public class TestcontainersConfiguration {
 			registry.add("spring.data.redis.host", redisContainer::getHost);
 			registry.add("spring.data.redis.port", () -> redisContainer.getMappedPort(6379));
 		};
+	}
+
+	/*
+	 * KafkaConfig lit spring.kafka.bootstrap-servers directement via @Value,
+	 * meme raison que Redis ci-dessus : ServiceConnection ne suffit pas.
+	 * Necessaire des qu'un test declenche RecordMatchResultService, qui
+	 * publie systematiquement un MatchFinishedEvent en conditions normales
+	 * (pas seulement dans KafkaIntegrationTest). Container partage par tous
+	 * les tests d'integration importent cette configuration.
+	 */
+	@Bean
+	KafkaContainer kafkaContainer() {
+		KafkaContainer container = new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.6.0"));
+		container.start();
+		return container;
+	}
+
+	@Bean
+	DynamicPropertyRegistrar kafkaProperties(KafkaContainer kafkaContainer) {
+		return registry -> registry.add("spring.kafka.bootstrap-servers", kafkaContainer::getBootstrapServers);
 	}
 }
