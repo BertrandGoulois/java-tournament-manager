@@ -244,6 +244,7 @@ docker-compose up -d
 | Prometheus | `http://localhost:9090` |
 | Grafana | `http://localhost:3000` (admin / admin) |
 | Jaeger UI | `http://localhost:16686` |
+| Health | `http://localhost/actuator/health` |
 
 ---
 
@@ -507,6 +508,7 @@ Toutes les erreurs REST retournent un JSON uniforme :
 - Pagination sur toutes les listes (joueurs, tournois, inscriptions) avec `Pageable` Spring
 - Tests de mutation via PIT (mutation coverage 88%) - vérifie que les tests détectent vraiment les bugs, pas seulement qu'ils couvrent les lignes
 - Circuit breaker Resilience4j sur OpenAI (CLOSED -> OPEN -> HALF_OPEN testé)
+- Healthcheck custom Kafka via `/actuator/health` (`KafkaHealthIndicator`) - PostgreSQL, Redis et Kafka monitorés avec détails
 
 ---
 
