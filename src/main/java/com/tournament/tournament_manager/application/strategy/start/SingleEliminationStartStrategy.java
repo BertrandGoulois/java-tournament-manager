@@ -15,8 +15,12 @@ import java.util.List;
  * Stratégie de démarrage pour le format {@link TournamentFormat#SINGLE_ELIMINATION}.
  *
  * <p>Mélange aléatoirement les joueurs et génère le premier tour du bracket.
- * Les joueurs sans adversaire (effectif impair) reçoivent un match {@code FINISHED}
- * immédiat (bye).
+ * Le nombre de byes nécessaires ({@code bracketSize - playerCount}, où
+ * {@code bracketSize} est la plus petite puissance de 2 supérieure ou égale
+ * à l'effectif) est calculé une seule fois et distribué entièrement au
+ * premier tour, garantissant que tous les tours suivants opposent un
+ * nombre de joueurs strictement pair — aucun bye ne peut apparaître
+ * au-delà du premier tour.
  */
 @Component
 public class SingleEliminationStartStrategy implements TournamentStartStrategy {
@@ -36,11 +40,20 @@ public class SingleEliminationStartStrategy implements TournamentStartStrategy {
     public void generateInitialMatches(Tournament tournament, List<Player> players) {
         Collections.shuffle(players);
 
-        for (int i = 0; i < players.size(); i += 2) {
-            Player player1 = players.get(i);
-            Player player2 = (i + 1 < players.size()) ? players.get(i + 1) : null;
-            BracketUtils.createMatch(tournament, player1, player2,
-                    BracketUtils.calculateFirstRound(players.size()), saveMatchPort);
+        int playerCount = players.size();
+        int bracketSize = BracketUtils.calculateFirstRound(playerCount);
+        int byeCount = bracketSize - playerCount;
+
+        List<Player> byePlayers = players.subList(0, byeCount);
+        List<Player> matchPlayers = players.subList(byeCount, playerCount);
+
+        for (Player player : byePlayers) {
+            BracketUtils.createMatch(tournament, player, null, bracketSize, saveMatchPort);
+        }
+
+        for (int i = 0; i < matchPlayers.size(); i += 2) {
+            BracketUtils.createMatch(tournament, matchPlayers.get(i), matchPlayers.get(i + 1),
+                    bracketSize, saveMatchPort);
         }
     }
 }

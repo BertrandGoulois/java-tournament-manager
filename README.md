@@ -125,7 +125,7 @@ Le pattern **Strategy** est appliqué à deux niveaux :
 
 **Démarrage** (`StartTournamentService`) - Spring injecte toutes les implémentations de `TournamentStartStrategy`, indexées par format :
 
-- `SingleEliminationStartStrategy` -> mélange aléatoire et génère le premier tour du bracket (avec byes si effectif impair)
+- `SingleEliminationStartStrategy` -> mélange aléatoire et génère le premier tour du bracket (byes distribués entièrement au premier tour si l'effectif n'est pas une puissance de 2)
 - `RoundRobinStartStrategy` -> génère l'intégralité des confrontations via la **méthode du cercle** (`RoundRobinUtils`)
 - `GroupsThenKnockoutStartStrategy` -> répartit les joueurs en `numberOfGroups` groupes égaux, puis génère un round-robin par groupe
 

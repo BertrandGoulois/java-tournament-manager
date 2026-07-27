@@ -66,4 +66,23 @@ class SingleEliminationStartStrategyTest {
         verify(saveMatchPort, times(2)).saveMatch(captor.capture());
         assertTrue(captor.getAllValues().stream().anyMatch(m -> m.getPlayer2() == null));
     }
+
+    @Test
+    void generateInitialMatches_shouldCreateExactlyOneBye_whenFivePlayers() {
+        Tournament tournament = new Tournament();
+        List<Player> players = new ArrayList<>(List.of(
+                new Player(), new Player(), new Player(), new Player(), new Player()));
+
+        strategy.generateInitialMatches(tournament, players);
+
+        ArgumentCaptor<Match> captor = ArgumentCaptor.forClass(Match.class);
+
+        verify(saveMatchPort, times(4)).saveMatch(captor.capture());
+
+        long byeCount = captor.getAllValues().stream().filter(m -> m.getPlayer2() == null).count();
+        long realMatchCount = captor.getAllValues().stream().filter(m -> m.getPlayer2() != null).count();
+
+        assertEquals(3, byeCount, "5 joueurs -> 3 byes attendus au premier tour (bracketSize=8)");
+        assertEquals(1, realMatchCount, "5 joueurs -> 1 seul match reel au premier tour");
+    }
 }
