@@ -177,23 +177,20 @@ cd java-tournament-manager
 
 ```
 POSTGRES_PASSWORD=tonmotdepasse
+JWT_SECRET=une-valeur-base64-generee-avec-openssl-rand-base64-32
 OPENAI_API_KEY=sk-...ta-clef
+GRAFANA_ADMIN_PASSWORD=tonmotdepasse-grafana
 ```
 
-3. Créer `src/main/resources/application-local.properties` :
+> `JWT_SECRET` doit être une chaîne Base64 valide. Génère-en une avec `openssl rand -base64 32`.
 
-```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/tournament_manager
-spring.datasource.username=postgres
-spring.datasource.password=tonmotdepasse
-openai.api.key=sk-...ta-clef
-```
-
-4. Démarrer tous les services :
+3. Démarrer tous les services :
 
 ```bash
 docker-compose up -d
 ```
+
+> `src/main/resources/application-local.properties` lit déjà `POSTGRES_PASSWORD` et `OPENAI_API_KEY` depuis l'environnement (`${...}`) - aucune valeur en clair à y écrire. Si tu lances l'app en dehors de Docker (`./mvnw spring-boot:run`), exporte les mêmes variables dans ton shell avant de démarrer.
 
 ---
 
@@ -205,11 +202,13 @@ docker-compose up -d
 ./mvnw spring-boot:run
 ```
 
-**Tests unitaires :**
+**Tests unitaires (aucune dépendance externe, pas de Docker requis) :**
 
 ```bash
-./mvnw test
+./mvnw verify
 ```
+
+> Génère aussi le rapport de couverture JaCoCo. Les tests nécessitant Testcontainers (Postgres/Redis/Kafka) en sont exclus - voir ci-dessous.
 
 **Tests de mutation (PIT) :**
 
@@ -219,13 +218,13 @@ docker-compose up -d
 
 > Rapport HTML généré dans `target/pit-reports/index.html`. Score actuel : 88% de mutation coverage sur la couche `application/`.
 
-**Tests d'intégration (nécessitent Docker) :**
+**Tests d'intégration (nécessitent Docker en cours d'exécution) :**
 
 ```bash
-./mvnw verify
+./mvnw test -Pintegration-tests
 ```
 
-> `KafkaIntegrationTest`, `PlayerIntegrationTest`, `RoundRobinIntegrationTest`, `GroupsThenKnockoutIntegrationTest`, `PurgeServiceIntegrationTest` et `OpenAiCommentaryAdapterCircuitBreakerTest` sont exclus de la CI standard.
+> Fait tourner `KafkaIntegrationTest`, `PlayerIntegrationTest`, `RoundRobinIntegrationTest`, `GroupsThenKnockoutIntegrationTest`, `PurgeServiceIntegrationTest`, `OpenAiCommentaryAdapterCircuitBreakerTest` et `RateLimitingFilterTest`, chacun dans sa propre JVM (`reuseForks=false`) avec retry automatique en cas d'échec transitoire. Tournent en CI dans un job séparé (`integration-tests`), non-bloquant, indépendant du job principal qui génère le badge de couverture.
 
 **Tests de charge (Gatling) :**
 
@@ -242,7 +241,7 @@ docker-compose up -d
 | WebSocket test | `http://localhost/ws-test.html` |
 | Kafka UI | `http://localhost:8090` |
 | Prometheus | `http://localhost:9090` |
-| Grafana | `http://localhost:3000` (admin / admin) |
+| Grafana | `http://localhost:3000` (admin / valeur de `GRAFANA_ADMIN_PASSWORD` dans `.env`) |
 | Jaeger UI | `http://localhost:16686` |
 | Health | `http://localhost/actuator/health` |
 

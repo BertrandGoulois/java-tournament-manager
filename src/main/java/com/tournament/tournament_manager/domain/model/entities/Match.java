@@ -35,6 +35,10 @@ public class Match {
     @Column(columnDefinition = "TEXT")
     private String commentary;
 
+    @Version
+    @Column(nullable = false)
+    private Long version;
+
     @ManyToOne()
     @JoinColumn(name = "tournament_id", nullable = false)
     private Tournament tournament;

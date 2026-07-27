@@ -41,6 +41,10 @@ public class Player {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @Version
+    @Column(nullable = false)
+    private Long version;
+
     @Column(nullable = false)
     private boolean deleted = false;
 

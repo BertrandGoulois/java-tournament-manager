@@ -333,6 +333,7 @@
 						<exclude>**/GroupsThenKnockoutIntegrationTest.java</exclude>
 						<exclude>**/OpenAiCommentaryAdapterCircuitBreakerTest.java</exclude>
 						<exclude>**/PurgeServiceIntegrationTest.java</exclude>
+						<exclude>**/RateLimitingFilterTest.java</exclude>
 					</excludes>
 				</configuration>
 			</plugin>
@@ -405,6 +406,7 @@
 								<include>**/GroupsThenKnockoutIntegrationTest.java</include>
 								<include>**/OpenAiCommentaryAdapterCircuitBreakerTest.java</include>
 								<include>**/PurgeServiceIntegrationTest.java</include>
+								<include>**/RateLimitingFilterTest.java</include>
 							</includes>
 							<rerunFailingTestsCount>2</rerunFailingTestsCount>
 							<forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
