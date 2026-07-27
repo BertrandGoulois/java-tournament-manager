@@ -1,6 +1,7 @@
 package com.tournament.tournament_manager.infrastructure.input.rpc.player;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.Validator;
 import com.tournament.tournament_manager.domain.port.in.player.GetPlayerUseCase;
 import com.tournament.tournament_manager.infrastructure.input.rpc.AbstractJsonRpcHandler;
 import org.springframework.stereotype.Component;
@@ -15,8 +16,8 @@ public class PlayerGetByIdHandler extends AbstractJsonRpcHandler {
 
     private final GetPlayerUseCase getPlayerUseCase;
 
-    public PlayerGetByIdHandler(GetPlayerUseCase getPlayerUseCase, ObjectMapper objectMapper) {
-        super(objectMapper);
+    public PlayerGetByIdHandler(GetPlayerUseCase getPlayerUseCase, ObjectMapper objectMapper, Validator validator) {
+        super(objectMapper, validator);
         this.getPlayerUseCase = getPlayerUseCase;
     }
 

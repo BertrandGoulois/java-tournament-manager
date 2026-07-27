@@ -1,6 +1,7 @@
 package com.tournament.tournament_manager.infrastructure.input.rpc.tournament;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.Validator;
 import com.tournament.tournament_manager.domain.port.in.tournament.GetStandingsUseCase;
 import com.tournament.tournament_manager.infrastructure.input.rpc.AbstractJsonRpcHandler;
 import org.springframework.stereotype.Component;
@@ -15,8 +16,8 @@ public class TournamentGetStandingsHandler extends AbstractJsonRpcHandler {
 
     private final GetStandingsUseCase getStandingsUseCase;
 
-    public TournamentGetStandingsHandler(GetStandingsUseCase getStandingsUseCase, ObjectMapper objectMapper) {
-        super(objectMapper);
+    public TournamentGetStandingsHandler(GetStandingsUseCase getStandingsUseCase, ObjectMapper objectMapper, Validator validator) {
+        super(objectMapper, validator);
         this.getStandingsUseCase = getStandingsUseCase;
     }
 

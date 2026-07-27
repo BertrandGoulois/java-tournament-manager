@@ -1,6 +1,7 @@
 package com.tournament.tournament_manager.infrastructure.input.rpc.match;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.Validator;
 import com.tournament.tournament_manager.domain.port.in.match.GetMatchUseCase;
 import com.tournament.tournament_manager.infrastructure.input.rpc.AbstractJsonRpcHandler;
 import org.springframework.stereotype.Component;
@@ -15,8 +16,8 @@ public class MatchGetByIdHandler extends AbstractJsonRpcHandler {
 
     private final GetMatchUseCase getMatchUseCase;
 
-    public MatchGetByIdHandler(GetMatchUseCase getMatchUseCase, ObjectMapper objectMapper) {
-        super(objectMapper);
+    public MatchGetByIdHandler(GetMatchUseCase getMatchUseCase, ObjectMapper objectMapper, Validator validator) {
+        super(objectMapper, validator);
         this.getMatchUseCase = getMatchUseCase;
     }
 

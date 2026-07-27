@@ -1,6 +1,7 @@
 package com.tournament.tournament_manager.infrastructure.input.rpc.tournament;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.Validator;
 import com.tournament.tournament_manager.domain.port.in.tournament.DeleteTournamentUseCase;
 import com.tournament.tournament_manager.infrastructure.input.rpc.AbstractJsonRpcHandler;
 import org.springframework.stereotype.Component;
@@ -15,8 +16,8 @@ public class TournamentDeleteHandler extends AbstractJsonRpcHandler {
 
     private final DeleteTournamentUseCase deleteTournamentUseCase;
 
-    public TournamentDeleteHandler(DeleteTournamentUseCase deleteTournamentUseCase, ObjectMapper objectMapper) {
-        super(objectMapper);
+    public TournamentDeleteHandler(DeleteTournamentUseCase deleteTournamentUseCase, ObjectMapper objectMapper, Validator validator) {
+        super(objectMapper, validator);
         this.deleteTournamentUseCase = deleteTournamentUseCase;
     }
 

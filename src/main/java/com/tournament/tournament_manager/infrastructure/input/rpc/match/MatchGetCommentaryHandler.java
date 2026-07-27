@@ -1,6 +1,7 @@
 package com.tournament.tournament_manager.infrastructure.input.rpc.match;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.Validator;
 import com.tournament.tournament_manager.domain.port.in.match.GetMatchCommentaryUseCase;
 import com.tournament.tournament_manager.infrastructure.input.rpc.AbstractJsonRpcHandler;
 import org.springframework.stereotype.Component;
@@ -15,8 +16,8 @@ public class MatchGetCommentaryHandler extends AbstractJsonRpcHandler {
 
     private final GetMatchCommentaryUseCase getMatchCommentaryUseCase;
 
-    public MatchGetCommentaryHandler(GetMatchCommentaryUseCase getMatchCommentaryUseCase, ObjectMapper objectMapper) {
-        super(objectMapper);
+    public MatchGetCommentaryHandler(GetMatchCommentaryUseCase getMatchCommentaryUseCase, ObjectMapper objectMapper, Validator validator) {
+        super(objectMapper, validator);
         this.getMatchCommentaryUseCase = getMatchCommentaryUseCase;
     }
 

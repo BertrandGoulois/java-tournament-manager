@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tournament.tournament_manager.domain.port.in.tournament.CreateTournamentUseCase;
 import com.tournament.tournament_manager.dto.request.tournament.CreateTournamentRequest;
 import com.tournament.tournament_manager.infrastructure.input.rpc.AbstractJsonRpcHandler;
+import jakarta.validation.Validator;
 import org.springframework.stereotype.Component;
 
 /**
@@ -17,10 +18,10 @@ import org.springframework.stereotype.Component;
 public class TournamentCreateHandler extends AbstractJsonRpcHandler {
 
     private final CreateTournamentUseCase createTournamentUseCase;
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    public TournamentCreateHandler(CreateTournamentUseCase createTournamentUseCase, ObjectMapper objectMapper) {
-        super(objectMapper);
+    public TournamentCreateHandler(CreateTournamentUseCase createTournamentUseCase, ObjectMapper objectMapper,
+                                   Validator validator) {
+        super(objectMapper, validator);
         this.createTournamentUseCase = createTournamentUseCase;
     }
 
