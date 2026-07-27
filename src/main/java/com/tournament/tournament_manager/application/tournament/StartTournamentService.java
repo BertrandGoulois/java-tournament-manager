@@ -71,6 +71,18 @@ public class StartTournamentService implements StartTournamentUseCase {
                 .map(Registration::getPlayer)
                 .collect(Collectors.toList());
 
+        if (tournament.getFormat() == TournamentFormat.GROUPS_THEN_KNOCKOUT
+                && players.size() % tournament.getNumberOfGroups() != 0) {
+            log.warn("Tentative de démarrage GROUPS_THEN_KNOCKOUT avec un effectif non divisible "
+                            + "[id={}, joueurs={}, numberOfGroups={}]",
+                    tournamentId, players.size(), tournament.getNumberOfGroups());
+            throw new InvalidException(
+                    "Le nombre de joueurs inscrits (" + players.size() + ") doit être divisible par "
+                            + "le nombre de groupes (" + tournament.getNumberOfGroups()
+                            + ") pour démarrer ce tournoi. maxPlayers étant divisible par numberOfGroups, "
+                            + "attendez que l'effectif complet soit atteint, ou ajustez les inscriptions.");
+        }
+
         TournamentStartStrategy strategy = strategies.get(tournament.getFormat());
         if (strategy == null) {
             log.error("Aucune stratégie de démarrage pour le format [id={}, format={}]",

@@ -124,6 +124,25 @@ class StartTournamentServiceTest {
         assertThrows(InvalidException.class, () -> startTournamentService.startTournament(1L));
     }
 
+    @Test
+    void startTournament_shouldThrowException_whenGroupsThenKnockoutPlayerCountNotDivisibleByGroups() {
+        Tournament tournament = new Tournament();
+        tournament.setStatus(TournamentStatus.OPEN);
+        tournament.setMaxPlayers(10);
+        tournament.setNumberOfGroups(2);
+        tournament.setFormat(TournamentFormat.GROUPS_THEN_KNOCKOUT);
+
+        when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
+        when(loadRegistrationPort.loadByTournamentId(1L)).thenReturn(List.of(
+                registrationWithPlayer(), registrationWithPlayer(), registrationWithPlayer(),
+                registrationWithPlayer(), registrationWithPlayer(), registrationWithPlayer(),
+                registrationWithPlayer()
+        ));
+
+        assertThrows(InvalidException.class, () -> startTournamentService.startTournament(1L));
+        verifyNoInteractions(saveTournamentPort);
+    }
+
     private Registration registrationWithPlayer() {
         Registration reg = new Registration();
         reg.setPlayer(new Player());

@@ -15,11 +15,14 @@ import java.util.List;
 /**
  * Stratégie de démarrage pour le format {@link TournamentFormat#GROUPS_THEN_KNOCKOUT}.
  *
- * <p>Répartit les joueurs en {@code tournament.getNumberOfGroups()} groupes équilibrés
- * (l'effectif total est garanti divisible par le nombre de groupes, validé à la création
- * du tournoi). Chaque groupe joue un round-robin complet via {@link RoundRobinUtils},
- * identifié par son {@code groupNumber}. Le bracket final entre qualifiés n'est généré
- * qu'une fois tous les matchs de groupe terminés (cf. {@code BracketListener}).
+ * <p>Répartit les joueurs en {@code tournament.getNumberOfGroups()} groupes équilibrés.
+ * La divisibilité de l'effectif réel par le nombre de groupes est vérifiée par
+ * {@code StartTournamentService} avant l'appel à cette stratégie (la validation à la
+ * création du tournoi ne porte que sur {@code maxPlayers}, pas sur le nombre réel
+ * d'inscrits au moment du démarrage). Chaque groupe joue un round-robin complet via
+ * {@link RoundRobinUtils}, identifié par son {@code groupNumber}. Le bracket final
+ * entre qualifiés n'est généré qu'une fois tous les matchs de groupe terminés
+ * (cf. {@code BracketListener}).
  */
 @Component
 public class GroupsThenKnockoutStartStrategy implements TournamentStartStrategy {
