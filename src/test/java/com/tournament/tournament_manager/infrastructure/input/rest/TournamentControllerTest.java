@@ -12,6 +12,7 @@ import com.tournament.tournament_manager.dto.request.tournament.CreateTournament
 import com.tournament.tournament_manager.dto.response.tournament.BracketResponse;
 import com.tournament.tournament_manager.dto.response.tournament.StandingsResponse;
 import com.tournament.tournament_manager.dto.response.tournament.TournamentResponse;
+import com.tournament.tournament_manager.exception.domain.InvalidException;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
@@ -131,6 +132,19 @@ class TournamentControllerTest {
                         .with(user("admin").roles("ADMIN"))
                         .with(csrf()))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void startTournament_shouldReturn400_whenPlayerCountNotDivisibleByGroups() throws Exception {
+        doAnswer(invocation -> {
+            throw new InvalidException(
+                    "Le nombre de joueurs inscrits (7) doit être divisible par le nombre de groupes (2)");
+        }).when(startTournamentUseCase).startTournament(1L);
+
+        mockMvc.perform(post("/api/tournaments/1/start")
+                        .with(user("admin").roles("ADMIN"))
+                        .with(csrf()))
+                .andExpect(status().isBadRequest());
     }
 
     @Test
