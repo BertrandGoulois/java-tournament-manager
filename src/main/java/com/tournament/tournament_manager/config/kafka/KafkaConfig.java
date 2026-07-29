@@ -31,8 +31,10 @@ import java.util.Map;
  * tous les messages indépendamment des autres.
  *
  * <p>Sérialisation : clé en {@code String}, valeur en JSON via Jackson.
- * Le type de désérialisation par défaut est {@code MatchFinishedEvent} —
- * tous les packages sont marqués comme trusted ({@code TRUSTED_PACKAGES = "*"}).
+ * Le type de désérialisation est fixé à {@code MatchFinishedEvent} — seul le
+ * package {@code com.tournament.tournament_manager.domain.event} est marqué comme
+ * trusted, et l'en-tête {@code __TypeId__} (potentiellement forgeable par tout
+ * producteur autorisé à publier sur le topic) est ignoré au profit de ce type fixe.
  *
  * <p>En cas d'échec répété d'un listener (3 tentatives espacées de 1 seconde),
  * le message est redirigé vers le topic {@code match-finished.DLT}
@@ -138,9 +140,13 @@ public class KafkaConfig {
         config.put(ConsumerConfig.GROUP_ID_CONFIG, "elo-group");
         config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JacksonJsonDeserializer.class);
-        config.put(JacksonJsonDeserializer.TRUSTED_PACKAGES, "*");
+        config.put(JacksonJsonDeserializer.TRUSTED_PACKAGES, "com.tournament.tournament_manager.domain.event");
         config.put(JacksonJsonDeserializer.VALUE_DEFAULT_TYPE,
                 "com.tournament.tournament_manager.domain.event.MatchFinishedEvent");
+        // Le topic ne véhicule qu'un seul type d'événement : on ignore l'en-tête __TypeId__
+        // (que tout producteur capable de publier sur le topic pourrait sinon forger) et on
+        // force systématiquement la désérialisation vers VALUE_DEFAULT_TYPE.
+        config.put(JacksonJsonDeserializer.USE_TYPE_INFO_HEADERS, false);
         return new DefaultKafkaConsumerFactory<>(config);
     }
 
