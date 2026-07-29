@@ -1,6 +1,6 @@
 package com.tournament.tournament_manager.infrastructure.input.rpc.player;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.tournament.tournament_manager.domain.port.in.player.CreatePlayerUseCase;
 import com.tournament.tournament_manager.dto.request.player.CreatePlayerRequest;
 import com.tournament.tournament_manager.infrastructure.input.rpc.AbstractJsonRpcHandler;

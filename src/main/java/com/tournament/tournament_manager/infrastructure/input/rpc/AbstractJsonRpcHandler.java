@@ -1,6 +1,6 @@
 package com.tournament.tournament_manager.infrastructure.input.rpc;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.tournament.tournament_manager.domain.port.out.rpc.JsonRpcMethodHandler;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;

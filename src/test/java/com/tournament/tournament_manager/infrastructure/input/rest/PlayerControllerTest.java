@@ -1,7 +1,7 @@
 package com.tournament.tournament_manager.infrastructure.input.rest;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import com.tournament.tournament_manager.config.security.JwtAuthenticationFilter;
 import com.tournament.tournament_manager.config.security.SecurityConfig;
 import com.tournament.tournament_manager.config.security.UserDetailsServiceImpl;
@@ -70,8 +70,7 @@ class PlayerControllerTest {
     @MockitoBean
     private MeterRegistry meterRegistry;
 
-    private final ObjectMapper objectMapper = new ObjectMapper()
-            .registerModule(new JavaTimeModule());
+    private final ObjectMapper objectMapper = JsonMapper.builder().build();
 
     private PlayerResponse samplePlayer() {
         return new PlayerResponse(1L, "player1", "player1@mail.com", 1000, LocalDateTime.now());

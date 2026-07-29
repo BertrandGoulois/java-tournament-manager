@@ -1,6 +1,6 @@
 package com.tournament.tournament_manager.infrastructure.input.rpc.registration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.tournament.tournament_manager.domain.port.in.registration.RegisterPlayerUseCase;
 import com.tournament.tournament_manager.dto.request.registration.CreateRegistrationRequest;
 import com.tournament.tournament_manager.infrastructure.input.rpc.AbstractJsonRpcHandler;

@@ -1,7 +1,8 @@
 package com.tournament.tournament_manager.application.rpc;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import com.tournament.tournament_manager.domain.port.out.rpc.JsonRpcMethodHandler;
 import com.tournament.tournament_manager.dto.request.rpc.JsonRpcRequest;
 import com.tournament.tournament_manager.dto.response.rpc.JsonRpcError;
@@ -17,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class JsonRpcDispatchServiceTest {
 
     private JsonRpcDispatchService dispatchService;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = JsonMapper.builder().build();
 
     @BeforeEach
     void setUp() {
@@ -30,7 +31,7 @@ class JsonRpcDispatchServiceTest {
             @Override
             public Object handle(Object params) {
                 @SuppressWarnings("unchecked")
-                Map<String, Object> map = new ObjectMapper().convertValue(params, Map.class);
+                Map<String, Object> map = JsonMapper.builder().build().convertValue(params, Map.class);
                 return "hello " + map.get("name");
             }
         };

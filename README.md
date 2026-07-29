@@ -180,6 +180,7 @@ POSTGRES_PASSWORD=tonmotdepasse
 JWT_SECRET=une-valeur-base64-generee-avec-openssl-rand-base64-32
 OPENAI_API_KEY=sk-...ta-clef
 GRAFANA_ADMIN_PASSWORD=tonmotdepasse-grafana
+REDIS_PASSWORD=tonmotdepasse-redis
 ```
 
 > `JWT_SECRET` doit être une chaîne Base64 valide. Génère-en une avec `openssl rand -base64 32`.
