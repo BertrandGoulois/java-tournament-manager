@@ -7,6 +7,7 @@ import com.tournament.tournament_manager.domain.port.out.rpc.JsonRpcMethodHandle
 import com.tournament.tournament_manager.dto.request.rpc.JsonRpcRequest;
 import com.tournament.tournament_manager.dto.response.rpc.JsonRpcError;
 import com.tournament.tournament_manager.dto.response.rpc.JsonRpcResponse;
+import com.tournament.tournament_manager.exception.domain.NotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -60,7 +61,20 @@ class JsonRpcDispatchServiceTest {
             }
         };
 
-        dispatchService = new JsonRpcDispatchService(List.of(handler, failingHandler, invalidParamsHandler));
+        JsonRpcMethodHandler businessFailingHandler = new JsonRpcMethodHandler() {
+            @Override
+            public String methodName() {
+                return "test.notFound";
+            }
+
+            @Override
+            public Object handle(Object params) {
+                throw new NotFoundException("Joueur 42 introuvable");
+            }
+        };
+
+        dispatchService = new JsonRpcDispatchService(
+                List.of(handler, failingHandler, invalidParamsHandler, businessFailingHandler));
     }
 
     @Test
@@ -89,7 +103,7 @@ class JsonRpcDispatchServiceTest {
     }
 
     @Test
-    void dispatch_shouldReturnInternalError_whenHandlerThrowsException() throws Exception {
+    void dispatch_shouldMaskTechnicalMessage_whenHandlerThrowsUnexpectedException() throws Exception {
         JsonNode params = objectMapper.readTree("{}");
         JsonRpcRequest request = new JsonRpcRequest("2.0", "test.fail", params, "3");
 
@@ -98,7 +112,27 @@ class JsonRpcDispatchServiceTest {
         assertNull(response.result());
         assertNotNull(response.error());
         assertEquals(JsonRpcError.INTERNAL_ERROR, response.error().code());
-        assertEquals("something went wrong", response.error().data());
+        // Le message technique brut ("something went wrong", potentiellement une trace
+        // Hibernate/JDBC dans un cas réel) ne doit jamais atteindre le client — seul un
+        // message générique est exposé, même politique que GlobalExceptionHandler côté REST.
+        assertEquals("Une erreur inattendue s'est produite", response.error().data());
+        assertNotEquals("something went wrong", response.error().data());
+    }
+
+    @Test
+    void dispatch_shouldExposeCuratedMessage_whenHandlerThrowsBusinessException() throws Exception {
+        JsonNode params = objectMapper.readTree("{}");
+        JsonRpcRequest request = new JsonRpcRequest("2.0", "test.notFound", params, "5");
+
+        JsonRpcResponse response = dispatchService.dispatch(request);
+
+        assertNull(response.result());
+        assertNotNull(response.error());
+        assertEquals(JsonRpcError.INTERNAL_ERROR, response.error().code());
+        // Les exceptions métier curées (NotFoundException, AlreadyExistsException,
+        // InvalidException) restent exposées telles quelles : leur message est écrit
+        // pour l'appelant, contrairement aux exceptions techniques.
+        assertEquals("Joueur 42 introuvable", response.error().data());
     }
 
     @Test

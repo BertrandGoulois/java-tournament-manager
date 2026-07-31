@@ -4,6 +4,10 @@ import com.tournament.tournament_manager.domain.port.out.rpc.JsonRpcMethodHandle
 import com.tournament.tournament_manager.dto.request.rpc.JsonRpcRequest;
 import com.tournament.tournament_manager.dto.response.rpc.JsonRpcError;
 import com.tournament.tournament_manager.dto.response.rpc.JsonRpcResponse;
+import com.tournament.tournament_manager.exception.domain.AlreadyExistsException;
+import com.tournament.tournament_manager.exception.domain.InvalidException;
+import com.tournament.tournament_manager.exception.domain.NotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -17,6 +21,7 @@ import java.util.stream.Collectors;
  * indexés ici par leur nom de méthode (ex. {@code tournament.create}), à la manière du
  * pattern Strategy déjà utilisé pour {@code TournamentStartStrategy}.
  */
+@Slf4j
 @Service
 public class JsonRpcDispatchService {
 
@@ -33,6 +38,13 @@ public class JsonRpcDispatchService {
      * <p>Ne propage jamais d'exception : toute erreur (méthode inconnue, paramètres
      * invalides, exception métier) est convertie en {@link JsonRpcError} conforme
      * à la spécification, pour que l'appelant reçoive toujours une enveloppe JSON-RPC valide.
+     *
+     * <p>Politique d'exposition des messages d'erreur — alignée sur {@code GlobalExceptionHandler}
+     * côté REST : seules les exceptions métier "curées" ({@link NotFoundException},
+     * {@link AlreadyExistsException}, {@link InvalidException}) exposent leur message au client.
+     * Toute autre exception (Hibernate, JDBC, etc.) est masquée par un message générique — son
+     * détail réel (noms de tables, contraintes, SQL...) n'a rien à faire chez l'appelant — et
+     * journalisée côté serveur pour le diagnostic.
      *
      * @param request la requête JSON-RPC désérialisée
      * @return la réponse JSON-RPC (succès ou erreur)
@@ -54,9 +66,16 @@ public class JsonRpcDispatchService {
             return JsonRpcResponse.failure(
                     new JsonRpcError(JsonRpcError.INVALID_PARAMS, "Invalid params", e.getMessage()),
                     request.id());
-        } catch (Exception e) {
+        } catch (NotFoundException | AlreadyExistsException | InvalidException e) {
             return JsonRpcResponse.failure(
-                    new JsonRpcError(JsonRpcError.INTERNAL_ERROR, "Internal error", e.getMessage()),
+                    new JsonRpcError(JsonRpcError.INTERNAL_ERROR, "Request failed", e.getMessage()),
+                    request.id());
+        } catch (Exception e) {
+            log.error("Erreur inattendue lors du traitement de la méthode JSON-RPC '{}' : {}",
+                    request.method(), e.getMessage(), e);
+            return JsonRpcResponse.failure(
+                    new JsonRpcError(JsonRpcError.INTERNAL_ERROR, "Internal error",
+                            "Une erreur inattendue s'est produite"),
                     request.id());
         }
     }
