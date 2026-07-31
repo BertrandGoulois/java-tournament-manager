@@ -58,6 +58,13 @@ services:
     container_name: tournament-app
     expose:
       - "8080"
+      - "9001"
+    ports:
+      # Port de management (actuator) publié directement sur l'hôte pour un accès
+      # dev local (ex. http://localhost:9001/actuator/health), en dehors de nginx :
+      # il ne passe donc jamais par le port 80 exposé publiquement. À retirer si
+      # l'app tourne derrière un vrai réseau privé en production.
+      - "9001:9001"
     environment:
       SPRING_PROFILES_ACTIVE: docker
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}

@@ -244,7 +244,8 @@ docker-compose up -d
 | Prometheus | `http://localhost:9090` |
 | Grafana | `http://localhost:3000` (admin / valeur de `GRAFANA_ADMIN_PASSWORD` dans `.env`) |
 | Jaeger UI | `http://localhost:16686` |
-| Health | `http://localhost/actuator/health` |
+| Health (détails, port de management) | `http://localhost:9001/actuator/health` |
+| Liveness / readiness (port principal, public) | `http://localhost/livez`, `http://localhost/readyz` |
 
 ---
 

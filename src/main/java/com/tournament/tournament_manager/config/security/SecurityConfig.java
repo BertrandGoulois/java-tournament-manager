@@ -25,6 +25,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  *   <li>{@code /api/auth/**} — authentification</li>
  *   <li>{@code /swagger-ui/**}, {@code /v3/api-docs/**} — documentation API</li>
  *   <li>{@code /ws/**}, {@code /ws-test.html} — WebSocket</li>
+ *   <li>{@code /livez}, {@code /readyz} — probes liveness/readiness (actuator détaillé
+ *       déplacé sur {@code management.server.port}, hors de ce filtre)</li>
  * </ul>
  * Tous les autres endpoints nécessitent un token JWT valide.
  * Les sessions HTTP sont désactivées (stateless).
@@ -60,9 +62,11 @@ public class SecurityConfig {
                                 "/ws/**",
                                 "/ws-test.html",
                                 "/error",
-                                "/actuator/prometheus",
-                                "/actuator/health",
-                                "/actuator/metrics/**"
+                                // Actuator tourne désormais sur management.server.port (séparé,
+                                // non exposé par nginx) : seules les probes liveness/readiness
+                                // restent publiques, sur le port principal.
+                                "/livez",
+                                "/readyz"
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/tournaments").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/tournaments/**").hasRole("ADMIN")

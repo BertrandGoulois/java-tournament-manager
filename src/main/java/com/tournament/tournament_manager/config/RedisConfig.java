@@ -17,6 +17,9 @@ import java.time.Duration;
 /**
  * Configuration Redis : expose le {@link RedisClient} Lettuce et le {@link ProxyManager}
  * Bucket4j utilisé pour le rate limiting distribué.
+ *
+ * <p>Connexion distincte de celle utilisée par le cache Spring ({@code CacheConfig}),
+ * donc le mot de passe Redis doit être fourni explicitement ici aussi.
  */
 @Configuration
 public class RedisConfig {
@@ -27,12 +30,18 @@ public class RedisConfig {
     @Value("${spring.data.redis.port:6379}")
     private int redisPort;
 
+    @Value("${spring.data.redis.password:}")
+    private String redisPassword;
+
     @Bean(destroyMethod = "shutdown")
     public RedisClient redisClient() {
-        return RedisClient.create(RedisURI.builder()
+        RedisURI.Builder uriBuilder = RedisURI.builder()
                 .withHost(redisHost)
-                .withPort(redisPort)
-                .build());
+                .withPort(redisPort);
+        if (redisPassword != null && !redisPassword.isBlank()) {
+            uriBuilder.withPassword(redisPassword.toCharArray());
+        }
+        return RedisClient.create(uriBuilder.build());
     }
 
     @Bean
