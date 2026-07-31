@@ -9,6 +9,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Answers;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -50,6 +51,26 @@ class OpenAiCommentaryAdapterCircuitBreakerTest {
     @BeforeEach
     void resetCircuitBreaker() {
         circuitBreakerRegistry.circuitBreaker("openai").reset();
+    }
+
+    @Test
+    void generateCommentary_shouldIncludeSystemPromptGuardingAgainstInjection() {
+        when(openAIClient.chat().completions().create(any(ChatCompletionCreateParams.class)))
+                .thenThrow(new RuntimeException("peu importe, on inspecte juste les params envoyés"));
+
+        ArgumentCaptor<ChatCompletionCreateParams> paramsCaptor =
+                ArgumentCaptor.forClass(ChatCompletionCreateParams.class);
+
+        assertThrows(OpenAiUnavailableException.class,
+                () -> adapter.generateCommentary("<player1_name>joueur1</player1_name>"));
+
+        verify(openAIClient.chat().completions()).create(paramsCaptor.capture());
+        String paramsAsString = paramsCaptor.getValue().toString();
+
+        assertThat(paramsAsString)
+                .containsIgnoringCase("system")
+                .contains("jamais")
+                .contains("<player1_name>");
     }
 
     @Test

@@ -61,12 +61,12 @@ public class CommentaryListener {
 
             String prompt = String.format("""
                     Génère un commentaire sportif court (2-3 phrases) en français pour ce match de tournoi :
-                    - Joueur 1 : %s (ELO %d)
-                    - Joueur 2 : %s (ELO %d)
-                    - Vainqueur : %s
+                    - Joueur 1 : <player1_name>%s</player1_name> (ELO %d)
+                    - Joueur 2 : <player2_name>%s</player2_name> (ELO %d)
+                    - Vainqueur : <winner_name>%s</winner_name>
                     - Probabilité de victoire du vainqueur avant le match : %d%%
                     - Round : %d
-                    
+
                     Le commentaire doit être dynamique et narratif, comme un commentateur sportif.
                     """,
                     player1Name, player1Elo,
