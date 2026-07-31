@@ -18,6 +18,8 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.nio.charset.StandardCharsets;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -139,6 +141,111 @@ class RateLimitingFilterTest {
             filter.doFilterInternal(request, response, filterChain);
             assertThat(response.getStatus()).isEqualTo(200);
         }
+    }
+
+    @Test
+    void rpcPlayerCreate_shouldAllow_withinLimit() throws Exception {
+        for (int i = 0; i < 10; i++) {
+            MockHttpServletRequest request = buildRpcRequest("player.create", "7.7.7.7");
+            MockHttpServletResponse response = new MockHttpServletResponse();
+            filter.doFilterInternal(request, response, filterChain);
+            assertThat(response.getStatus()).isEqualTo(200);
+        }
+        verify(filterChain, times(10)).doFilter(any(), any());
+    }
+
+    @Test
+    void rpcPlayerCreate_shouldBlock_whenLimitExceeded() throws Exception {
+        for (int i = 0; i < 10; i++) {
+            filter.doFilterInternal(
+                    buildRpcRequest("player.create", "8.8.8.8"),
+                    new MockHttpServletResponse(),
+                    filterChain);
+        }
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        filter.doFilterInternal(
+                buildRpcRequest("player.create", "8.8.8.8"),
+                response,
+                filterChain);
+
+        assertThat(response.getStatus()).isEqualTo(429);
+        assertThat(response.getContentAsString()).contains("Trop de créations");
+    }
+
+    @Test
+    void rpcPlayerCreate_shouldShareBucket_withRestEndpoint() throws Exception {
+        String ip = "9.9.9.9";
+        for (int i = 0; i < 6; i++) {
+            filter.doFilterInternal(
+                    buildRequest("POST", "/api/players", ip),
+                    new MockHttpServletResponse(),
+                    filterChain);
+        }
+        for (int i = 0; i < 4; i++) {
+            filter.doFilterInternal(
+                    buildRpcRequest("player.create", ip),
+                    new MockHttpServletResponse(),
+                    filterChain);
+        }
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        filter.doFilterInternal(buildRpcRequest("player.create", ip), response, filterChain);
+
+        assertThat(response.getStatus()).isEqualTo(429);
+    }
+
+    @Test
+    void rpcOtherMethod_shouldNotBeRateLimited() throws Exception {
+        for (int i = 0; i < 20; i++) {
+            MockHttpServletRequest request = buildRpcRequest("tournament.getAll", "11.11.11.11");
+            MockHttpServletResponse response = new MockHttpServletResponse();
+            filter.doFilterInternal(request, response, filterChain);
+            assertThat(response.getStatus()).isEqualTo(200);
+        }
+    }
+
+    @Test
+    void rpcRequest_shouldRemainReadable_byControllerDownstream() throws Exception {
+        MockHttpServletRequest request = buildRpcRequest("tournament.getAll", "12.12.12.12");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        filter.doFilterInternal(request, response, filterChain);
+
+        verify(filterChain, times(1)).doFilter(argThat(req -> {
+            try {
+                String body = new String(req.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+                return body.contains("tournament.getAll");
+            } catch (Exception e) {
+                return false;
+            }
+        }), any());
+    }
+
+    @Test
+    void shouldFailOpen_whenRedisUnavailable() throws Exception {
+        @SuppressWarnings("unchecked")
+        ProxyManager<String> brokenProxyManager = mock(ProxyManager.class);
+        when(brokenProxyManager.builder()).thenThrow(new RuntimeException("Redis injoignable"));
+
+        RateLimitingFilter degradedFilter =
+                new RateLimitingFilter(brokenProxyManager, new SimpleMeterRegistry());
+        degradedFilter.init();
+
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        degradedFilter.doFilterInternal(
+                buildRequest("POST", "/api/auth/login", "13.13.13.13"),
+                response,
+                filterChain);
+
+        assertThat(response.getStatus()).isEqualTo(200);
+        verify(filterChain, times(1)).doFilter(any(), any());
+    }
+
+    private MockHttpServletRequest buildRpcRequest(String rpcMethod, String remoteAddr) {
+        MockHttpServletRequest request = buildRequest("POST", "/api/rpc", remoteAddr);
+        String body = "{\"jsonrpc\":\"2.0\",\"method\":\"" + rpcMethod + "\",\"params\":{},\"id\":1}";
+        request.setContent(body.getBytes(StandardCharsets.UTF_8));
+        request.setContentType("application/json");
+        return request;
     }
 
     private MockHttpServletRequest buildRequest(String method, String uri, String remoteAddr) {
