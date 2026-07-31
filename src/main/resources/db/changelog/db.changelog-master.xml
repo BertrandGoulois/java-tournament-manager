@@ -14,4 +14,5 @@
     <include file="classpath:db/changelog/changes/007-add-tournament-format.sql"/>
     <include file="classpath:db/changelog/changes/008-add-groups-then-knockout-fields.sql"/>
     <include file="classpath:db/changelog/changes/009-add-optimistic-locking.sql"/>
+    <include file="classpath:db/changelog/changes/010-hash-refresh-tokens.sql"/>
 </databaseChangeLog>
