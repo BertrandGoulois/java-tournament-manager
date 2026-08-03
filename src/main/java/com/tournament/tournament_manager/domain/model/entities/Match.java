@@ -22,6 +22,16 @@ public class Match {
     @Column(nullable = false)
     private int round;
 
+    /**
+     * Position 0-indexée du match au sein de son round — sa place déterminée dans le
+     * tableau. Le vainqueur des matchs aux positions {@code 2k} et {@code 2k+1} d'un round
+     * avance vers la position {@code k} du round suivant (voir {@code AdvanceBracketService}).
+     * Assignée via un seeding par classement ELO à la création du bracket
+     * (voir {@code BracketUtils.seedOrder}), jamais tirée au hasard.
+     */
+    @Column(nullable = false)
+    private int position;
+
     @Column(name = "group_number")
     private Integer groupNumber;
 

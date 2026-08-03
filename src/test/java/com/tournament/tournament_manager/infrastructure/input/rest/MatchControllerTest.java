@@ -71,7 +71,7 @@ class MatchControllerTest {
     }
 
     private MatchResponse sampleMatch() {
-        return new MatchResponse(1L, 1, MatchStatus.PENDING, null, 1L, 1L, 2L, null);
+        return new MatchResponse(1L, 1, 0, MatchStatus.PENDING, null, 1L, 1L, 2L, null);
     }
 
     @Test
@@ -93,7 +93,7 @@ class MatchControllerTest {
 
     @Test
     void recordMatchResult_shouldReturn200() throws Exception {
-        MatchResponse finished = new MatchResponse(1L, 1, MatchStatus.FINISHED, null, 1L, 1L, 2L, 1L);
+        MatchResponse finished = new MatchResponse(1L, 1, 0, MatchStatus.FINISHED, null, 1L, 1L, 2L, 1L);
         when(recordMatchResultUseCase.recordMatchResult(eq(1L), any())).thenReturn(finished);
 
         mockMvc.perform(put("/api/matches/1/result")

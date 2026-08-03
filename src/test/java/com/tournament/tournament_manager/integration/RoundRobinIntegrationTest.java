@@ -85,7 +85,7 @@ class RoundRobinIntegrationTest {
         startTournamentService.startTournament(tournament.id());
 
         List<MatchResponse> matches = matchRepository.findByTournamentId(tournament.id()).stream()
-                .map(m -> new MatchResponse(m.getId(), m.getRound(), m.getStatus(), m.getPlayedAt(),
+                .map(m -> new MatchResponse(m.getId(), m.getRound(), m.getPosition(), m.getStatus(), m.getPlayedAt(),
                         m.getTournament().getId(), m.getPlayer1().getId(),
                         m.getPlayer2() != null ? m.getPlayer2().getId() : null,
                         m.getWinner() != null ? m.getWinner().getId() : null))

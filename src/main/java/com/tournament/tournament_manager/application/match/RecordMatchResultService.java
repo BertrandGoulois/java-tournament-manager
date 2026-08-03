@@ -84,6 +84,7 @@ public class RecordMatchResultService implements RecordMatchResultUseCase {
         return new MatchResponse(
                 match.getId(),
                 match.getRound(),
+                match.getPosition(),
                 match.getStatus(),
                 match.getPlayedAt(),
                 match.getTournament().getId(),

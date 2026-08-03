@@ -11,6 +11,7 @@ import com.tournament.tournament_manager.dto.response.tournament.BracketRoundRes
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -53,6 +54,7 @@ public class BracketQueryService implements GetBracketUseCase {
                 .map(entry -> new BracketRoundResponse(
                         entry.getKey(),
                         entry.getValue().stream()
+                                .sorted(Comparator.comparingInt(Match::getPosition))
                                 .map(this::toMatchResponse)
                                 .collect(Collectors.toList())
                 ))
@@ -69,6 +71,7 @@ public class BracketQueryService implements GetBracketUseCase {
     private BracketMatchResponse toMatchResponse(Match match) {
         return new BracketMatchResponse(
                 match.getId(),
+                match.getPosition(),
                 match.getPlayer1().getId(),
                 match.getPlayer2() != null ? match.getPlayer2().getId() : null,
                 match.getWinner() != null ? match.getWinner().getId() : null,

@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 public record MatchResponse(
         @Schema(example = "1") Long id,
         @Schema(example = "4") int round,
+        @Schema(example = "0") int position,
         MatchStatus status,
         LocalDateTime playedAt,
         @Schema(example = "1") Long tournamentId,

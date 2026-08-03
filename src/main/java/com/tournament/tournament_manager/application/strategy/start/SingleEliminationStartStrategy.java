@@ -8,19 +8,20 @@ import com.tournament.tournament_manager.domain.port.out.strategy.TournamentStar
 import com.tournament.tournament_manager.application.shared.BracketUtils;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
 import java.util.List;
 
 /**
  * Stratégie de démarrage pour le format {@link TournamentFormat#SINGLE_ELIMINATION}.
  *
- * <p>Mélange aléatoirement les joueurs et génère le premier tour du bracket.
- * Le nombre de byes nécessaires ({@code bracketSize - playerCount}, où
+ * <p>Seede les joueurs par classement ELO (seed 1 = ELO le plus élevé) et génère le premier
+ * tour du bracket selon l'ordre de seeding standard ({@link BracketUtils#seedOrder}) : les
+ * meilleurs joueurs ne peuvent se rencontrer qu'au tour le plus tardif possible compte tenu
+ * de leur rang, au lieu d'un tirage purement aléatoire.
+ *
+ * <p>Le nombre de byes nécessaires ({@code bracketSize - playerCount}, où
  * {@code bracketSize} est la plus petite puissance de 2 supérieure ou égale
- * à l'effectif) est calculé une seule fois et distribué entièrement au
- * premier tour, garantissant que tous les tours suivants opposent un
- * nombre de joueurs strictement pair — aucun bye ne peut apparaître
- * au-delà du premier tour.
+ * à l'effectif) va aux joueurs les mieux classés — c'est la convention standard :
+ * les meilleurs seeds sont récompensés par un tour gratuit.
  */
 @Component
 public class SingleEliminationStartStrategy implements TournamentStartStrategy {
@@ -38,22 +39,31 @@ public class SingleEliminationStartStrategy implements TournamentStartStrategy {
 
     @Override
     public void generateInitialMatches(Tournament tournament, List<Player> players) {
-        Collections.shuffle(players);
-
-        int playerCount = players.size();
+        List<Player> seeded = BracketUtils.seedByElo(players);
+        int playerCount = seeded.size();
         int bracketSize = BracketUtils.calculateFirstRound(playerCount);
-        int byeCount = bracketSize - playerCount;
+        List<Integer> seedOrder = BracketUtils.seedOrder(bracketSize);
 
-        List<Player> byePlayers = players.subList(0, byeCount);
-        List<Player> matchPlayers = players.subList(byeCount, playerCount);
+        for (int position = 0; position < bracketSize / 2; position++) {
+            int seedA = seedOrder.get(position * 2);
+            int seedB = seedOrder.get(position * 2 + 1);
 
-        for (Player player : byePlayers) {
-            BracketUtils.createMatch(tournament, player, null, bracketSize, saveMatchPort);
-        }
+            boolean aExists = seedA <= playerCount;
+            boolean bExists = seedB <= playerCount;
 
-        for (int i = 0; i < matchPlayers.size(); i += 2) {
-            BracketUtils.createMatch(tournament, matchPlayers.get(i), matchPlayers.get(i + 1),
-                    bracketSize, saveMatchPort);
+            if (!aExists && !bExists) {
+                // Ne devrait jamais arriver : le nombre de byes (bracketSize - playerCount)
+                // est toujours strictement inférieur à bracketSize / 2, donc chaque paire de
+                // slots contient au moins un joueur réel dans l'ordre de seeding standard.
+                throw new IllegalStateException(
+                        "Seeding invalide : aucun joueur réel aux positions " + (position * 2)
+                                + " et " + (position * 2 + 1));
+            }
+
+            Player player1 = aExists ? seeded.get(seedA - 1) : seeded.get(seedB - 1);
+            Player player2 = (aExists && bExists) ? seeded.get(seedB - 1) : null;
+
+            BracketUtils.createMatch(tournament, player1, player2, bracketSize, position, saveMatchPort);
         }
     }
 }

@@ -65,12 +65,21 @@ public class GenerateKnockoutBracketFromGroupsService implements GenerateKnockou
 
         List<Player> qualifiers = computeQualifiers(groupMatches, tournament.getQualifiersPerGroup());
 
-        Collections.shuffle(qualifiers);
-        int firstRound = BracketUtils.calculateFirstRound(qualifiers.size());
-        for (int i = 0; i < qualifiers.size(); i += 2) {
-            Player player1 = qualifiers.get(i);
-            Player player2 = (i + 1 < qualifiers.size()) ? qualifiers.get(i + 1) : null;
-            BracketUtils.createMatch(tournament, player1, player2, firstRound, saveMatchPort);
+        List<Player> seeded = BracketUtils.seedByElo(qualifiers);
+        int playerCount = seeded.size();
+        int bracketSize = BracketUtils.calculateFirstRound(playerCount);
+        List<Integer> seedOrder = BracketUtils.seedOrder(bracketSize);
+
+        for (int position = 0; position < bracketSize / 2; position++) {
+            int seedA = seedOrder.get(position * 2);
+            int seedB = seedOrder.get(position * 2 + 1);
+            boolean aExists = seedA <= playerCount;
+            boolean bExists = seedB <= playerCount;
+
+            Player player1 = aExists ? seeded.get(seedA - 1) : seeded.get(seedB - 1);
+            Player player2 = (aExists && bExists) ? seeded.get(seedB - 1) : null;
+
+            BracketUtils.createMatch(tournament, player1, player2, bracketSize, position, saveMatchPort);
         }
     }
 

@@ -15,6 +15,7 @@ API REST de gestion de tournois sportifs (élimination directe, round-robin, ou 
 - **Spring Boot 4**
 - **Spring Security** + **JWT** (authentification stateless)
 - **Spring Data JPA** / **Hibernate**
+- **Jackson 3** (`tools.jackson`, migration complète depuis Jackson 2 - voir `JacksonConfig`, `CacheConfig`)
 - **PostgreSQL** (production)
 - **Liquibase** (migrations versionnées)
 - **Apache Kafka** (messaging distribué, remplacement des Spring Events)
@@ -30,7 +31,7 @@ API REST de gestion de tournois sportifs (élimination directe, round-robin, ou 
 - **Springdoc / Swagger UI** (documentation API interactive)
 - **Lombok**
 - **Resilience4j** (circuit breaker sur l'appel OpenAI)
-- **Bucket4j** + **Redis** (rate limiting distribué, buckets partagés entre instances via Lettuce)
+- **Bucket4j** + **Redis** (rate limiting distribué, buckets partagés entre instances via Lettuce - couvre `POST /api/players` et son équivalent JSON-RPC `player.create` avec le même bucket ; mode dégradé fail-open si Redis est indisponible)
 - **Nginx** (reverse proxy, point d'entrée unique sur le port 80, `X-Forwarded-For` fiable)
 
 ---
@@ -69,12 +70,12 @@ src/main/java/com/tournament/tournament_manager/
 │   │   ├── rest/           -> controllers REST (TournamentController, MatchController, ...)
 │   │   ├── messaging/      -> consumers Kafka (BracketListener, EloListener, ...)
 │   │   ├── rpc/            -> handlers JSON-RPC par domaine (tournament/, player/, match/, registration/)
-│   │   └── scheduler/      -> jobs planifiés (PurgeService)
+│   │   └── scheduler/      -> jobs planifiés (PurgeService, OutboxPublisherService)
 │   └── output/
 │       ├── persistence/
 │       │   ├── adapter/    -> adapters JPA (PlayerJpaAdapter, MatchJpaAdapter, ...)
 │       │   └── repository/ -> repositories Spring Data (PlayerRepository, MatchRepository, ...)
-│       ├── messaging/      -> producer Kafka (MatchKafkaAdapter)
+│       ├── messaging/      -> écriture outbox pour Kafka (MatchKafkaAdapter, voir OutboxPublisherService)
 │       └── client/         -> clients HTTP externes (OpenAiCommentaryAdapter)
 │
 ├── config/                 -> configuration Spring (Redis, Jackson, Swagger, Cache, Security, Kafka, WebSocket)
@@ -89,7 +90,7 @@ Exemple : `PUT /api/matches/1/result` - du client jusqu'à la réponse HTTP.
 
 ![Flux REST](docs/sequence.png)
 
-1. **RateLimitingFilter** (`config/security/`) - vérifie le bucket Redis par IP → `429` si dépassé
+1. **RateLimitingFilter** (`config/security/`) - vérifie le bucket Redis par IP (partagé avec `POST /api/rpc` en cas d'opération équivalente) → `429` si dépassé ; mode dégradé (laisse passer) si Redis est indisponible
 2. **JwtAuthenticationFilter** (`config/security/`) - valide le JWT → `401` si invalide
 3. **Spring Security** (`SecurityConfig`) - vérifie le rôle ADMIN → `403` si insuffisant
 4. **MatchController** (`infrastructure/input/rest/`) - adapter primaire, désérialise la requête en `RecordMatchResultRequest`
@@ -98,12 +99,15 @@ Exemple : `PUT /api/matches/1/result` - du client jusqu'à la réponse HTTP.
 7. **SaveMatchPort** (`domain/port/out/`) - interface du port sortant "sauvegarder un match"
 8. **MatchJpaAdapter** (`infrastructure/output/persistence/adapter/`) - implémente `SaveMatchPort`, traduit vers JPA
 9. **MatchRepository** (`infrastructure/output/persistence/repository/`) - Spring Data JPA
-10. **PostgreSQL** - persistance physique
+10. **PostgreSQL** - persistance physique du match
 11. **PublishMatchEventPort** (`domain/port/out/`) - interface du port sortant "publier un événement"
-12. **MatchKafkaAdapter** (`infrastructure/output/messaging/`) - implémente `PublishMatchEventPort`, publie sur Kafka
-13. **Kafka** `match-finished` - les 4 listeners consomment en asynchrone (ELO, Bracket, WebSocket, Commentary)
-14. **GlobalExceptionHandler** (`exception/handler/`) - intercepte toute exception → `ErrorResponse` JSON uniforme
-15. **MatchController** - retourne `200 OK` + `MatchResponse` JSON au client
+12. **MatchKafkaAdapter** (`infrastructure/output/messaging/`) - implémente `PublishMatchEventPort` **via le pattern Outbox** : écrit une ligne dans `outbox_events`, dans la **même transaction** que le match (pas d'appel Kafka direct ici)
+13. **OutboxPublisherService** (`infrastructure/input/scheduler/`) - poller indépendant (toutes les 500ms, hors de toute transaction métier) qui publie réellement les événements en attente vers Kafka, avec la clé de partition `tournamentId`
+14. **Kafka** `match-finished` - les 4 listeners consomment en asynchrone (ELO, Bracket, WebSocket, Commentary)
+15. **GlobalExceptionHandler** (`exception/handler/`) - intercepte toute exception → `ErrorResponse` JSON uniforme
+16. **MatchController** - retourne `200 OK` + `MatchResponse` JSON au client
+
+> Pourquoi l'écriture Kafka n'a pas lieu directement à l'étape 12 : si elle avait lieu pendant la transaction (avant le commit), un rollback après envoi laisserait les consumers traiter un match jamais réellement passé à `FINISHED`, et un consumer rapide pourrait lire le match avant le commit. Le pattern Outbox rend l'écriture DB et la publication Kafka atomiques l'une vis-à-vis de l'autre : soit les deux finissent par arriver, soit ni l'une ni l'autre.
 
 ### Architecture hexagonale
 
@@ -125,17 +129,19 @@ Le pattern **Strategy** est appliqué à deux niveaux :
 
 **Démarrage** (`StartTournamentService`) - Spring injecte toutes les implémentations de `TournamentStartStrategy`, indexées par format :
 
-- `SingleEliminationStartStrategy` -> mélange aléatoire et génère le premier tour du bracket (byes distribués entièrement au premier tour si l'effectif n'est pas une puissance de 2)
+- `SingleEliminationStartStrategy` -> **seede les joueurs par classement ELO** (`BracketUtils.seedByElo` + `seedOrder`, algorithme de seeding standard des tournois à élimination directe) et génère le premier tour ; les byes nécessaires (si l'effectif n'est pas une puissance de 2) vont aux meilleurs seeds en priorité. Le seed 1 et le seed 2 ne peuvent se rencontrer qu'en finale, jamais avant.
 - `RoundRobinStartStrategy` -> génère l'intégralité des confrontations via la **méthode du cercle** (`RoundRobinUtils`)
 - `GroupsThenKnockoutStartStrategy` -> répartit les joueurs en `numberOfGroups` groupes égaux, puis génère un round-robin par groupe
 
 **Progression** (`BracketListener`) - Spring injecte toutes les implémentations de `TournamentProgressionStrategy`, indexées par format :
 
-- `SingleEliminationProgressionStrategy` -> avancement round par round via `AdvanceBracketService`
+- `SingleEliminationProgressionStrategy` -> avancement round par round via `AdvanceBracketService`, déterministe (le vainqueur des matchs aux positions `2k`/`2k+1` avance vers la position `k` du round suivant - pas de retirage), et idempotent face à la redelivery Kafka (contrainte d'unicité `UNIQUE(tournament_id, round)` sur une table dédiée `round_advancements`, réclamée en transaction indépendante avant toute création de match)
 - `RoundRobinProgressionStrategy` -> vérification d'achèvement global via `CheckTournamentCompletionService`
-- `GroupsThenKnockoutProgressionStrategy` -> route selon la nature du match (groupe ou bracket)
+- `GroupsThenKnockoutProgressionStrategy` -> route selon la nature du match (groupe ou bracket), même seeding ELO que `SingleEliminationStartStrategy` pour le bracket final entre qualifiés
 
 Pour ajouter un nouveau format, il suffit de créer deux nouvelles classes `@Component` - aucune modification des services existants n'est nécessaire.
+
+> **`round` contient la taille du bracket, pas un numéro de tour.** Historiquement nommé ainsi, sa valeur va en décroissant (16, 8, 4, 2 - jamais 1, 2, 3, 4). Nommage conservé tel quel pour l'instant (cosmétique, gros impact sur l'API publique) ; voir aussi `position`, la place déterministe d'un match au sein de son round, qui permet de reconstruire un vrai arbre de bracket côté client.
 
 ### API JSON-RPC 2.0
 
@@ -149,18 +155,30 @@ Les side effects métier sont découplés du service principal via Kafka. Lorsqu
 
 - `elo-group` -> mise à jour des ratings ELO
 - `bracket-group` -> progression du tournoi via `TournamentProgressionStrategy`
-- `websocket-group` -> notification temps réel via WebSocket
+- `websocket-group` -> notification temps réel via WebSocket (connexion authentifiée par JWT, voir plus bas)
 - `commentary-group` -> génération de commentaire via OpenAI GPT-4o-mini
 
 En cas d'échec répété (3 tentatives espacées d'1 seconde), le message est redirigé vers `match-finished.DLT` pour inspection et rejeu via Kafka UI.
 
 > L'appel OpenAI est protégé par un circuit breaker Resilience4j. En cas d'échec, le fallback logue l'incident sans bloquer les autres listeners.
 
-**Test WebSocket** : page de démonstration disponible sur `http://localhost/ws-test.html`.
+**Pattern Outbox transactionnel.** La publication ne se fait jamais directement pendant la transaction métier. `RecordMatchResultService` écrit le match ET une ligne dans `outbox_events`, dans la même transaction (atomique par construction). Un poller séparé, `OutboxPublisherService`, tourne toutes les 500ms hors de toute transaction métier :
 
-### Purge des soft deletes
+- verrouille un lot d'événements non publiés avec `FOR UPDATE SKIP LOCKED` (sûr avec plusieurs instances de l'app en parallèle)
+- les envoie réellement à Kafka, avec `tournamentId` comme clé de partition (ordre garanti par tournoi une fois le topic multi-partitions)
+- marque `publishedAt` en cas de succès ; en cas d'échec (Kafka indisponible), la ligne reste en base et sera retentée au cycle suivant - jamais silencieusement perdue
 
-Les joueurs et tournois supprimés (soft delete) sont conservés en base pendant 30 jours (configurable via `purge.retention-days`), puis supprimés physiquement par un job `@Scheduled` qui tourne tous les jours à 2h du matin (`PurgeService`).
+Les événements publiés sont purgés périodiquement par `PurgeService` (voir ci-dessous) ; les non-publiés ne le sont jamais, quel que soit leur âge.
+
+**Test WebSocket** : page de démonstration disponible sur `http://localhost/ws-test.html` (nécessite un token JWT, récupérable via `POST /api/auth/login`, saisi dans le champ dédié avant de se connecter).
+
+### Purge périodique
+
+Un job `@Scheduled` (`PurgeService`) tourne tous les jours à 2h du matin et purge trois choses :
+
+- les joueurs et tournois soft-deleted depuis plus de `purge.retention-days` jours (défaut 30, configurable)
+- les refresh tokens expirés (indépendamment de `purge.retention-days` - un token expiré n'a plus aucun usage)
+- les événements outbox déjà publiés depuis plus de `purge.retention-days` jours (les non-publiés ne sont jamais purgés : un événement bloqué signale un problème à corriger, pas à faire disparaître silencieusement)
 
 ---
 
@@ -283,6 +301,15 @@ docker-compose up -d
 { "refreshToken": "<refresh token>" }
 ```
 
+- **Réponse** : un nouvel access token **et un nouveau refresh token** (rotation à chaque
+  appel - remplace systématiquement le refresh token stocké côté client par celui reçu en
+  retour ; l'ancien devient inutilisable immédiatement).
+
+> **Une seule session active par utilisateur.** Se connecter (`/api/auth/login`) révoque tous
+> les refresh tokens existants de l'utilisateur avant d'en émettre un nouveau. Se connecter
+> sur un second appareil déconnecte donc silencieusement le premier - c'est un choix assumé
+> (pas de sessions concurrentes), pas une limitation technique à contourner.
+
 #### Logout
 
 - **POST** `/api/auth/logout`
@@ -379,6 +406,26 @@ docker-compose up -d
 #### Get tournament bracket
 
 - **GET** `/api/tournaments/{id}/bracket`
+- **Response JSON** (extrait) :
+
+```json
+{
+  "tournamentId": 1,
+  "tournamentName": "Spring Championship",
+  "status": "IN_PROGRESS",
+  "rounds": [
+    {
+      "round": 8,
+      "matches": [
+        { "id": 1, "position": 0, "player1Id": 1, "player2Id": 8, "winnerId": null, "status": "PENDING" },
+        { "id": 2, "position": 1, "player1Id": 4, "player2Id": 5, "winnerId": null, "status": "PENDING" }
+      ]
+    }
+  ]
+}
+```
+
+> Matchs triés par `position` au sein de chaque round : le vainqueur des positions `2k`/`2k+1` avance vers la position `k` du round suivant, ce qui permet de reconstruire un vrai arbre côté client. `round` contient la taille du bracket (16, 8, 4, 2), pas un numéro de tour croissant.
 
 #### Get tournament standings
 
@@ -490,15 +537,19 @@ Toutes les erreurs REST retournent un JSON uniforme :
 - Réponses d'erreur uniformes via `GlobalExceptionHandler` + `ErrorResponse`
 - Documentation API interactive via Swagger UI (`@Operation`, `@ApiResponse`, `@Tag`) avec schéma d'erreur uniforme
 - Calcul ELO après chaque match (K=32, formule standard), idempotent
+- Seeding ELO du bracket (algorithme de seeding standard, seed 1/seed 2 ne se rencontrent qu'en finale) - byes attribués aux meilleurs seeds en priorité
+- Avancement de bracket déterministe et idempotent face à la redelivery Kafka (contrainte d'unicité DB `round_advancements`, réclamée en transaction indépendante)
+- Pattern Outbox transactionnel pour la publication Kafka (`outbox_events` + `OutboxPublisherService`) - garantie de livraison, aucun événement perdu même en cas de panne Kafka prolongée
 - Progression de tournoi multi-format event-driven via Kafka
-- Génération automatique de commentaires via OpenAI GPT-4o-mini
+- Génération automatique de commentaires via OpenAI GPT-4o-mini, prompt durci contre l'injection (message système + délimitation des données utilisateur)
 - Dead Letter Queue Kafka (`match-finished.DLT`) + Kafka UI pour rejeu manuel
-- Notifications temps réel via WebSocket
-- Cache Redis sur les statistiques joueur
-- Authentification JWT avec refresh token et révocation
-- Rate limiting distribué (Bucket4j + Redis, fenêtre glissante `refillGreedy`) - partagé entre instances
+- Notifications temps réel via WebSocket, authentifiées par JWT au niveau STOMP (`JwtChannelInterceptor` sur la trame `CONNECT`)
+- Cache Redis sur les statistiques joueur, sérialisation JSON (Jackson 3) avec liste blanche de types
+- Authentification JWT avec refresh token hashé (SHA-256) et rotation à chaque utilisation ; vérifie que l'utilisateur existe toujours
+- Rate limiting distribué (Bucket4j + Redis, fenêtre glissante `refillGreedy`) - partagé entre instances, couvre REST et JSON-RPC pour la même opération, mode dégradé si Redis indisponible
 - Restrictions par rôle ADMIN/PLAYER sur les endpoints (401 non authentifié, 403 non autorisé)
-- Purge périodique des soft deletes (`@Scheduled`, rétention configurable)
+- Purge périodique des soft deletes, refresh tokens expirés et événements outbox publiés (`@Scheduled`, rétention configurable)
+- Actuator isolé sur un port de management dédié (`management.server.port`), jamais exposé par Nginx - seules les probes liveness/readiness restent publiques
 - Tracing distribué OpenTelemetry + Jaeger - propagation du traceId à travers Kafka
 - Monitoring Prometheus / Grafana avec dashboards versionnés (métriques business : `tournament.created`, `tournament.started`, `match.result.recorded`, `player.created`, `rate.limit.blocked` ; métriques JVM : heap, CPU, threads, HikariCP, GC)
 - Reverse proxy Nginx en point d'entrée unique (port 80) - app non exposée directement, X-Forwarded-For posé de façon fiable pour le rate limiting

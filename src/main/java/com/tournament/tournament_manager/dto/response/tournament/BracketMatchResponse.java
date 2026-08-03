@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 public record BracketMatchResponse(
         @Schema(example = "1") Long id,
+        @Schema(example = "0") int position,
         @Schema(example = "1") Long player1Id,
         @Schema(example = "2") Long player2Id,
         @Schema(example = "1") Long winnerId,

@@ -17,4 +17,5 @@
     <include file="classpath:db/changelog/changes/010-hash-refresh-tokens.sql"/>
     <include file="classpath:db/changelog/changes/011-add-round-advancements.sql"/>
     <include file="classpath:db/changelog/changes/012-add-outbox-events.sql"/>
+    <include file="classpath:db/changelog/changes/013-add-match-position.sql"/>
 </databaseChangeLog>

@@ -152,6 +152,57 @@ class AdvanceBracketServiceTest {
     }
 
     @Test
+    void advanceToNextRound_shouldPairWinnersByPosition_notRandomly() {
+        Tournament tournament = new Tournament();
+        tournament.setId(1L);
+
+        Player w0 = new Player();
+        w0.setId(10L);
+        Player w1 = new Player();
+        w1.setId(11L);
+        Player w2 = new Player();
+        w2.setId(12L);
+        Player w3 = new Player();
+        w3.setId(13L);
+
+        Match m0 = new Match();
+        m0.setPosition(0);
+        m0.setStatus(MatchStatus.FINISHED);
+        m0.setWinner(w0);
+        Match m1 = new Match();
+        m1.setPosition(1);
+        m1.setStatus(MatchStatus.FINISHED);
+        m1.setWinner(w1);
+        Match m2 = new Match();
+        m2.setPosition(2);
+        m2.setStatus(MatchStatus.FINISHED);
+        m2.setWinner(w2);
+        Match m3 = new Match();
+        m3.setPosition(3);
+        m3.setStatus(MatchStatus.FINISHED);
+        m3.setWinner(w3);
+
+        // Volontairement dans le désordre : la méthode doit trier par position elle-même.
+        when(loadMatchByTournamentPort.loadByTournamentIdAndRound(1L, 8))
+                .thenReturn(List.of(m3, m1, m0, m2));
+
+        ArgumentCaptor<Match> captor = ArgumentCaptor.forClass(Match.class);
+        advanceBracketService.advanceToNextRound(tournament, 8);
+        verify(saveMatchPort, times(2)).saveMatch(captor.capture());
+
+        // Position 0+1 -> nouvelle position 0 (w0 vs w1) ; position 2+3 -> nouvelle position 1 (w2 vs w3).
+        Match nextMatch0 = captor.getAllValues().stream()
+                .filter(m -> m.getPosition() == 0).findFirst().orElseThrow();
+        Match nextMatch1 = captor.getAllValues().stream()
+                .filter(m -> m.getPosition() == 1).findFirst().orElseThrow();
+
+        assertEquals(w0, nextMatch0.getPlayer1());
+        assertEquals(w1, nextMatch0.getPlayer2());
+        assertEquals(w2, nextMatch1.getPlayer1());
+        assertEquals(w3, nextMatch1.getPlayer2());
+    }
+
+    @Test
     void advanceToNextRound_shouldDoNothing_whenRoundAlreadyClaimed() {
         // Simule une redelivery Kafka du dernier match d'un round déjà traité : le round
         // suivant a déjà été réclamé (par le premier passage, ou par un appel concurrent).
