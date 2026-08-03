@@ -56,4 +56,6 @@ jobs:
 
       - name: Run integration tests
         run: ./mvnw test -Pintegration-tests
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
