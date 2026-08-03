@@ -25,6 +25,8 @@ jobs:
 
       - name: Build and test
         run: ./mvnw verify
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
       - name: Generate JaCoCo Badge
         uses: cicirello/jacoco-badge-generator@v2
