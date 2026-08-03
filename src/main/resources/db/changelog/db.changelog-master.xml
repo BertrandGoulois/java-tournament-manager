@@ -15,4 +15,5 @@
     <include file="classpath:db/changelog/changes/008-add-groups-then-knockout-fields.sql"/>
     <include file="classpath:db/changelog/changes/009-add-optimistic-locking.sql"/>
     <include file="classpath:db/changelog/changes/010-hash-refresh-tokens.sql"/>
+    <include file="classpath:db/changelog/changes/011-add-round-advancements.sql"/>
 </databaseChangeLog>
