@@ -25,6 +25,24 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
             "WHERE m.tournament.id = :tournamentId AND m.round = :round")
     List<Match> findByTournamentIdAndRound(@Param("tournamentId") Long tournamentId, @Param("round") int round);
 
-    long countByPlayer1IdOrPlayer2Id(Long player1Id, Long player2Id);
-    long countByWinnerId(Long winnerId);
+    /**
+     * Compte les matchs réellement joués par un joueur : {@code FINISHED} et à deux joueurs
+     * réels (exclut les {@code PENDING} — un match programmé n'est pas "joué" — et les byes,
+     * qui n'opposent qu'un seul joueur réel).
+     */
+    @Query("SELECT COUNT(m) FROM Match m "
+            + "WHERE (m.player1.id = :playerId OR m.player2.id = :playerId) "
+            + "AND m.status = com.tournament.tournament_manager.domain.model.enums.MatchStatus.FINISHED "
+            + "AND m.player2 IS NOT NULL")
+    long countFinishedRealMatchesByPlayer(@Param("playerId") Long playerId);
+
+    /**
+     * Compte les victoires réelles d'un joueur : exclut les byes (le vainqueur d'un bye
+     * n'a battu personne, {@code player2} y est {@code null}).
+     */
+    @Query("SELECT COUNT(m) FROM Match m "
+            + "WHERE m.winner.id = :playerId "
+            + "AND m.status = com.tournament.tournament_manager.domain.model.enums.MatchStatus.FINISHED "
+            + "AND m.player2 IS NOT NULL")
+    long countRealWinsByPlayer(@Param("playerId") Long playerId);
 }

@@ -61,12 +61,12 @@ public class PlayerJpaAdapter implements LoadPlayerPort, SavePlayerPort,
 
     @Override
     public long countByPlayer(Long playerId) {
-        return matchRepository.countByPlayer1IdOrPlayer2Id(playerId, playerId);
+        return matchRepository.countFinishedRealMatchesByPlayer(playerId);
     }
 
     @Override
     public long countWinsByPlayer(Long playerId) {
-        return matchRepository.countByWinnerId(playerId);
+        return matchRepository.countRealWinsByPlayer(playerId);
     }
 
     @Override

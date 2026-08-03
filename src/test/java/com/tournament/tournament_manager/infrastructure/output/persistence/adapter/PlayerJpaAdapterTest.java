@@ -90,14 +90,14 @@ class PlayerJpaAdapterTest {
 
     @Test
     void countByPlayer_shouldReturnCount() {
-        when(matchRepository.countByPlayer1IdOrPlayer2Id(1L, 1L)).thenReturn(3L);
+        when(matchRepository.countFinishedRealMatchesByPlayer(1L)).thenReturn(3L);
 
         assertEquals(3L, playerJpaAdapter.countByPlayer(1L));
     }
 
     @Test
     void countWinsByPlayer_shouldReturnCount() {
-        when(matchRepository.countByWinnerId(1L)).thenReturn(2L);
+        when(matchRepository.countRealWinsByPlayer(1L)).thenReturn(2L);
 
         assertEquals(2L, playerJpaAdapter.countWinsByPlayer(1L));
     }
