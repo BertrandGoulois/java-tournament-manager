@@ -193,17 +193,39 @@ class EloServiceTest {
         match.setPlayer2(loser);
         match.setWinner(winner);
 
-        ArgumentCaptor<com.tournament.tournament_manager.domain.model.entities.EloHistory> captor =
-                ArgumentCaptor.forClass(com.tournament.tournament_manager.domain.model.entities.EloHistory.class);
+        ArgumentCaptor<EloHistory> captor =
+                ArgumentCaptor.forClass(EloHistory.class);
 
         eloService.updateElo(match);
 
         verify(saveEloHistoryPort, times(2)).saveEloHistory(captor.capture());
-        List<com.tournament.tournament_manager.domain.model.entities.EloHistory> histories = captor.getAllValues();
+        List<EloHistory> histories = captor.getAllValues();
 
         assertEquals(winner, histories.get(0).getPlayer());
         assertEquals(match, histories.get(0).getMatch());
         assertEquals(loser, histories.get(1).getPlayer());
         assertEquals(match, histories.get(1).getMatch());
+    }
+
+    @Test
+    void updateElo_shouldNotThrow_whenConcurrentExecutionAlreadyInsertedHistory() {
+        // Simule la contrainte UNIQUE(match_id, player_id) violée par une exécution
+        // concurrente ayant déjà inséré l'historique entre le check d'EloListener et cet
+        // appel — ne doit pas planter le listener, juste être rattrapé silencieusement.
+        Player winner = new Player();
+        winner.setEloRating(new EloRating(1000));
+        Player loser = new Player();
+        loser.setEloRating(new EloRating(1000));
+
+        Match match = new Match();
+        match.setId(1L);
+        match.setPlayer1(winner);
+        match.setPlayer2(loser);
+        match.setWinner(winner);
+
+        doThrow(new org.springframework.dao.DataIntegrityViolationException("duplicate key"))
+                .when(saveEloHistoryPort).saveEloHistory(any());
+
+        org.junit.jupiter.api.Assertions.assertDoesNotThrow(() -> eloService.updateElo(match));
     }
 }
