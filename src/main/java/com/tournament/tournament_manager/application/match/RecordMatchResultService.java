@@ -16,6 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 /**
  * Cas d'utilisation : enregistrement du résultat d'un match.
  */
@@ -63,6 +65,7 @@ public class RecordMatchResultService implements RecordMatchResultUseCase {
                 ? match.getPlayer1()
                 : match.getPlayer2());
         match.setStatus(MatchStatus.FINISHED);
+        match.setPlayedAt(LocalDateTime.now());
 
         Match saved = saveMatchPort.saveMatch(match);
         publishMatchEventPort.publishMatchFinished(new MatchFinishedEvent(saved.getId()));

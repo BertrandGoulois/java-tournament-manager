@@ -137,6 +137,30 @@ class RecordMatchResultServiceTest {
     }
 
     @Test
+    void recordMatchResult_shouldSetPlayedAt_whenValid() {
+        Player player1 = new Player();
+        player1.setId(1L);
+        Player player2 = new Player();
+        player2.setId(2L);
+        Match match = new Match();
+        match.setTournament(new Tournament());
+        match.setStatus(MatchStatus.PENDING);
+        match.setPlayer1(player1);
+        match.setPlayer2(player2);
+        assertNull(match.getPlayedAt());
+        when(loadMatchPort.loadMatch(1L)).thenReturn(match);
+        when(saveMatchPort.saveMatch(any())).thenReturn(match);
+
+        java.time.LocalDateTime before = java.time.LocalDateTime.now();
+        recordMatchResultService.recordMatchResult(1L, new RecordMatchResultRequest(1L));
+        java.time.LocalDateTime after = java.time.LocalDateTime.now();
+
+        assertNotNull(match.getPlayedAt());
+        assertFalse(match.getPlayedAt().isBefore(before));
+        assertFalse(match.getPlayedAt().isAfter(after));
+    }
+
+    @Test
     void recordMatchResult_shouldSetPlayer1AsWinner_whenWinnerIsPlayer1() {
         Player player1 = new Player();
         player1.setId(1L);

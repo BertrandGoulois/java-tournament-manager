@@ -29,7 +29,12 @@ public class Match {
     @Column(nullable = false)
     private MatchStatus status = MatchStatus.PENDING;
 
-    @Column(updatable = false)
+    /**
+     * Date à laquelle le résultat du match a été enregistré. Renseigné par
+     * {@code RecordMatchResultService} pour un match réellement joué, et par
+     * {@code BracketUtils.createMatch} à l'insertion pour un bye.
+     */
+    @Column
     private LocalDateTime playedAt;
 
     @Column(columnDefinition = "TEXT")
