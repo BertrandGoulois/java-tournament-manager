@@ -1,0 +1,18 @@
+-- changeset bertrand:14
+-- La purge des joueurs soft-deleted (PurgeService) supprimait physiquement TOUS les
+-- joueurs soft-deleted arrivés en fin de rétention, sans exception. Or matches.player1_id,
+-- matches.player2_id, matches.winner_id, registrations.player_id et elo_history.player_id
+-- référencent players(id) sans ON DELETE CASCADE : dès qu'un joueur soft-deleted a un
+-- historique (un seul match ou une seule inscription suffit), le DELETE natif échoue avec
+-- une violation de contrainte FK, fait échouer toute la transaction du job, et plus rien
+-- n'est jamais purgé — silencieusement cassé de façon permanente.
+--
+-- Fond du problème : un joueur avec un historique de matchs ne devrait de toute façon
+-- jamais être supprimé physiquement — ce serait supprimer une partie de l'historique
+-- d'autres joueurs (leurs propres matchs, leur ELO). La bonne réponse RGPD ici est
+-- l'anonymisation (on efface les données personnelles, on garde l'historique sportif),
+-- pas le DELETE.
+--
+-- anonymized_at distingue "déjà traité" (ne plus jamais retoucher) de "pas encore traité" :
+-- NULL = pas encore anonymisé, non-NULL = anonymisé à cette date, terminé.
+ALTER TABLE players ADD COLUMN anonymized_at TIMESTAMP;

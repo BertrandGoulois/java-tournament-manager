@@ -18,4 +18,5 @@
     <include file="classpath:db/changelog/changes/011-add-round-advancements.sql"/>
     <include file="classpath:db/changelog/changes/012-add-outbox-events.sql"/>
     <include file="classpath:db/changelog/changes/013-add-match-position.sql"/>
+    <include file="classpath:db/changelog/changes/014-add-player-anonymization.sql"/>
 </databaseChangeLog>

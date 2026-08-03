@@ -51,6 +51,15 @@ public class Player {
     @Column
     private LocalDateTime deletedAt;
 
+    /**
+     * Date d'anonymisation, si ce joueur a un historique de matchs/inscriptions et a donc
+     * été anonymisé plutôt que supprimé physiquement lors de la purge (voir
+     * {@code PlayerRepository.anonymizeWithHistory} et {@code PurgeService}).
+     * {@code null} tant qu'il n'a pas (encore) été traité.
+     */
+    @Column
+    private LocalDateTime anonymizedAt;
+
     @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Registration> registrations = new ArrayList<>();
 

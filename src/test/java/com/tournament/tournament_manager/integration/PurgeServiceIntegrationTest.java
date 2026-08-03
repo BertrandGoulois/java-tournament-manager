@@ -15,9 +15,12 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Teste la purge physique des entités soft-deleted.
@@ -120,5 +123,94 @@ class PurgeServiceIntegrationTest {
         Integer count = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM players WHERE deleted = true", Integer.class);
         assertEquals(1, count, "Rien ne doit être purgé");
+    }
+
+    @Test
+    void purge_shouldAnonymize_notPhysicallyDelete_whenSoftDeletedPlayerHasMatchHistory() {
+        // Reproduit exactement le bug de la revue : un joueur soft-deleted ayant joué un
+        // match. Avant le correctif, ce test aurait fait planter purgeDeletedEntities()
+        // avec une DataIntegrityViolationException (violation de contrainte FK sur
+        // matches.player1_id), et plus rien n'aurait jamais été purgé.
+        Tournament tournament = new Tournament();
+        tournament.setName("tournoi-purge-test-" + System.nanoTime());
+        tournament.setMaxPlayers(8);
+        tournament.setStatus(TournamentStatus.IN_PROGRESS);
+        tournament.setFormat(TournamentFormat.SINGLE_ELIMINATION);
+        tournament = tournamentRepository.save(tournament);
+
+        Player playerWithHistory = new Player();
+        playerWithHistory.setUsername("has_history_" + System.nanoTime());
+        playerWithHistory.setEmail("has_history_" + System.nanoTime() + "@mail.com");
+        playerWithHistory.setDeleted(true);
+        playerWithHistory.setDeletedAt(LocalDateTime.now().minusDays(31));
+        playerWithHistory = playerRepository.save(playerWithHistory);
+
+        Player opponent = new Player();
+        opponent.setUsername("opponent_" + System.nanoTime());
+        opponent.setEmail("opponent_" + System.nanoTime() + "@mail.com");
+        opponent = playerRepository.save(opponent);
+
+        jdbcTemplate.update(
+                "INSERT INTO matches (round, tournament_id, player1_id, player2_id, winner_id, status) "
+                        + "VALUES (?, ?, ?, ?, ?, 'FINISHED')",
+                2, tournament.getId(), playerWithHistory.getId(), opponent.getId(), playerWithHistory.getId());
+
+        Long playerId = playerWithHistory.getId();
+
+        // Ne doit lever aucune exception (c'était le bug : DataIntegrityViolationException).
+        purgeService.purgeDeletedEntities();
+
+        // Le joueur n'a pas été supprimé physiquement : la ligne existe toujours.
+        Integer stillExists = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM players WHERE id = ?", Integer.class, playerId);
+        assertEquals(1, stillExists, "Un joueur avec historique ne doit jamais être supprimé physiquement");
+
+        // Mais il a bien été anonymisé.
+        String username = jdbcTemplate.queryForObject(
+                "SELECT username FROM players WHERE id = ?", String.class, playerId);
+        assertTrue(username.startsWith("utilisateur-supprime-"), "Le username doit être anonymisé");
+
+        Timestamp anonymizedAt = jdbcTemplate.queryForObject(
+                "SELECT anonymized_at FROM players WHERE id = ?", Timestamp.class, playerId);
+        assertNotNull(anonymizedAt, "anonymized_at doit être renseigné");
+
+        // Le match référençant ce joueur est toujours intact.
+        Integer matchStillExists = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM matches WHERE player1_id = ?", Integer.class, playerId);
+        assertEquals(1, matchStillExists, "L'historique de match ne doit pas être touché");
+    }
+
+    @Test
+    void purge_shouldNotReanonymize_playerAlreadyAnonymized() {
+        Player alreadyAnonymized = new Player();
+        alreadyAnonymized.setUsername("utilisateur-supprime-deja");
+        alreadyAnonymized.setEmail("deja@anonymise.invalid");
+        alreadyAnonymized.setDeleted(true);
+        alreadyAnonymized.setDeletedAt(LocalDateTime.now().minusDays(31));
+        alreadyAnonymized.setAnonymizedAt(LocalDateTime.now().minusDays(20));
+        Player saved = playerRepository.save(alreadyAnonymized);
+
+        // Lui donner un historique pour qu'il resterait éligible à l'anonymisation
+        // s'il n'était pas déjà marqué comme traité.
+        Tournament tournament = new Tournament();
+        tournament.setName("tournoi-purge-test2-" + System.nanoTime());
+        tournament.setMaxPlayers(8);
+        tournament.setStatus(TournamentStatus.IN_PROGRESS);
+        tournament.setFormat(TournamentFormat.SINGLE_ELIMINATION);
+        tournament = tournamentRepository.save(tournament);
+        jdbcTemplate.update(
+                "INSERT INTO matches (round, tournament_id, player1_id, status) VALUES (?, ?, ?, 'FINISHED')",
+                2, tournament.getId(), saved.getId());
+
+        Timestamp beforeSecondRun = jdbcTemplate.queryForObject(
+                "SELECT anonymized_at FROM players WHERE id = ?", Timestamp.class, saved.getId());
+
+        purgeService.purgeDeletedEntities();
+
+        Timestamp afterSecondRun = jdbcTemplate.queryForObject(
+                "SELECT anonymized_at FROM players WHERE id = ?", Timestamp.class, saved.getId());
+
+        assertEquals(beforeSecondRun, afterSecondRun,
+                "Un joueur déjà anonymisé ne doit pas être retraité");
     }
 }

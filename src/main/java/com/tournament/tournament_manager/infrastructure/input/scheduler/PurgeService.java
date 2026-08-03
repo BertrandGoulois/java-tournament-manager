@@ -17,11 +17,19 @@ import java.time.LocalDateTime;
  * des événements outbox déjà publiés.
  *
  * <p>Les joueurs et tournois supprimés (soft delete) sont conservés en base
- * pendant une durée configurable ({@code purge.retention-days}), puis
- * supprimés physiquement par ce job planifié. Les refresh tokens expirés et les
- * événements outbox publiés sont purgés à chaque exécution, indépendamment de
- * {@code purge.retention-days} (une fois leur rôle rempli, ils n'ont plus aucun usage,
- * contrairement aux entités soft-deleted qu'on choisit de garder un moment par sécurité).
+ * pendant une durée configurable ({@code purge.retention-days}), puis traités
+ * par ce job planifié. Pour les joueurs : ceux qui ont un historique (match ou
+ * inscription) sont <b>anonymisés</b>, jamais supprimés physiquement — {@code matches},
+ * {@code registrations} et {@code elo_history} n'ont pas de {@code ON DELETE CASCADE} vers
+ * {@code players}, et supprimer un joueur ayant joué reviendrait à amputer l'historique
+ * d'autres joueurs. Seuls les joueurs soft-deleted sans aucun historique sont supprimés
+ * physiquement. Les tournois soft-deleted, eux, sont toujours supprimés physiquement
+ * (voir {@code TournamentRepository.purgeDeletedBefore}).
+ *
+ * <p>Les refresh tokens expirés et les événements outbox publiés sont purgés à chaque
+ * exécution, indépendamment de {@code purge.retention-days} (une fois leur rôle rempli,
+ * ils n'ont plus aucun usage, contrairement aux entités soft-deleted qu'on choisit de
+ * garder un moment par sécurité).
  *
  * <p>Le job tourne tous les jours à 2h du matin. La durée de rétention
  * est configurable via {@code purge.retention-days} (défaut : 30 jours).
@@ -49,8 +57,9 @@ public class PurgeService {
     }
 
     /**
-     * Purge les entités soft-deleted depuis plus de {@code purge.retention-days} jours,
-     * les refresh tokens expirés, et les événements outbox déjà publiés.
+     * Traite les entités soft-deleted depuis plus de {@code purge.retention-days} jours
+     * (anonymise les joueurs avec historique, supprime physiquement les autres et les
+     * tournois), purge les refresh tokens expirés, et les événements outbox déjà publiés.
      * Exécuté automatiquement tous les jours à 2h du matin.
      */
     @Scheduled(cron = "0 0 2 * * *")
@@ -59,13 +68,15 @@ public class PurgeService {
         LocalDateTime retentionLimit = LocalDateTime.now().minusDays(retentionDays);
         log.info("Démarrage de la purge des entités supprimées avant le {}", retentionLimit);
 
-        int purgedPlayers = playerRepository.purgeDeletedBefore(retentionLimit);
+        int anonymizedPlayers = playerRepository.anonymizeWithHistory(retentionLimit);
+        int purgedPlayers = playerRepository.purgeDeletedWithoutHistory(retentionLimit);
         int purgedTournaments = tournamentRepository.purgeDeletedBefore(retentionLimit);
         int purgedRefreshTokens = refreshTokenRepository.deleteExpiredBefore(LocalDateTime.now());
         int purgedOutboxEvents = outboxEventRepository.deletePublishedBefore(retentionLimit);
 
-        log.info("Purge terminée : {} joueur(s), {} tournoi(s), {} refresh token(s) expiré(s) "
-                + "et {} événement(s) outbox publié(s) supprimés physiquement",
-                purgedPlayers, purgedTournaments, purgedRefreshTokens, purgedOutboxEvents);
+        log.info("Purge terminée : {} joueur(s) anonymisé(s) (historique conservé), {} joueur(s) "
+                + "supprimé(s) physiquement (sans historique), {} tournoi(s), {} refresh token(s) "
+                + "expiré(s) et {} événement(s) outbox publié(s) supprimés",
+                anonymizedPlayers, purgedPlayers, purgedTournaments, purgedRefreshTokens, purgedOutboxEvents);
     }
 }
