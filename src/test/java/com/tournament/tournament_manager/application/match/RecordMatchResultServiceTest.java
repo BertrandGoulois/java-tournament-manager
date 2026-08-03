@@ -84,7 +84,7 @@ class RecordMatchResultServiceTest {
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         when(saveMatchPort.saveMatch(any())).thenReturn(match);
         recordMatchResultService.recordMatchResult(1L, new RecordMatchResultRequest(1L));
-        verify(publishMatchEventPort, times(1)).publishMatchFinished(any());
+        verify(publishMatchEventPort, times(1)).publishMatchFinished(any(), any());
     }
 
     @Test

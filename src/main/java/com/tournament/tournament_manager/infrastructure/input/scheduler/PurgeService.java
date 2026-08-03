@@ -1,5 +1,6 @@
 package com.tournament.tournament_manager.infrastructure.input.scheduler;
 
+import com.tournament.tournament_manager.infrastructure.output.persistence.repository.OutboxEventRepository;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.PlayerRepository;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.RefreshTokenRepository;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.TournamentRepository;
@@ -12,14 +13,15 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 
 /**
- * Service de purge périodique des entités soft-deleted et des refresh tokens expirés.
+ * Service de purge périodique des entités soft-deleted, des refresh tokens expirés, et
+ * des événements outbox déjà publiés.
  *
  * <p>Les joueurs et tournois supprimés (soft delete) sont conservés en base
  * pendant une durée configurable ({@code purge.retention-days}), puis
- * supprimés physiquement par ce job planifié. Les refresh tokens expirés
- * sont purgés à chaque exécution, indépendamment de {@code purge.retention-days}
- * (une fois expiré, un refresh token n'a plus aucun usage, contrairement aux
- * entités soft-deleted qu'on choisit de garder un moment par sécurité).
+ * supprimés physiquement par ce job planifié. Les refresh tokens expirés et les
+ * événements outbox publiés sont purgés à chaque exécution, indépendamment de
+ * {@code purge.retention-days} (une fois leur rôle rempli, ils n'ont plus aucun usage,
+ * contrairement aux entités soft-deleted qu'on choisit de garder un moment par sécurité).
  *
  * <p>Le job tourne tous les jours à 2h du matin. La durée de rétention
  * est configurable via {@code purge.retention-days} (défaut : 30 jours).
@@ -31,21 +33,25 @@ public class PurgeService {
     private final PlayerRepository playerRepository;
     private final TournamentRepository tournamentRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final OutboxEventRepository outboxEventRepository;
 
     @Value("${purge.retention-days:30}")
     private int retentionDays;
 
     public PurgeService(PlayerRepository playerRepository,
                         TournamentRepository tournamentRepository,
-                        RefreshTokenRepository refreshTokenRepository) {
+                        RefreshTokenRepository refreshTokenRepository,
+                        OutboxEventRepository outboxEventRepository) {
         this.playerRepository = playerRepository;
         this.tournamentRepository = tournamentRepository;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.outboxEventRepository = outboxEventRepository;
     }
 
     /**
      * Purge les entités soft-deleted depuis plus de {@code purge.retention-days} jours,
-     * ainsi que les refresh tokens expirés. Exécuté automatiquement tous les jours à 2h du matin.
+     * les refresh tokens expirés, et les événements outbox déjà publiés.
+     * Exécuté automatiquement tous les jours à 2h du matin.
      */
     @Scheduled(cron = "0 0 2 * * *")
     @Transactional
@@ -56,8 +62,10 @@ public class PurgeService {
         int purgedPlayers = playerRepository.purgeDeletedBefore(retentionLimit);
         int purgedTournaments = tournamentRepository.purgeDeletedBefore(retentionLimit);
         int purgedRefreshTokens = refreshTokenRepository.deleteExpiredBefore(LocalDateTime.now());
+        int purgedOutboxEvents = outboxEventRepository.deletePublishedBefore(retentionLimit);
 
-        log.info("Purge terminée : {} joueur(s), {} tournoi(s) et {} refresh token(s) expiré(s) supprimés physiquement",
-                purgedPlayers, purgedTournaments, purgedRefreshTokens);
+        log.info("Purge terminée : {} joueur(s), {} tournoi(s), {} refresh token(s) expiré(s) "
+                + "et {} événement(s) outbox publié(s) supprimés physiquement",
+                purgedPlayers, purgedTournaments, purgedRefreshTokens, purgedOutboxEvents);
     }
 }

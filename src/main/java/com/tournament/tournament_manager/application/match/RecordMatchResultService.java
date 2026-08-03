@@ -68,7 +68,8 @@ public class RecordMatchResultService implements RecordMatchResultUseCase {
         match.setPlayedAt(LocalDateTime.now());
 
         Match saved = saveMatchPort.saveMatch(match);
-        publishMatchEventPort.publishMatchFinished(new MatchFinishedEvent(saved.getId()));
+        publishMatchEventPort.publishMatchFinished(
+                new MatchFinishedEvent(saved.getId()), saved.getTournament().getId());
 
         log.info("Résultat enregistré [matchId={}, tournamentId={}, winner='{}']",
                 saved.getId(),
