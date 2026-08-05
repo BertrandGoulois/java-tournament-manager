@@ -7,6 +7,7 @@ import com.tournament.tournament_manager.exception.domain.OpenAiUnavailableExcep
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
  *   <li>{@link InvalidException} → {@code 400 Bad Request}</li>
  *   <li>{@link MethodArgumentNotValidException} → {@code 400 Bad Request}</li>
  *   <li>{@link OpenAiUnavailableException} → {@code 503 Service Unavailable}</li>
+ *   <li>{@link ObjectOptimisticLockingFailureException} → {@code 409 Conflict}</li>
  *   <li>{@link Exception} → {@code 500 Internal Server Error}</li>
  * </ul>
  */
@@ -67,6 +69,24 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.SERVICE_UNAVAILABLE)
                 .body(ErrorResponse.of(503, "Service Unavailable", "Le service de commentaire IA est temporairement indisponible"));
+    }
+
+    /**
+     * Levée par Hibernate quand {@code @Version} détecte qu'une entité a été modifiée par
+     * quelqu'un d'autre entre le chargement et l'écriture (deux requêtes concurrentes sur le
+     * même joueur/tournoi/match). Sans ce handler, elle tombait dans {@link #handleGeneric} et
+     * ressortait en 500 générique — un vrai conflit de concurrence, détecté correctement par
+     * Hibernate, présenté à l'appelant comme un bug serveur plutôt que comme "réessaie, quelqu'un
+     * d'autre est passé avant toi".
+     */
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<ErrorResponse> handleOptimisticLocking(ObjectOptimisticLockingFailureException ex) {
+        log.warn("Conflit de modification concurrente détecté : {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ErrorResponse.of(409, "Conflict",
+                        "Cette ressource a été modifiée entre-temps par quelqu'un d'autre. "
+                                + "Recharge les données à jour et réessaie."));
     }
 
     @ExceptionHandler(BadCredentialsException.class)

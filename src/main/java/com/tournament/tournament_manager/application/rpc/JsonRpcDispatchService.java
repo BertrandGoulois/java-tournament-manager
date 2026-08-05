@@ -8,6 +8,7 @@ import com.tournament.tournament_manager.exception.domain.AlreadyExistsException
 import com.tournament.tournament_manager.exception.domain.InvalidException;
 import com.tournament.tournament_manager.exception.domain.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -69,6 +70,17 @@ public class JsonRpcDispatchService {
         } catch (NotFoundException | AlreadyExistsException | InvalidException e) {
             return JsonRpcResponse.failure(
                     new JsonRpcError(JsonRpcError.INTERNAL_ERROR, "Request failed", e.getMessage()),
+                    request.id());
+        } catch (ObjectOptimisticLockingFailureException e) {
+            // Même traitement que côté REST (GlobalExceptionHandler) : un conflit de
+            // modification concurrente est un cas métier attendu, avec un message clair
+            // pour l'appelant — pas une exception technique à masquer.
+            log.warn("Conflit de modification concurrente sur la méthode JSON-RPC '{}' : {}",
+                    request.method(), e.getMessage());
+            return JsonRpcResponse.failure(
+                    new JsonRpcError(JsonRpcError.INTERNAL_ERROR, "Conflict",
+                            "Cette ressource a été modifiée entre-temps par quelqu'un d'autre. "
+                                    + "Recharge les données à jour et réessaie."),
                     request.id());
         } catch (Exception e) {
             log.error("Erreur inattendue lors du traitement de la méthode JSON-RPC '{}' : {}",

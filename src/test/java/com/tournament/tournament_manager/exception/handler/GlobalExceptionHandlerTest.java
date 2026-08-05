@@ -7,6 +7,7 @@ import com.tournament.tournament_manager.exception.domain.OpenAiUnavailableExcep
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
@@ -61,6 +62,16 @@ class GlobalExceptionHandlerTest {
                 new OpenAiUnavailableException("OpenAI down", new RuntimeException()));
         assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode());
         assertEquals(503, response.getBody().status());
+    }
+
+    @Test
+    void handleOptimisticLocking_shouldReturn409() {
+        ResponseEntity<ErrorResponse> response = handler.handleOptimisticLocking(
+                new ObjectOptimisticLockingFailureException(
+                        com.tournament.tournament_manager.domain.model.entities.Player.class, 1L));
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+        assertEquals(409, response.getBody().status());
+        assertNotNull(response.getBody().message());
     }
 
     @Test

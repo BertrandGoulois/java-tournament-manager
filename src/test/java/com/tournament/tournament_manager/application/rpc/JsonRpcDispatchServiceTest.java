@@ -73,8 +73,22 @@ class JsonRpcDispatchServiceTest {
             }
         };
 
+        JsonRpcMethodHandler optimisticLockingHandler = new JsonRpcMethodHandler() {
+            @Override
+            public String methodName() {
+                return "test.conflict";
+            }
+
+            @Override
+            public Object handle(Object params) {
+                throw new org.springframework.orm.ObjectOptimisticLockingFailureException(
+                        com.tournament.tournament_manager.domain.model.entities.Player.class, 1L);
+            }
+        };
+
         dispatchService = new JsonRpcDispatchService(
-                List.of(handler, failingHandler, invalidParamsHandler, businessFailingHandler));
+                List.of(handler, failingHandler, invalidParamsHandler, businessFailingHandler,
+                        optimisticLockingHandler));
     }
 
     @Test
@@ -155,5 +169,21 @@ class JsonRpcDispatchServiceTest {
         JsonRpcResponse response = dispatchService.dispatch(request);
 
         assertEquals("my-id-123", response.id());
+    }
+
+    @Test
+    void dispatch_shouldReturnClearConflictMessage_whenOptimisticLockingFails() throws Exception {
+        JsonNode params = objectMapper.readTree("{}");
+        JsonRpcRequest request = new JsonRpcRequest("2.0", "test.conflict", params, "6");
+
+        JsonRpcResponse response = dispatchService.dispatch(request);
+
+        assertNull(response.result());
+        assertNotNull(response.error());
+        // Même politique que côté REST (point 20) : un conflit de verrouillage optimiste
+        // n'est pas une exception technique à masquer, mais un cas métier attendu avec un
+        // message exploitable pour l'appelant — pas "Une erreur inattendue s'est produite".
+        assertNotEquals("Une erreur inattendue s'est produite", response.error().data());
+        assertNotNull(response.error().data());
     }
 }
