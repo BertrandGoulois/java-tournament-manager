@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.Optional;
 
 @Repository
@@ -43,7 +43,7 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
                 OR EXISTS (SELECT 1 FROM registrations r WHERE r.player_id = players.id)
               )
             """, nativeQuery = true)
-    int anonymizeWithHistory(LocalDateTime retentionLimit);
+    int anonymizeWithHistory(Instant retentionLimit);
 
     /**
      * Supprime physiquement les joueurs soft-deleted depuis plus de {@code retentionLimit}
@@ -67,5 +67,5 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
                               WHERE m.player1_id = players.id OR m.player2_id = players.id OR m.winner_id = players.id)
               AND NOT EXISTS (SELECT 1 FROM registrations r WHERE r.player_id = players.id)
             """, nativeQuery = true)
-    int purgeDeletedWithoutHistory(LocalDateTime retentionLimit);
+    int purgeDeletedWithoutHistory(Instant retentionLimit);
 }

@@ -66,12 +66,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         } catch (io.jsonwebtoken.ExpiredJwtException e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
-            response.getWriter().write("{\"status\":401,\"error\":\"Unauthorized\",\"message\":\"Token expiré, veuillez vous reconnecter\",\"timestamp\":\"" + java.time.LocalDateTime.now() + "\"}");
+            response.getWriter().write("{\"status\":401,\"error\":\"Unauthorized\",\"message\":\"Token expiré, veuillez vous reconnecter\",\"timestamp\":\"" + java.time.Instant.now() + "\"}");
             return;
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.setContentType("application/json");
-            response.getWriter().write("{\"status\":401,\"error\":\"Unauthorized\",\"message\":\"Token invalide\",\"timestamp\":\"" + java.time.LocalDateTime.now() + "\"}");
+            response.getWriter().write("{\"status\":401,\"error\":\"Unauthorized\",\"message\":\"Token invalide\",\"timestamp\":\"" + java.time.Instant.now() + "\"}");
             return;
         }
         filterChain.doFilter(request, response);

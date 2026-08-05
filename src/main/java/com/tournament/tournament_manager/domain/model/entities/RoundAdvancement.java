@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * Marqueur "ce round a déjà été créé pour ce tournoi", utilisé uniquement comme verrou
@@ -28,5 +28,5 @@ public class RoundAdvancement {
     private int round;
 
     @Column(nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private Instant createdAt = Instant.now();
 }

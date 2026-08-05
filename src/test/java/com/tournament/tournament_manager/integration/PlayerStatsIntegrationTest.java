@@ -17,7 +17,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -75,7 +75,7 @@ class PlayerStatsIntegrationTest {
         bye.setPlayer2(null);
         bye.setWinner(player);
         bye.setStatus(MatchStatus.FINISHED);
-        bye.setPlayedAt(LocalDateTime.now());
+        bye.setPlayedAt(Instant.now());
         matchRepository.save(bye);
 
         // Un match à venir au second tour : PENDING, deux joueurs réels, mais pas encore joué.
@@ -112,7 +112,7 @@ class PlayerStatsIntegrationTest {
         won.setPlayer2(winner1);
         won.setWinner(player);
         won.setStatus(MatchStatus.FINISHED);
-        won.setPlayedAt(LocalDateTime.now());
+        won.setPlayedAt(Instant.now());
         matchRepository.save(won);
 
         // 1 vraie défaite
@@ -124,7 +124,7 @@ class PlayerStatsIntegrationTest {
         lost.setPlayer2(opponent2);
         lost.setWinner(opponent2);
         lost.setStatus(MatchStatus.FINISHED);
-        lost.setPlayedAt(LocalDateTime.now());
+        lost.setPlayedAt(Instant.now());
         matchRepository.save(lost);
 
         // 1 bye (ne doit pas compter) + 1 match futur PENDING (ne doit pas compter)
@@ -136,7 +136,7 @@ class PlayerStatsIntegrationTest {
         bye.setPlayer2(null);
         bye.setWinner(player);
         bye.setStatus(MatchStatus.FINISHED);
-        bye.setPlayedAt(LocalDateTime.now());
+        bye.setPlayedAt(Instant.now());
         matchRepository.save(bye);
 
         assertEquals(2, countMatchesByPlayerPort.countByPlayer(player.getId()),

@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.HexFormat;
 import java.util.UUID;
 
@@ -105,7 +105,7 @@ public class RefreshTokenService implements RefreshTokenUseCase {
             log.warn("Tentative de réutilisation d'un refresh token révoqué [username={}]", token.getUsername());
             throw new InvalidException("Refresh token révoqué");
         }
-        if (token.getExpiryDate().isBefore(LocalDateTime.now())) {
+        if (token.getExpiryDate().isBefore(Instant.now())) {
             throw new InvalidException("Refresh token expiré");
         }
         if (!userExistsPort.existsByUsername(token.getUsername())) {
@@ -141,7 +141,7 @@ public class RefreshTokenService implements RefreshTokenUseCase {
         RefreshToken refreshToken = new RefreshToken();
         refreshToken.setToken(hash(rawToken));
         refreshToken.setUsername(username);
-        refreshToken.setExpiryDate(LocalDateTime.now().plusSeconds(refreshExpiration / 1000));
+        refreshToken.setExpiryDate(Instant.now().plusSeconds(refreshExpiration / 1000));
 
         saveRefreshTokenPort.saveRefreshToken(refreshToken);
         return rawToken;

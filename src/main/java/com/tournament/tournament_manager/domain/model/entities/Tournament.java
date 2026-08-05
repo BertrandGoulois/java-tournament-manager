@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.SQLRestriction;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,7 +47,7 @@ public class Tournament {
     private int maxPlayers;
 
     @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @Version
     @Column(nullable = false)
@@ -57,7 +57,7 @@ public class Tournament {
     private boolean deleted = false;
 
     @Column
-    private LocalDateTime deletedAt;
+    private Instant deletedAt;
 
     @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Registration> registrations = new ArrayList<>();
@@ -67,7 +67,7 @@ public class Tournament {
 
     @PrePersist
     protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = Instant.now();
     }
 }
 

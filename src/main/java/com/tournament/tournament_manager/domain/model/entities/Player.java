@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.SQLRestriction;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,7 +39,7 @@ public class Player {
     private EloRating eloRating = EloRating.defaultRating();
 
     @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @Version
     @Column(nullable = false)
@@ -49,7 +49,7 @@ public class Player {
     private boolean deleted = false;
 
     @Column
-    private LocalDateTime deletedAt;
+    private Instant deletedAt;
 
     /**
      * Date d'anonymisation, si ce joueur a un historique de matchs/inscriptions et a donc
@@ -58,7 +58,7 @@ public class Player {
      * {@code null} tant qu'il n'a pas (encore) été traité.
      */
     @Column
-    private LocalDateTime anonymizedAt;
+    private Instant anonymizedAt;
 
     @OneToMany(mappedBy = "player", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Registration> registrations = new ArrayList<>();
@@ -68,6 +68,6 @@ public class Player {
 
     @PrePersist
     protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = Instant.now();
     }
 }

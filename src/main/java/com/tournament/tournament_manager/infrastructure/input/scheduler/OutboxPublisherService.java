@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import tools.jackson.databind.ObjectMapper;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -62,7 +62,7 @@ public class OutboxPublisherService {
             Object payload = deserializePayload(event);
             kafkaTemplate.send(event.getTopic(), event.getPartitionKey(), payload)
                     .get(SEND_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-            event.setPublishedAt(LocalDateTime.now());
+            event.setPublishedAt(Instant.now());
         } catch (Exception e) {
             // Événement laissé non publié : retenté au prochain cycle (500ms). Le verrou
             // FOR UPDATE SKIP LOCKED garantit qu'aucune autre instance ne le publie en

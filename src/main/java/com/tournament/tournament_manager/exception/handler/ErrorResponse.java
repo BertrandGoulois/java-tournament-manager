@@ -2,7 +2,7 @@ package com.tournament.tournament_manager.exception.handler;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * Corps de réponse standard pour toutes les erreurs de l'API.
@@ -16,9 +16,9 @@ public record ErrorResponse(
         @Schema(example = "404") int status,
         String error,
         String message,
-        LocalDateTime timestamp
+        Instant timestamp
 ) {
     public static ErrorResponse of(int status, String error, String message) {
-        return new ErrorResponse(status, error, message, LocalDateTime.now());
+        return new ErrorResponse(status, error, message, Instant.now());
     }
 }

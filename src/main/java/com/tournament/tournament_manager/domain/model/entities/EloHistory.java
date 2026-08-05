@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(name = "elo_history")
@@ -25,7 +25,7 @@ public class EloHistory {
     private int eloAfter;
 
     @Column(nullable=false, updatable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @ManyToOne()
     @JoinColumn(name = "player_id", nullable = false)
@@ -37,6 +37,6 @@ public class EloHistory {
 
     @PrePersist
     protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = Instant.now();
     }
 }

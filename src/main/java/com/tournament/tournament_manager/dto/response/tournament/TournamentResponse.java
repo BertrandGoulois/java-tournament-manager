@@ -4,7 +4,7 @@ import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
 import io.swagger.v3.oas.annotations.media.Schema;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public record TournamentResponse(
         @Schema(example = "1") Long id,
@@ -14,5 +14,5 @@ public record TournamentResponse(
         @Schema(example = "8") int maxPlayers,
         @Schema(example = "2") Integer numberOfGroups,
         @Schema(example = "2") Integer qualifiersPerGroup,
-        LocalDateTime createdAt
+        Instant createdAt
 ) {}

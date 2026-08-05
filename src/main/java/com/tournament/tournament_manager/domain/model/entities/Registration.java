@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 
 @Entity
@@ -22,7 +22,7 @@ public class Registration {
     private Long id;
 
     @Column(nullable = false, updatable = false)
-    private LocalDateTime registeredAt;
+    private Instant registeredAt;
 
     @ManyToOne()
     @JoinColumn(name = "tournament_id", nullable = false)
@@ -34,6 +34,6 @@ public class Registration {
 
     @PrePersist
     protected void onCreate() {
-        this.registeredAt = LocalDateTime.now();
+        this.registeredAt = Instant.now();
     }
 }

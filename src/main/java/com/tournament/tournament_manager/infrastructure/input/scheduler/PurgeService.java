@@ -10,7 +10,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.Duration;
+import java.time.Instant;
 
 /**
  * Service de purge périodique des entités soft-deleted, des refresh tokens expirés, et
@@ -65,13 +66,13 @@ public class PurgeService {
     @Scheduled(cron = "0 0 2 * * *")
     @Transactional
     public void purgeDeletedEntities() {
-        LocalDateTime retentionLimit = LocalDateTime.now().minusDays(retentionDays);
+        Instant retentionLimit = Instant.now().minus(Duration.ofDays(retentionDays));
         log.info("Démarrage de la purge des entités supprimées avant le {}", retentionLimit);
 
         int anonymizedPlayers = playerRepository.anonymizeWithHistory(retentionLimit);
         int purgedPlayers = playerRepository.purgeDeletedWithoutHistory(retentionLimit);
         int purgedTournaments = tournamentRepository.purgeDeletedBefore(retentionLimit);
-        int purgedRefreshTokens = refreshTokenRepository.deleteExpiredBefore(LocalDateTime.now());
+        int purgedRefreshTokens = refreshTokenRepository.deleteExpiredBefore(Instant.now());
         int purgedOutboxEvents = outboxEventRepository.deletePublishedBefore(retentionLimit);
 
         log.info("Purge terminée : {} joueur(s) anonymisé(s) (historique conservé), {} joueur(s) "

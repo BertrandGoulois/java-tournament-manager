@@ -22,8 +22,8 @@ public class GetMatchCommentaryService implements GetMatchCommentaryUseCase {
 
     /**
      * Retourne le commentaire d'un match terminé.
-     * Retourne un message d'attente si le commentaire n'est pas encore généré.
-     * * En cas d'indisponibilité du service, retourne un message de fallback.
+     * Retourne un message d'attente si le commentaire n'est pas encore généré
+     * (génération asynchrone via {@code CommentaryListener}, voir sa Javadoc).
      *
      * @param matchId identifiant du match
      * @return le commentaire du match
@@ -37,16 +37,5 @@ public class GetMatchCommentaryService implements GetMatchCommentaryUseCase {
                 : "Commentaire en cours de génération...";
 
         return new MatchCommentaryResponse(matchId, commentary);
-    }
-
-    /**
-     * Fallback retourné lorsque le circuit breaker est ouvert.
-     *
-     * @param matchId identifiant du match
-     * @param ex      l'exception déclenchante
-     * @return un message d'indisponibilité
-     */
-    public MatchCommentaryResponse fallbackCommentary(Long matchId, Exception ex) {
-        return new MatchCommentaryResponse(matchId, "Commentaire temporairement indisponible.");
     }
 }

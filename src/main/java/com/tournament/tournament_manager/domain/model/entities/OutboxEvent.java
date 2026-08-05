@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * Ligne de l'outbox transactionnel : un événement écrit dans la même transaction que le
@@ -47,7 +47,7 @@ public class OutboxEvent {
     private String payload;
 
     @Column(nullable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private Instant createdAt = Instant.now();
 
-    private LocalDateTime publishedAt;
+    private Instant publishedAt;
 }

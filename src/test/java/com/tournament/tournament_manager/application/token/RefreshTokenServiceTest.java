@@ -16,7 +16,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.security.MessageDigest;
-import java.time.LocalDateTime;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.HexFormat;
 import java.util.Optional;
 
@@ -86,7 +87,7 @@ class RefreshTokenServiceTest {
         stored.setToken(sha256Hex(rawToken));
         stored.setUsername("admin");
         stored.setRevoked(false);
-        stored.setExpiryDate(LocalDateTime.now().plusDays(1));
+        stored.setExpiryDate(Instant.now().plus(Duration.ofDays(1)));
 
         when(loadRefreshTokenPort.loadByToken(sha256Hex(rawToken))).thenReturn(Optional.of(stored));
         when(userExistsPort.existsByUsername("admin")).thenReturn(true);
@@ -116,7 +117,7 @@ class RefreshTokenServiceTest {
         RefreshToken token = new RefreshToken();
         token.setUsername("admin");
         token.setRevoked(true);
-        token.setExpiryDate(LocalDateTime.now().plusDays(1));
+        token.setExpiryDate(Instant.now().plus(Duration.ofDays(1)));
 
         when(loadRefreshTokenPort.loadByToken(anyString())).thenReturn(Optional.of(token));
 
@@ -130,7 +131,7 @@ class RefreshTokenServiceTest {
         RefreshToken token = new RefreshToken();
         token.setUsername("admin");
         token.setRevoked(false);
-        token.setExpiryDate(LocalDateTime.now().minusDays(1));
+        token.setExpiryDate(Instant.now().minus(Duration.ofDays(1)));
 
         when(loadRefreshTokenPort.loadByToken(anyString())).thenReturn(Optional.of(token));
 
@@ -142,7 +143,7 @@ class RefreshTokenServiceTest {
         RefreshToken token = new RefreshToken();
         token.setUsername("deleted-user");
         token.setRevoked(false);
-        token.setExpiryDate(LocalDateTime.now().plusDays(1));
+        token.setExpiryDate(Instant.now().plus(Duration.ofDays(1)));
 
         when(loadRefreshTokenPort.loadByToken(anyString())).thenReturn(Optional.of(token));
         when(userExistsPort.existsByUsername("deleted-user")).thenReturn(false);

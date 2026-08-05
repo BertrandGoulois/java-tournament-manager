@@ -32,7 +32,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -73,7 +73,7 @@ class PlayerControllerTest {
     private final ObjectMapper objectMapper = JsonMapper.builder().build();
 
     private PlayerResponse samplePlayer() {
-        return new PlayerResponse(1L, "player1", "player1@mail.com", 1000, LocalDateTime.now());
+        return new PlayerResponse(1L, "player1", "player1@mail.com", 1000, Instant.now());
     }
 
     @BeforeEach

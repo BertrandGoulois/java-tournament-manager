@@ -16,7 +16,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
+import java.time.Duration;
+import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -53,7 +54,7 @@ class PurgeServiceIntegrationTest {
         oldDeleted.setUsername("old_deleted");
         oldDeleted.setEmail("old_deleted@mail.com");
         oldDeleted.setDeleted(true);
-        oldDeleted.setDeletedAt(LocalDateTime.now().minusDays(31));
+        oldDeleted.setDeletedAt(Instant.now().minus(Duration.ofDays(31)));
         playerRepository.save(oldDeleted);
 
         // Joueur supprimé il y a 1 jour -> doit être conservé
@@ -61,7 +62,7 @@ class PurgeServiceIntegrationTest {
         recentDeleted.setUsername("recent_deleted");
         recentDeleted.setEmail("recent_deleted@mail.com");
         recentDeleted.setDeleted(true);
-        recentDeleted.setDeletedAt(LocalDateTime.now().minusDays(1));
+        recentDeleted.setDeletedAt(Instant.now().minus(Duration.ofDays(1)));
         playerRepository.save(recentDeleted);
 
         // Joueur non supprimé -> doit être conservé
@@ -90,7 +91,7 @@ class PurgeServiceIntegrationTest {
         oldDeleted.setStatus(TournamentStatus.OPEN);
         oldDeleted.setFormat(TournamentFormat.SINGLE_ELIMINATION);
         oldDeleted.setDeleted(true);
-        oldDeleted.setDeletedAt(LocalDateTime.now().minusDays(31));
+        oldDeleted.setDeletedAt(Instant.now().minus(Duration.ofDays(31)));
         tournamentRepository.save(oldDeleted);
 
         Tournament recentDeleted = new Tournament();
@@ -99,7 +100,7 @@ class PurgeServiceIntegrationTest {
         recentDeleted.setStatus(TournamentStatus.OPEN);
         recentDeleted.setFormat(TournamentFormat.SINGLE_ELIMINATION);
         recentDeleted.setDeleted(true);
-        recentDeleted.setDeletedAt(LocalDateTime.now().minusDays(1));
+        recentDeleted.setDeletedAt(Instant.now().minus(Duration.ofDays(1)));
         tournamentRepository.save(recentDeleted);
 
         purgeService.purgeDeletedEntities();
@@ -115,7 +116,7 @@ class PurgeServiceIntegrationTest {
         recentDeleted.setUsername("recent");
         recentDeleted.setEmail("recent@mail.com");
         recentDeleted.setDeleted(true);
-        recentDeleted.setDeletedAt(LocalDateTime.now().minusDays(5));
+        recentDeleted.setDeletedAt(Instant.now().minus(Duration.ofDays(5)));
         playerRepository.save(recentDeleted);
 
         purgeService.purgeDeletedEntities();
@@ -142,7 +143,7 @@ class PurgeServiceIntegrationTest {
         playerWithHistory.setUsername("has_history_" + System.nanoTime());
         playerWithHistory.setEmail("has_history_" + System.nanoTime() + "@mail.com");
         playerWithHistory.setDeleted(true);
-        playerWithHistory.setDeletedAt(LocalDateTime.now().minusDays(31));
+        playerWithHistory.setDeletedAt(Instant.now().minus(Duration.ofDays(31)));
         playerWithHistory = playerRepository.save(playerWithHistory);
 
         Player opponent = new Player();
@@ -186,8 +187,8 @@ class PurgeServiceIntegrationTest {
         alreadyAnonymized.setUsername("utilisateur-supprime-deja");
         alreadyAnonymized.setEmail("deja@anonymise.invalid");
         alreadyAnonymized.setDeleted(true);
-        alreadyAnonymized.setDeletedAt(LocalDateTime.now().minusDays(31));
-        alreadyAnonymized.setAnonymizedAt(LocalDateTime.now().minusDays(20));
+        alreadyAnonymized.setDeletedAt(Instant.now().minus(Duration.ofDays(31)));
+        alreadyAnonymized.setAnonymizedAt(Instant.now().minus(Duration.ofDays(20)));
         Player saved = playerRepository.save(alreadyAnonymized);
 
         // Lui donner un historique pour qu'il resterait éligible à l'anonymisation

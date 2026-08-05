@@ -6,7 +6,7 @@ import com.tournament.tournament_manager.domain.model.entities.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 import com.tournament.tournament_manager.domain.port.out.match.SaveMatchPort;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -34,7 +34,7 @@ public class BracketUtils {
         if (player2 == null) {
             match.setStatus(MatchStatus.FINISHED);
             match.setWinner(player1);
-            match.setPlayedAt(LocalDateTime.now());
+            match.setPlayedAt(Instant.now());
         } else {
             match.setStatus(MatchStatus.PENDING);
         }

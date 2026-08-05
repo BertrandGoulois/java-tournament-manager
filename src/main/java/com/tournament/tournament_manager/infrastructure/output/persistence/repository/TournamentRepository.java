@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Repository
 public interface TournamentRepository extends JpaRepository<Tournament, Long> {
@@ -21,5 +21,5 @@ public interface TournamentRepository extends JpaRepository<Tournament, Long> {
      */
     @Modifying
     @Query(value = "DELETE FROM tournaments WHERE deleted = true AND deleted_at < :retentionLimit", nativeQuery = true)
-    int purgeDeletedBefore(LocalDateTime retentionLimit);
+    int purgeDeletedBefore(Instant retentionLimit);
 }

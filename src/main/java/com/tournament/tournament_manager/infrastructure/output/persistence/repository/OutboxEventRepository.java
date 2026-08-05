@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 
 @Repository
@@ -38,5 +38,5 @@ public interface OutboxEventRepository extends JpaRepository<OutboxEvent, Long> 
      */
     @Modifying
     @Query("DELETE FROM OutboxEvent e WHERE e.publishedAt IS NOT NULL AND e.publishedAt < :cutoff")
-    int deletePublishedBefore(@Param("cutoff") LocalDateTime cutoff);
+    int deletePublishedBefore(@Param("cutoff") Instant cutoff);
 }

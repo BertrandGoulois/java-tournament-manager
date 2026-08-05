@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Entity
 @Table(name = "matches")
@@ -45,7 +45,7 @@ public class Match {
      * {@code BracketUtils.createMatch} à l'insertion pour un bye.
      */
     @Column
-    private LocalDateTime playedAt;
+    private Instant playedAt;
 
     @Column(columnDefinition = "TEXT")
     private String commentary;
