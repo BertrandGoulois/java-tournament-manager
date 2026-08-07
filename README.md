@@ -38,7 +38,9 @@ API REST de gestion de tournois sportifs (élimination directe, round-robin, ou 
 
 ## Architecture & Design
 
-Le projet suit une **architecture hexagonale** (ports & adapters) : le domaine métier est isolé de toute dépendance technique (JPA, Kafka, Redis, OpenAI). Le flux de dépendances va toujours de l'extérieur vers le domaine, jamais l'inverse.
+Le projet suit une **architecture hexagonale** (ports & adapters) : le domaine métier (`domain/`) est isolé de toute dépendance technique (JPA/Hibernate, Spring - y compris `Page`/`Pageable` -, Lombok, Kafka, Jackson...). Les objets de domaine (`domain/model/`, ex. `Player`, `Match`, `Tournament`) sont de purs POJO, sans aucune annotation ; leur persistance est gérée séparément par des entités JPA dédiées (`infrastructure/output/persistence/entity/`) et des mappers explicites (`infrastructure/output/persistence/mapper/`) qui font la conversion aux deux frontières. Le flux de dépendances va toujours de l'extérieur vers le domaine, jamais l'inverse.
+
+> Cette règle est vérifiée en continu par un test ArchUnit (`DomainIsolationTest`), qui échoue si quiconque réintroduit une dépendance technique dans `domain/` - une règle non vérifiée par la CI n'existe pas.
 
 ```
 src/main/java/com/tournament/tournament_manager/

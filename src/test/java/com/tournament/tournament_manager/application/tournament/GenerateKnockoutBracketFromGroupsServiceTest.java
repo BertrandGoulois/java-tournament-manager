@@ -1,8 +1,8 @@
 package com.tournament.tournament_manager.application.tournament;
 
-import com.tournament.tournament_manager.domain.model.entities.Match;
-import com.tournament.tournament_manager.domain.model.entities.Player;
-import com.tournament.tournament_manager.domain.model.entities.Tournament;
+import com.tournament.tournament_manager.domain.model.Match;
+import com.tournament.tournament_manager.domain.model.Player;
+import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchesByTournamentPort;
 import com.tournament.tournament_manager.domain.port.out.match.SaveMatchPort;

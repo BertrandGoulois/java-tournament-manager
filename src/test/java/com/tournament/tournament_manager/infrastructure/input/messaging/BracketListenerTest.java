@@ -1,8 +1,8 @@
 package com.tournament.tournament_manager.infrastructure.input.messaging;
 
 import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
-import com.tournament.tournament_manager.domain.model.entities.Match;
-import com.tournament.tournament_manager.domain.model.entities.Tournament;
+import com.tournament.tournament_manager.domain.model.Match;
+import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 import com.tournament.tournament_manager.domain.port.in.tournament.AdvanceBracketUseCase;
 import com.tournament.tournament_manager.domain.port.in.tournament.CheckTournamentCompletionUseCase;

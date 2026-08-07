@@ -13,6 +13,7 @@ import com.tournament.tournament_manager.dto.response.player.PlayerResponse;
 import com.tournament.tournament_manager.dto.response.tournament.StandingsResponse;
 import com.tournament.tournament_manager.dto.response.tournament.TournamentResponse;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.MatchRepository;
+import com.tournament.tournament_manager.infrastructure.output.persistence.mapper.TournamentMapper;
 import com.tournament.tournament_manager.application.match.RecordMatchResultService;
 import com.tournament.tournament_manager.application.player.CreatePlayerService;
 import com.tournament.tournament_manager.application.registration.RegisterPlayerService;
@@ -62,6 +63,9 @@ class RoundRobinIntegrationTest {
     @Autowired
     private MatchRepository matchRepository;
 
+    @Autowired
+    private TournamentMapper tournamentMapper;
+
     @Test
     void roundRobinTournament_shouldCompleteFullFlow() {
         // Création de 4 joueurs
@@ -103,7 +107,7 @@ class RoundRobinIntegrationTest {
         // On recharge le tournoi pour avoir l'entité à jour, puis on déclenche
         // manuellement la vérification de fin de tournoi (équivalent du listener Kafka).
         var allMatches = matchRepository.findByTournamentId(tournament.id());
-        var loadedTournament = allMatches.get(0).getTournament();
+        var loadedTournament = tournamentMapper.toDomain(allMatches.get(0).getTournament());
         checkTournamentCompletionService.checkCompletion(loadedTournament);
 
         TournamentResponse finished = getTournamentService.getTournamentById(tournament.id());

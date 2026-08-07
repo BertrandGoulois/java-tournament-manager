@@ -68,7 +68,7 @@ class GlobalExceptionHandlerTest {
     void handleOptimisticLocking_shouldReturn409() {
         ResponseEntity<ErrorResponse> response = handler.handleOptimisticLocking(
                 new ObjectOptimisticLockingFailureException(
-                        com.tournament.tournament_manager.domain.model.entities.Player.class, 1L));
+                        com.tournament.tournament_manager.domain.model.Player.class, 1L));
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
         assertEquals(409, response.getBody().status());
         assertNotNull(response.getBody().message());

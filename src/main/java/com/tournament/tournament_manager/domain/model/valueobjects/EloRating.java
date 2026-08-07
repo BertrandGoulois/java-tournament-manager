@@ -1,7 +1,5 @@
 package com.tournament.tournament_manager.domain.model.valueobjects;
 
-import jakarta.persistence.Embeddable;
-
 /**
  * Value object représentant le classement ELO d'un joueur.
  *
@@ -10,8 +8,11 @@ import jakarta.persistence.Embeddable;
  * inférieure à {@link #MIN} est automatiquement plafonné à {@code 0}.
  *
  * <p>La valeur par défaut à la création d'un joueur est {@link #DEFAULT} ({@code 1000}).
+ *
+ * <p>Type de domaine pur — aucune annotation JPA. Côté persistance,
+ * {@code PlayerEntity} stocke directement la valeur ({@code int}) en colonne ;
+ * {@code PlayerMapper} fait la conversion aux deux frontières.
  */
-@Embeddable
 public record EloRating(int value) {
 
     public static final int DEFAULT = 1000;

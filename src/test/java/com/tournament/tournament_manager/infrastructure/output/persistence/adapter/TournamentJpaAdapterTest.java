@@ -1,11 +1,13 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.adapter;
 
-import com.tournament.tournament_manager.domain.model.entities.Tournament;
+import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.exception.domain.TournamentNotFoundException;
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.TournamentEntity;
+import com.tournament.tournament_manager.infrastructure.output.persistence.mapper.TournamentMapper;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.TournamentRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
@@ -25,14 +27,23 @@ class TournamentJpaAdapterTest {
     @Mock
     private TournamentRepository tournamentRepository;
 
-    @InjectMocks
     private TournamentJpaAdapter tournamentJpaAdapter;
+
+    @BeforeEach
+    void setUp() {
+        tournamentJpaAdapter = new TournamentJpaAdapter(tournamentRepository, new TournamentMapper());
+    }
+
+    private TournamentEntity entityWithId(long id) {
+        TournamentEntity entity = new TournamentEntity();
+        entity.setId(id);
+        entity.setName("tournament" + id);
+        return entity;
+    }
 
     @Test
     void loadTournament_shouldReturnTournament_whenFound() {
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
-        when(tournamentRepository.findById(1L)).thenReturn(Optional.of(tournament));
+        when(tournamentRepository.findById(1L)).thenReturn(Optional.of(entityWithId(1L)));
 
         Tournament result = tournamentJpaAdapter.loadTournament(1L);
 
@@ -47,13 +58,35 @@ class TournamentJpaAdapterTest {
     }
 
     @Test
-    void saveTournament_shouldReturnSavedTournament() {
+    void saveTournament_shouldCreateNewEntity_whenNoId() {
         Tournament tournament = new Tournament();
-        when(tournamentRepository.save(any())).thenReturn(tournament);
+        tournament.setName("new tournament");
+        when(tournamentRepository.save(any())).thenAnswer(inv -> {
+            TournamentEntity e = inv.getArgument(0);
+            e.setId(42L);
+            return e;
+        });
 
         Tournament result = tournamentJpaAdapter.saveTournament(tournament);
 
         assertNotNull(result);
+        assertEquals(42L, result.getId());
+    }
+
+    @Test
+    void saveTournament_shouldUpdateExistingEntity_whenIdPresent() {
+        Tournament tournament = new Tournament();
+        tournament.setId(1L);
+        tournament.setName("updated");
+
+        TournamentEntity existing = entityWithId(1L);
+        when(tournamentRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(tournamentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        Tournament result = tournamentJpaAdapter.saveTournament(tournament);
+
+        assertEquals("updated", result.getName());
+        assertEquals("updated", existing.getName());
     }
 
     @Test
@@ -72,8 +105,7 @@ class TournamentJpaAdapterTest {
 
     @Test
     void loadAllTournaments_shouldReturnPage() {
-        Tournament tournament = new Tournament();
-        Page<Tournament> page = new PageImpl<>(List.of(tournament));
+        Page<TournamentEntity> page = new PageImpl<>(List.of(entityWithId(1L)));
         when(tournamentRepository.findAll(any(Pageable.class))).thenReturn(page);
 
         Page<Tournament> result = tournamentJpaAdapter.loadAllTournaments(Pageable.unpaged());

@@ -1,6 +1,6 @@
 package com.tournament.tournament_manager.domain.port.out.registration;
 
-import com.tournament.tournament_manager.domain.model.entities.Registration;
+import com.tournament.tournament_manager.domain.model.Registration;
 
 /**
  * Port sortant : sauvegarde d'une inscription en persistance.

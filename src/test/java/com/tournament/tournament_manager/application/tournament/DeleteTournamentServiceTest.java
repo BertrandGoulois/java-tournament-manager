@@ -1,6 +1,6 @@
 package com.tournament.tournament_manager.application.tournament;
 
-import com.tournament.tournament_manager.domain.model.entities.Tournament;
+import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.domain.port.out.tournament.LoadTournamentPort;
 import com.tournament.tournament_manager.domain.port.out.tournament.SoftDeleteTournamentPort;
 import org.junit.jupiter.api.Test;

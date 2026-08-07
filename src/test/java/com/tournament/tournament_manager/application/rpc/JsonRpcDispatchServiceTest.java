@@ -82,7 +82,7 @@ class JsonRpcDispatchServiceTest {
             @Override
             public Object handle(Object params) {
                 throw new org.springframework.orm.ObjectOptimisticLockingFailureException(
-                        com.tournament.tournament_manager.domain.model.entities.Player.class, 1L);
+                        com.tournament.tournament_manager.domain.model.Player.class, 1L);
             }
         };
 

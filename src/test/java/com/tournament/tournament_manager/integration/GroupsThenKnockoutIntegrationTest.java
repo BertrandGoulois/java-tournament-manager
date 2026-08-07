@@ -1,7 +1,8 @@
 package com.tournament.tournament_manager.integration;
 
 import com.tournament.tournament_manager.TestcontainersConfiguration;
-import com.tournament.tournament_manager.domain.model.entities.Match;
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.MatchEntity;
+import com.tournament.tournament_manager.infrastructure.output.persistence.mapper.TournamentMapper;
 import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
@@ -63,6 +64,9 @@ class GroupsThenKnockoutIntegrationTest {
     @Autowired
     private MatchRepository matchRepository;
 
+    @Autowired
+    private TournamentMapper tournamentMapper;
+
     @Test
     void groupsThenKnockoutTournament_shouldCompleteFullFlow() {
         // 8 joueurs
@@ -89,23 +93,23 @@ class GroupsThenKnockoutIntegrationTest {
         // Démarrage : 2 groupes de 4 -> C(4,2) = 6 matchs par groupe = 12 matchs de groupe
         startTournamentService.startTournament(tournament.id());
 
-        List<Match> groupMatches = matchRepository.findByTournamentId(tournament.id());
+        List<MatchEntity> groupMatches = matchRepository.findByTournamentId(tournament.id());
         assertEquals(12, groupMatches.size());
         assertTrue(groupMatches.stream().allMatch(m -> m.getGroupNumber() != null));
 
         // Tous les matchs de groupe sont gagnés par player1
-        for (Match match : groupMatches) {
+        for (MatchEntity match : groupMatches) {
             recordMatchResultService.recordMatchResult(
                     match.getId(), new RecordMatchResultRequest(match.getPlayer1().getId()));
         }
 
         // Déclenchement manuel équivalent au listener Kafka : génère le bracket
         var allMatchesAfterGroups = matchRepository.findByTournamentId(tournament.id());
-        var loadedTournament = allMatchesAfterGroups.get(0).getTournament();
+        var loadedTournament = tournamentMapper.toDomain(allMatchesAfterGroups.get(0).getTournament());
         generateKnockoutBracketFromGroupsService.checkGroupsCompletionAndGenerateBracket(loadedTournament);
 
-        List<Match> allMatches = matchRepository.findByTournamentId(tournament.id());
-        List<Match> bracketMatches = allMatches.stream()
+        List<MatchEntity> allMatches = matchRepository.findByTournamentId(tournament.id());
+        List<MatchEntity> bracketMatches = allMatches.stream()
                 .filter(m -> m.getGroupNumber() == null)
                 .toList();
 

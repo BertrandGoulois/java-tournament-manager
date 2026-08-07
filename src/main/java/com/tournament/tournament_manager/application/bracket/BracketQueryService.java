@@ -1,7 +1,7 @@
 package com.tournament.tournament_manager.application.bracket;
 
-import com.tournament.tournament_manager.domain.model.entities.Match;
-import com.tournament.tournament_manager.domain.model.entities.Tournament;
+import com.tournament.tournament_manager.domain.model.Match;
+import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.domain.port.in.tournament.GetBracketUseCase;
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchesByTournamentPort;
 import com.tournament.tournament_manager.domain.port.out.tournament.LoadTournamentPort;

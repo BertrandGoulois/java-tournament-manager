@@ -1,7 +1,7 @@
 package com.tournament.tournament_manager.application.strategy.start;
 
-import com.tournament.tournament_manager.domain.model.entities.Player;
-import com.tournament.tournament_manager.domain.model.entities.Tournament;
+import com.tournament.tournament_manager.domain.model.Player;
+import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 import com.tournament.tournament_manager.domain.port.out.match.SaveMatchPort;
 import com.tournament.tournament_manager.domain.port.out.strategy.TournamentStartStrategy;

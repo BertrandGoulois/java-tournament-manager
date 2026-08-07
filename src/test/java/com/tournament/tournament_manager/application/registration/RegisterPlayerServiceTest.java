@@ -1,8 +1,8 @@
 package com.tournament.tournament_manager.application.registration;
 
-import com.tournament.tournament_manager.domain.model.entities.Player;
-import com.tournament.tournament_manager.domain.model.entities.Registration;
-import com.tournament.tournament_manager.domain.model.entities.Tournament;
+import com.tournament.tournament_manager.domain.model.Player;
+import com.tournament.tournament_manager.domain.model.Registration;
+import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
 import com.tournament.tournament_manager.domain.port.out.player.LoadPlayerPort;
 import com.tournament.tournament_manager.domain.port.out.registration.CountRegistrationPort;
@@ -194,7 +194,7 @@ class RegisterPlayerServiceTest {
         when(countRegistrationPort.countByTournamentId(1L)).thenReturn(0L);
 
         ArgumentCaptor<Registration> captor = ArgumentCaptor.forClass(
-                com.tournament.tournament_manager.domain.model.entities.Registration.class);
+                Registration.class);
         when(saveRegistrationPort.saveRegistration(captor.capture())).thenReturn(saved);
 
         registerPlayerService.registerPlayer(new CreateRegistrationRequest(1L, 1L));

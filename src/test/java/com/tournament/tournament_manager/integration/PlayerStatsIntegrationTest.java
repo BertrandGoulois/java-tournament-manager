@@ -1,9 +1,9 @@
 package com.tournament.tournament_manager.integration;
 
 import com.tournament.tournament_manager.TestcontainersConfiguration;
-import com.tournament.tournament_manager.domain.model.entities.Match;
-import com.tournament.tournament_manager.domain.model.entities.Player;
-import com.tournament.tournament_manager.domain.model.entities.Tournament;
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.MatchEntity;
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.PlayerEntity;
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.TournamentEntity;
 import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
@@ -44,8 +44,8 @@ class PlayerStatsIntegrationTest {
     @Autowired
     private MatchRepository matchRepository;
 
-    private Tournament newTournament() {
-        Tournament tournament = new Tournament();
+    private TournamentEntity newTournament() {
+        TournamentEntity tournament = new TournamentEntity();
         tournament.setName("tournoi-stats-test-" + System.nanoTime());
         tournament.setMaxPlayers(8);
         tournament.setStatus(TournamentStatus.IN_PROGRESS);
@@ -53,8 +53,8 @@ class PlayerStatsIntegrationTest {
         return tournamentRepository.save(tournament);
     }
 
-    private Player newPlayer(String prefix) {
-        Player player = new Player();
+    private PlayerEntity newPlayer(String prefix) {
+        PlayerEntity player = new PlayerEntity();
         player.setUsername(prefix + "_" + System.nanoTime());
         player.setEmail(prefix + "_" + System.nanoTime() + "@mail.com");
         return playerRepository.save(player);
@@ -62,12 +62,12 @@ class PlayerStatsIntegrationTest {
 
     @Test
     void countByPlayer_shouldBeZero_forPlayerWithOnlyAByeAndPendingMatches() {
-        Tournament tournament = newTournament();
-        Player player = newPlayer("bye_player");
-        Player opponent = newPlayer("future_opponent");
+        TournamentEntity tournament = newTournament();
+        PlayerEntity player = newPlayer("bye_player");
+        PlayerEntity opponent = newPlayer("future_opponent");
 
         // Le bye du premier tour : status FINISHED, mais un seul joueur réel (player2 null).
-        Match bye = new Match();
+        MatchEntity bye = new MatchEntity();
         bye.setTournament(tournament);
         bye.setRound(8);
         bye.setPosition(0);
@@ -79,7 +79,7 @@ class PlayerStatsIntegrationTest {
         matchRepository.save(bye);
 
         // Un match à venir au second tour : PENDING, deux joueurs réels, mais pas encore joué.
-        Match pending = new Match();
+        MatchEntity pending = new MatchEntity();
         pending.setTournament(tournament);
         pending.setRound(4);
         pending.setPosition(0);
@@ -98,13 +98,13 @@ class PlayerStatsIntegrationTest {
 
     @Test
     void countByPlayer_shouldCountOnlyRealFinishedMatches() {
-        Tournament tournament = newTournament();
-        Player player = newPlayer("real_player");
-        Player winner1 = newPlayer("opponent1");
-        Player opponent2 = newPlayer("opponent2");
+        TournamentEntity tournament = newTournament();
+        PlayerEntity player = newPlayer("real_player");
+        PlayerEntity winner1 = newPlayer("opponent1");
+        PlayerEntity opponent2 = newPlayer("opponent2");
 
         // 1 vraie victoire
-        Match won = new Match();
+        MatchEntity won = new MatchEntity();
         won.setTournament(tournament);
         won.setRound(8);
         won.setPosition(0);
@@ -116,7 +116,7 @@ class PlayerStatsIntegrationTest {
         matchRepository.save(won);
 
         // 1 vraie défaite
-        Match lost = new Match();
+        MatchEntity lost = new MatchEntity();
         lost.setTournament(tournament);
         lost.setRound(4);
         lost.setPosition(0);
@@ -128,7 +128,7 @@ class PlayerStatsIntegrationTest {
         matchRepository.save(lost);
 
         // 1 bye (ne doit pas compter) + 1 match futur PENDING (ne doit pas compter)
-        Match bye = new Match();
+        MatchEntity bye = new MatchEntity();
         bye.setTournament(tournament);
         bye.setRound(2);
         bye.setPosition(0);

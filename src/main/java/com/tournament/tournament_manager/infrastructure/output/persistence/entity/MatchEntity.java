@@ -1,4 +1,4 @@
-package com.tournament.tournament_manager.domain.model.entities;
+package com.tournament.tournament_manager.infrastructure.output.persistence.entity;
 
 import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 import jakarta.persistence.*;
@@ -8,12 +8,18 @@ import lombok.Setter;
 
 import java.time.Instant;
 
+/**
+ * Entité JPA pour la persistance d'un match.
+ *
+ * <p>Contrepartie technique du domaine pur {@code domain.model.Match} — voir
+ * {@code MatchMapper} pour la conversion entre les deux.
+ */
 @Entity
 @Table(name = "matches")
 @Getter
 @Setter
 @NoArgsConstructor
-public class Match {
+public class MatchEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,13 +28,6 @@ public class Match {
     @Column(nullable = false)
     private int round;
 
-    /**
-     * Position 0-indexée du match au sein de son round — sa place déterminée dans le
-     * tableau. Le vainqueur des matchs aux positions {@code 2k} et {@code 2k+1} d'un round
-     * avance vers la position {@code k} du round suivant (voir {@code AdvanceBracketService}).
-     * Assignée via un seeding par classement ELO à la création du bracket
-     * (voir {@code BracketUtils.seedOrder}), jamais tirée au hasard.
-     */
     @Column(nullable = false)
     private int position;
 
@@ -39,11 +38,6 @@ public class Match {
     @Column(nullable = false)
     private MatchStatus status = MatchStatus.PENDING;
 
-    /**
-     * Date à laquelle le résultat du match a été enregistré. Renseigné par
-     * {@code RecordMatchResultService} pour un match réellement joué, et par
-     * {@code BracketUtils.createMatch} à l'insertion pour un bye.
-     */
     @Column
     private Instant playedAt;
 
@@ -56,18 +50,17 @@ public class Match {
 
     @ManyToOne()
     @JoinColumn(name = "tournament_id", nullable = false)
-    private Tournament tournament;
+    private TournamentEntity tournament;
 
     @ManyToOne()
     @JoinColumn(name = "player1_id", nullable = false)
-    private Player player1;
+    private PlayerEntity player1;
 
     @ManyToOne()
     @JoinColumn(name = "player2_id", nullable = true)
-    private Player player2;
+    private PlayerEntity player2;
 
     @ManyToOne()
     @JoinColumn(name = "winner_id", nullable = true)
-    private Player winner;
-
+    private PlayerEntity winner;
 }

@@ -1,6 +1,6 @@
 package com.tournament.tournament_manager.domain.port.out.registration;
 
-import com.tournament.tournament_manager.domain.model.entities.Registration;
+import com.tournament.tournament_manager.domain.model.Registration;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

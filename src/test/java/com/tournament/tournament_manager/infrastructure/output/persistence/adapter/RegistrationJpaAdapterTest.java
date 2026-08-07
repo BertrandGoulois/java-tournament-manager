@@ -1,10 +1,20 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.adapter;
 
-import com.tournament.tournament_manager.domain.model.entities.Registration;
+import com.tournament.tournament_manager.domain.model.Player;
+import com.tournament.tournament_manager.domain.model.Registration;
+import com.tournament.tournament_manager.domain.model.Tournament;
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.PlayerEntity;
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.RegistrationEntity;
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.TournamentEntity;
+import com.tournament.tournament_manager.infrastructure.output.persistence.mapper.PlayerMapper;
+import com.tournament.tournament_manager.infrastructure.output.persistence.mapper.RegistrationMapper;
+import com.tournament.tournament_manager.infrastructure.output.persistence.mapper.TournamentMapper;
+import com.tournament.tournament_manager.infrastructure.output.persistence.repository.PlayerRepository;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.RegistrationRepository;
+import com.tournament.tournament_manager.infrastructure.output.persistence.repository.TournamentRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -19,14 +29,27 @@ class RegistrationJpaAdapterTest {
 
     @Mock
     private RegistrationRepository registrationRepository;
+    @Mock
+    private PlayerRepository playerRepository;
+    @Mock
+    private TournamentRepository tournamentRepository;
 
-    @InjectMocks
     private RegistrationJpaAdapter registrationJpaAdapter;
+
+    @BeforeEach
+    void setUp() {
+        PlayerMapper playerMapper = new PlayerMapper();
+        TournamentMapper tournamentMapper = new TournamentMapper();
+        registrationJpaAdapter = new RegistrationJpaAdapter(
+                registrationRepository, playerRepository, tournamentRepository,
+                new RegistrationMapper(playerMapper, tournamentMapper));
+    }
 
     @Test
     void loadByTournamentId_shouldReturnRegistrations() {
-        Registration registration = new Registration();
-        when(registrationRepository.findByTournamentId(1L)).thenReturn(List.of(registration));
+        RegistrationEntity entity = new RegistrationEntity();
+        entity.setId(1L);
+        when(registrationRepository.findByTournamentId(1L)).thenReturn(List.of(entity));
 
         List<Registration> result = registrationJpaAdapter.loadByTournamentId(1L);
 
@@ -34,13 +57,28 @@ class RegistrationJpaAdapterTest {
     }
 
     @Test
-    void saveRegistration_shouldReturnSavedRegistration() {
+    void saveRegistration_shouldResolveReferencesAndReturnSaved() {
+        Tournament tournament = new Tournament();
+        tournament.setId(10L);
+        Player player = new Player();
+        player.setId(1L);
+
         Registration registration = new Registration();
-        when(registrationRepository.save(any())).thenReturn(registration);
+        registration.setTournament(tournament);
+        registration.setPlayer(player);
+
+        when(tournamentRepository.getReferenceById(10L)).thenReturn(new TournamentEntity());
+        when(playerRepository.getReferenceById(1L)).thenReturn(new PlayerEntity());
+        when(registrationRepository.save(any())).thenAnswer(inv -> {
+            RegistrationEntity e = inv.getArgument(0);
+            e.setId(42L);
+            return e;
+        });
 
         Registration result = registrationJpaAdapter.saveRegistration(registration);
 
         assertNotNull(result);
+        assertEquals(42L, result.getId());
     }
 
     @Test

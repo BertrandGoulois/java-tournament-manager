@@ -1,6 +1,6 @@
 package com.tournament.tournament_manager.domain.port.in.tournament;
 
-import com.tournament.tournament_manager.domain.model.entities.Tournament;
+import com.tournament.tournament_manager.domain.model.Tournament;
 
 /**
  * Port entrant : cas d'utilisation pour faire progresser le bracket au tour suivant.

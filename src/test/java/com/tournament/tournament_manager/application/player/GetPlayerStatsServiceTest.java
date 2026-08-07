@@ -1,8 +1,8 @@
 package com.tournament.tournament_manager.application.player;
 
-import com.tournament.tournament_manager.domain.model.entities.EloHistory;
-import com.tournament.tournament_manager.domain.model.entities.Match;
-import com.tournament.tournament_manager.domain.model.entities.Player;
+import com.tournament.tournament_manager.domain.model.EloHistory;
+import com.tournament.tournament_manager.domain.model.Match;
+import com.tournament.tournament_manager.domain.model.Player;
 import com.tournament.tournament_manager.domain.model.valueobjects.EloRating;
 import com.tournament.tournament_manager.domain.port.out.player.CountMatchesByPlayerPort;
 import com.tournament.tournament_manager.domain.port.out.player.LoadEloHistoryPort;
@@ -118,8 +118,8 @@ class GetPlayerStatsServiceTest {
         Match match = new Match();
         match.setId(5L);
 
-        com.tournament.tournament_manager.domain.model.entities.EloHistory history =
-                new com.tournament.tournament_manager.domain.model.entities.EloHistory();
+        EloHistory history =
+                new EloHistory();
         history.setEloChange(16);
         history.setEloAfter(1016);
         history.setMatch(match);

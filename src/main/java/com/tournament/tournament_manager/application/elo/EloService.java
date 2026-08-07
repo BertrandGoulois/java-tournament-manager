@@ -1,8 +1,8 @@
 package com.tournament.tournament_manager.application.elo;
 
-import com.tournament.tournament_manager.domain.model.entities.EloHistory;
-import com.tournament.tournament_manager.domain.model.entities.Match;
-import com.tournament.tournament_manager.domain.model.entities.Player;
+import com.tournament.tournament_manager.domain.model.EloHistory;
+import com.tournament.tournament_manager.domain.model.Match;
+import com.tournament.tournament_manager.domain.model.Player;
 import com.tournament.tournament_manager.domain.port.in.elo.UpdateEloUseCase;
 import com.tournament.tournament_manager.domain.port.out.elo.SaveAllPlayersPort;
 import com.tournament.tournament_manager.domain.port.out.elo.SaveEloHistoryPort;

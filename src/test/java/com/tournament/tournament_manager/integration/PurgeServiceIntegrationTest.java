@@ -1,8 +1,8 @@
 package com.tournament.tournament_manager.integration;
 
 import com.tournament.tournament_manager.TestcontainersConfiguration;
-import com.tournament.tournament_manager.domain.model.entities.Player;
-import com.tournament.tournament_manager.domain.model.entities.Tournament;
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.PlayerEntity;
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.TournamentEntity;
 import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.PlayerRepository;
@@ -50,7 +50,7 @@ class PurgeServiceIntegrationTest {
     @Test
     void purge_shouldPhysicallyDeletePlayersDeletedBeforeRetentionLimit() {
         // Joueur supprimé il y a 31 jours -> doit être purgé
-        Player oldDeleted = new Player();
+        PlayerEntity oldDeleted = new PlayerEntity();
         oldDeleted.setUsername("old_deleted");
         oldDeleted.setEmail("old_deleted@mail.com");
         oldDeleted.setDeleted(true);
@@ -58,7 +58,7 @@ class PurgeServiceIntegrationTest {
         playerRepository.save(oldDeleted);
 
         // Joueur supprimé il y a 1 jour -> doit être conservé
-        Player recentDeleted = new Player();
+        PlayerEntity recentDeleted = new PlayerEntity();
         recentDeleted.setUsername("recent_deleted");
         recentDeleted.setEmail("recent_deleted@mail.com");
         recentDeleted.setDeleted(true);
@@ -66,7 +66,7 @@ class PurgeServiceIntegrationTest {
         playerRepository.save(recentDeleted);
 
         // Joueur non supprimé -> doit être conservé
-        Player active = new Player();
+        PlayerEntity active = new PlayerEntity();
         active.setUsername("active");
         active.setEmail("active@mail.com");
         playerRepository.save(active);
@@ -85,7 +85,7 @@ class PurgeServiceIntegrationTest {
 
     @Test
     void purge_shouldPhysicallyDeleteTournamentsDeletedBeforeRetentionLimit() {
-        Tournament oldDeleted = new Tournament();
+        TournamentEntity oldDeleted = new TournamentEntity();
         oldDeleted.setName("old_deleted_tournament");
         oldDeleted.setMaxPlayers(8);
         oldDeleted.setStatus(TournamentStatus.OPEN);
@@ -94,7 +94,7 @@ class PurgeServiceIntegrationTest {
         oldDeleted.setDeletedAt(Instant.now().minus(Duration.ofDays(31)));
         tournamentRepository.save(oldDeleted);
 
-        Tournament recentDeleted = new Tournament();
+        TournamentEntity recentDeleted = new TournamentEntity();
         recentDeleted.setName("recent_deleted_tournament");
         recentDeleted.setMaxPlayers(8);
         recentDeleted.setStatus(TournamentStatus.OPEN);
@@ -112,7 +112,7 @@ class PurgeServiceIntegrationTest {
 
     @Test
     void purge_shouldNotDeleteAnything_whenNoEntitiesOlderThanRetention() {
-        Player recentDeleted = new Player();
+        PlayerEntity recentDeleted = new PlayerEntity();
         recentDeleted.setUsername("recent");
         recentDeleted.setEmail("recent@mail.com");
         recentDeleted.setDeleted(true);
@@ -132,21 +132,21 @@ class PurgeServiceIntegrationTest {
         // match. Avant le correctif, ce test aurait fait planter purgeDeletedEntities()
         // avec une DataIntegrityViolationException (violation de contrainte FK sur
         // matches.player1_id), et plus rien n'aurait jamais été purgé.
-        Tournament tournament = new Tournament();
+        TournamentEntity tournament = new TournamentEntity();
         tournament.setName("tournoi-purge-test-" + System.nanoTime());
         tournament.setMaxPlayers(8);
         tournament.setStatus(TournamentStatus.IN_PROGRESS);
         tournament.setFormat(TournamentFormat.SINGLE_ELIMINATION);
         tournament = tournamentRepository.save(tournament);
 
-        Player playerWithHistory = new Player();
+        PlayerEntity playerWithHistory = new PlayerEntity();
         playerWithHistory.setUsername("has_history_" + System.nanoTime());
         playerWithHistory.setEmail("has_history_" + System.nanoTime() + "@mail.com");
         playerWithHistory.setDeleted(true);
         playerWithHistory.setDeletedAt(Instant.now().minus(Duration.ofDays(31)));
         playerWithHistory = playerRepository.save(playerWithHistory);
 
-        Player opponent = new Player();
+        PlayerEntity opponent = new PlayerEntity();
         opponent.setUsername("opponent_" + System.nanoTime());
         opponent.setEmail("opponent_" + System.nanoTime() + "@mail.com");
         opponent = playerRepository.save(opponent);
@@ -183,17 +183,17 @@ class PurgeServiceIntegrationTest {
 
     @Test
     void purge_shouldNotReanonymize_playerAlreadyAnonymized() {
-        Player alreadyAnonymized = new Player();
+        PlayerEntity alreadyAnonymized = new PlayerEntity();
         alreadyAnonymized.setUsername("utilisateur-supprime-deja");
         alreadyAnonymized.setEmail("deja@anonymise.invalid");
         alreadyAnonymized.setDeleted(true);
         alreadyAnonymized.setDeletedAt(Instant.now().minus(Duration.ofDays(31)));
         alreadyAnonymized.setAnonymizedAt(Instant.now().minus(Duration.ofDays(20)));
-        Player saved = playerRepository.save(alreadyAnonymized);
+        PlayerEntity saved = playerRepository.save(alreadyAnonymized);
 
         // Lui donner un historique pour qu'il resterait éligible à l'anonymisation
         // s'il n'était pas déjà marqué comme traité.
-        Tournament tournament = new Tournament();
+        TournamentEntity tournament = new TournamentEntity();
         tournament.setName("tournoi-purge-test2-" + System.nanoTime());
         tournament.setMaxPlayers(8);
         tournament.setStatus(TournamentStatus.IN_PROGRESS);

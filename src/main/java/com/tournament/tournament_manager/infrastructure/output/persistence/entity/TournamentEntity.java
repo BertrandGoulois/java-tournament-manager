@@ -1,9 +1,8 @@
-package com.tournament.tournament_manager.domain.model.entities;
+package com.tournament.tournament_manager.infrastructure.output.persistence.entity;
 
 import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,19 +12,24 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Entité JPA pour la persistance d'un tournoi.
+ *
+ * <p>Contrepartie technique du domaine pur {@code domain.model.Tournament} — voir
+ * {@code TournamentMapper} pour la conversion entre les deux.
+ */
 @Entity
-@Table(name="tournaments")
+@Table(name = "tournaments")
 @Getter
 @Setter
 @NoArgsConstructor
 @SQLRestriction("deleted = false")
-public class Tournament {
+public class TournamentEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank
     @Column(nullable = false, unique = true)
     private String name;
 
@@ -60,15 +64,13 @@ public class Tournament {
     private Instant deletedAt;
 
     @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Registration> registrations = new ArrayList<>();
+    private List<RegistrationEntity> registrations = new ArrayList<>();
 
     @OneToMany(mappedBy = "tournament", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Match> matches = new ArrayList<>();
+    private List<MatchEntity> matches = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {
         this.createdAt = Instant.now();
     }
 }
-
-

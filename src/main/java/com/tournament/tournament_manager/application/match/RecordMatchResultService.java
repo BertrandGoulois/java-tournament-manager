@@ -1,7 +1,7 @@
 package com.tournament.tournament_manager.application.match;
 
 import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
-import com.tournament.tournament_manager.domain.model.entities.Match;
+import com.tournament.tournament_manager.domain.model.Match;
 import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 import com.tournament.tournament_manager.domain.port.in.match.RecordMatchResultUseCase;
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchPort;

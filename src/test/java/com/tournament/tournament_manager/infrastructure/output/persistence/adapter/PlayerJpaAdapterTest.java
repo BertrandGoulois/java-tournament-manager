@@ -1,14 +1,20 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.adapter;
 
-import com.tournament.tournament_manager.domain.model.entities.EloHistory;
-import com.tournament.tournament_manager.domain.model.entities.Player;
+import com.tournament.tournament_manager.domain.model.EloHistory;
+import com.tournament.tournament_manager.domain.model.Player;
+import com.tournament.tournament_manager.domain.model.valueobjects.EloRating;
 import com.tournament.tournament_manager.exception.domain.PlayerNotFoundException;
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.EloHistoryEntity;
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.PlayerEntity;
+import com.tournament.tournament_manager.infrastructure.output.persistence.mapper.EloHistoryMapper;
+import com.tournament.tournament_manager.infrastructure.output.persistence.mapper.MatchMapper;
+import com.tournament.tournament_manager.infrastructure.output.persistence.mapper.PlayerMapper;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.EloHistoryRepository;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.MatchRepository;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.PlayerRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
@@ -22,6 +28,11 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+/**
+ * Utilise de vraies instances des mappers (pas des mocks) : ce sont de simples classes de
+ * conversion sans dépendance, et ça permet de vérifier le mapping réel plutôt que de le
+ * présupposer.
+ */
 @ExtendWith(MockitoExtension.class)
 class PlayerJpaAdapterTest {
 
@@ -32,18 +43,35 @@ class PlayerJpaAdapterTest {
     @Mock
     private EloHistoryRepository eloHistoryRepository;
 
-    @InjectMocks
     private PlayerJpaAdapter playerJpaAdapter;
+
+    @BeforeEach
+    void setUp() {
+        PlayerMapper playerMapper = new PlayerMapper();
+        MatchMapper matchMapper = new MatchMapper(playerMapper, new com.tournament.tournament_manager.infrastructure.output.persistence.mapper.TournamentMapper());
+        EloHistoryMapper eloHistoryMapper = new EloHistoryMapper(playerMapper, matchMapper);
+        playerJpaAdapter = new PlayerJpaAdapter(
+                playerRepository, matchRepository, eloHistoryRepository, playerMapper, eloHistoryMapper);
+    }
+
+    private PlayerEntity entityWithId(long id) {
+        PlayerEntity entity = new PlayerEntity();
+        entity.setId(id);
+        entity.setUsername("player" + id);
+        entity.setEmail("player" + id + "@mail.com");
+        entity.setEloRating(1000);
+        return entity;
+    }
 
     @Test
     void loadPlayer_shouldReturnPlayer_whenFound() {
-        Player player = new Player();
-        player.setId(1L);
-        when(playerRepository.findById(1L)).thenReturn(Optional.of(player));
+        when(playerRepository.findById(1L)).thenReturn(Optional.of(entityWithId(1L)));
 
         Player result = playerJpaAdapter.loadPlayer(1L);
 
         assertEquals(1L, result.getId());
+        assertEquals("player1", result.getUsername());
+        assertEquals(new EloRating(1000), result.getEloRating());
     }
 
     @Test
@@ -54,13 +82,41 @@ class PlayerJpaAdapterTest {
     }
 
     @Test
-    void savePlayer_shouldReturnSavedPlayer() {
+    void savePlayer_shouldCreateNewEntity_whenNoId() {
         Player player = new Player();
-        when(playerRepository.save(any())).thenReturn(player);
+        player.setUsername("newplayer");
+        player.setEmail("newplayer@mail.com");
+        when(playerRepository.save(any())).thenAnswer(inv -> {
+            PlayerEntity e = inv.getArgument(0);
+            e.setId(42L);
+            return e;
+        });
 
         Player result = playerJpaAdapter.savePlayer(player);
 
         assertNotNull(result);
+        assertEquals(42L, result.getId());
+        assertEquals("newplayer", result.getUsername());
+    }
+
+    @Test
+    void savePlayer_shouldUpdateExistingEntity_preservingIt_whenIdPresent() {
+        Player player = new Player();
+        player.setId(1L);
+        player.setUsername("updated");
+        player.setEmail("updated@mail.com");
+        player.setEloRating(new EloRating(1200));
+
+        PlayerEntity existing = entityWithId(1L);
+        when(playerRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(playerRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        Player result = playerJpaAdapter.savePlayer(player);
+
+        assertEquals("updated", result.getUsername());
+        assertEquals(1200, result.getEloRating().value());
+        // La mise à jour se fait bien sur l'entité chargée (même référence), pas une neuve.
+        assertEquals("updated", existing.getUsername());
     }
 
     @Test
@@ -79,8 +135,7 @@ class PlayerJpaAdapterTest {
 
     @Test
     void loadAllPlayers_shouldReturnPage() {
-        Player player = new Player();
-        Page<Player> page = new PageImpl<>(List.of(player));
+        Page<PlayerEntity> page = new PageImpl<>(List.of(entityWithId(1L)));
         when(playerRepository.findAll(any(Pageable.class))).thenReturn(page);
 
         Page<Player> result = playerJpaAdapter.loadAllPlayers(Pageable.unpaged());
@@ -104,7 +159,9 @@ class PlayerJpaAdapterTest {
 
     @Test
     void loadByPlayerIdOrderByDateDesc_shouldReturnHistory() {
-        EloHistory history = new EloHistory();
+        EloHistoryEntity history = new EloHistoryEntity();
+        history.setId(1L);
+        history.setPlayer(entityWithId(1L));
         when(eloHistoryRepository.findByPlayerIdOrderByCreatedAtDesc(1L)).thenReturn(List.of(history));
 
         List<EloHistory> result = playerJpaAdapter.loadByPlayerIdOrderByDateDesc(1L);
