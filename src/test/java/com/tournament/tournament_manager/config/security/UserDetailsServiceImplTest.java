@@ -1,6 +1,6 @@
 package com.tournament.tournament_manager.config.security;
 
-import com.tournament.tournament_manager.domain.model.entities.User;
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.UserEntity;
 import com.tournament.tournament_manager.domain.model.enums.Role;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -27,7 +27,7 @@ class UserDetailsServiceImplTest {
 
     @Test
     void loadUserByUsername_shouldReturnUserDetails_whenUserExists() {
-        User user = new User();
+        UserEntity user = new UserEntity();
         user.setUsername("admin");
         user.setPassword("password");
         user.setRole(Role.ADMIN);

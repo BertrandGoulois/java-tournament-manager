@@ -40,7 +40,7 @@ class EloListenerTest {
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         when(existsEloHistoryPort.existsByMatchId(1L)).thenReturn(false);
 
-        eloListener.onMatchFinished(new MatchFinishedEvent(1L));
+        eloListener.onMatchFinished(new MatchFinishedEvent(1L, 0, 0));
 
         verify(updateEloUseCase, times(1)).updateElo(match);
     }
@@ -54,7 +54,7 @@ class EloListenerTest {
 
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
 
-        eloListener.onMatchFinished(new MatchFinishedEvent(1L));
+        eloListener.onMatchFinished(new MatchFinishedEvent(1L, 0, 0));
 
         verifyNoInteractions(updateEloUseCase);
     }
@@ -70,7 +70,7 @@ class EloListenerTest {
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         when(existsEloHistoryPort.existsByMatchId(1L)).thenReturn(true);
 
-        eloListener.onMatchFinished(new MatchFinishedEvent(1L));
+        eloListener.onMatchFinished(new MatchFinishedEvent(1L, 0, 0));
 
         verifyNoInteractions(updateEloUseCase);
     }
@@ -80,6 +80,6 @@ class EloListenerTest {
         when(loadMatchPort.loadMatch(99L)).thenThrow(new MatchNotFoundException(99L));
 
         assertThrows(MatchNotFoundException.class,
-                () -> eloListener.onMatchFinished(new MatchFinishedEvent(99L)));
+                () -> eloListener.onMatchFinished(new MatchFinishedEvent(99L, 0, 0)));
     }
 }

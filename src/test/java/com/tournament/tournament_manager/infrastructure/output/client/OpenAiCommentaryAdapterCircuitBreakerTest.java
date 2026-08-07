@@ -67,6 +67,8 @@ class OpenAiCommentaryAdapterCircuitBreakerTest {
         verify(openAIClient.chat().completions()).create(paramsCaptor.capture());
         String paramsAsString = paramsCaptor.getValue().toString();
 
+        // Le message système (rôle "system") doit être présent et rappeler que les
+        // pseudos joueurs sont des données, jamais des instructions à suivre.
         assertThat(paramsAsString)
                 .containsIgnoringCase("system")
                 .contains("jamais")

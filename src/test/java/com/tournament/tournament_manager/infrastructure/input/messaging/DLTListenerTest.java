@@ -14,7 +14,7 @@ class DLTListenerTest {
 
     @Test
     void onDeadLetter_shouldLogMessage_whenEventReceived() {
-        MatchFinishedEvent event = new MatchFinishedEvent(42L);
+        MatchFinishedEvent event = new MatchFinishedEvent(42L, 0, 0);
         dltListener.onDeadLetter(event);
     }
 }

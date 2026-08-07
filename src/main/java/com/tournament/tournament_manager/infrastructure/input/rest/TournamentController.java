@@ -68,7 +68,10 @@ public class TournamentController {
     @ApiResponse(responseCode = "200", description = "Liste des tournois")
     @GetMapping
     public ResponseEntity<Page<TournamentResponse>> getAllTournaments(Pageable pageable) {
-        return ResponseEntity.ok(getTournamentUseCase.getAllTournaments(pageable));
+        var result = getTournamentUseCase.getAllTournaments(
+                new com.tournament.tournament_manager.domain.model.PageRequest(pageable.getPageNumber(), pageable.getPageSize()));
+        return ResponseEntity.ok(new org.springframework.data.domain.PageImpl<>(
+                result.content(), pageable, result.totalElements()));
     }
 
     @Operation(summary = "Obtenir un tournoi par ID")

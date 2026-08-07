@@ -1,5 +1,6 @@
 package com.tournament.tournament_manager.application.tournament;
 
+import com.tournament.tournament_manager.domain.model.PageResult;
 import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.domain.port.out.tournament.LoadAllTournamentsPort;
 import com.tournament.tournament_manager.domain.port.out.tournament.LoadTournamentPort;
@@ -10,9 +11,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -57,12 +55,13 @@ class GetTournamentServiceTest {
         tournament.setName("Test");
         tournament.setMaxPlayers(4);
 
-        Page<Tournament> page = new PageImpl<>(List.of(tournament));
-        when(loadAllTournamentsPort.loadAllTournaments(any(Pageable.class))).thenReturn(page);
+        PageResult<Tournament> page = PageResult.of(List.of(tournament), 0, 20, 1);
+        when(loadAllTournamentsPort.loadAllTournaments(any())).thenReturn(page);
 
-        Page<TournamentResponse> responses = getTournamentService.getAllTournaments(Pageable.unpaged());
+        PageResult<TournamentResponse> responses = getTournamentService.getAllTournaments(
+                com.tournament.tournament_manager.domain.model.PageRequest.of(0, 20));
 
-        assertEquals(1, responses.getTotalElements());
-        assertEquals("Test", responses.getContent().get(0).name());
+        assertEquals(1, responses.totalElements());
+        assertEquals("Test", responses.content().get(0).name());
     }
 }

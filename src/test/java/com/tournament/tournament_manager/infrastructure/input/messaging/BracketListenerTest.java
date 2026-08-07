@@ -57,7 +57,7 @@ class BracketListenerTest {
 
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
 
-        bracketListener.onMatchFinished(new MatchFinishedEvent(1L));
+        bracketListener.onMatchFinished(new MatchFinishedEvent(1L, 0, 0));
 
         verify(advanceBracketUseCase, times(1)).advanceToNextRound(tournament, 4);
         verify(checkTournamentCompletionUseCase, never()).checkCompletion(any());
@@ -73,7 +73,7 @@ class BracketListenerTest {
 
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
 
-        bracketListener.onMatchFinished(new MatchFinishedEvent(1L));
+        bracketListener.onMatchFinished(new MatchFinishedEvent(1L, 0, 0));
 
         verify(checkTournamentCompletionUseCase, times(1)).checkCompletion(tournament);
         verify(advanceBracketUseCase, never()).advanceToNextRound(any(), anyInt());
@@ -84,7 +84,7 @@ class BracketListenerTest {
         when(loadMatchPort.loadMatch(99L)).thenThrow(new MatchNotFoundException(99L));
 
         assertThrows(MatchNotFoundException.class,
-                () -> bracketListener.onMatchFinished(new MatchFinishedEvent(99L)));
+                () -> bracketListener.onMatchFinished(new MatchFinishedEvent(99L, 0, 0)));
     }
 
     @Test
@@ -97,7 +97,7 @@ class BracketListenerTest {
 
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
 
-        bracketListener.onMatchFinished(new MatchFinishedEvent(1L));
+        bracketListener.onMatchFinished(new MatchFinishedEvent(1L, 0, 0));
 
         verify(generateKnockoutBracketFromGroupsUseCase, times(1)).checkGroupsCompletionAndGenerateBracket(tournament);
         verify(advanceBracketUseCase, never()).advanceToNextRound(any(), anyInt());
@@ -114,7 +114,7 @@ class BracketListenerTest {
 
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
 
-        bracketListener.onMatchFinished(new MatchFinishedEvent(1L));
+        bracketListener.onMatchFinished(new MatchFinishedEvent(1L, 0, 0));
 
         verify(advanceBracketUseCase, times(1)).advanceToNextRound(tournament, 2);
         verify(generateKnockoutBracketFromGroupsUseCase, never()).checkGroupsCompletionAndGenerateBracket(any());

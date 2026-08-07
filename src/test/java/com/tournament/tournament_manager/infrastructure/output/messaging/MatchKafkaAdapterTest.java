@@ -1,7 +1,7 @@
 package com.tournament.tournament_manager.infrastructure.output.messaging;
 
 import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
-import com.tournament.tournament_manager.domain.model.entities.OutboxEvent;
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.OutboxEventEntity;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.OutboxEventRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,14 +39,14 @@ class MatchKafkaAdapterTest {
 
     @Test
     void publishMatchFinished_shouldWriteToOutbox_notKafkaDirectly() {
-        MatchFinishedEvent event = new MatchFinishedEvent(1L);
+        MatchFinishedEvent event = new MatchFinishedEvent(1L, 0, 0);
 
         matchKafkaAdapter.publishMatchFinished(event, 42L);
 
-        ArgumentCaptor<OutboxEvent> captor = ArgumentCaptor.forClass(OutboxEvent.class);
+        ArgumentCaptor<OutboxEventEntity> captor = ArgumentCaptor.forClass(OutboxEventEntity.class);
         verify(outboxEventRepository, times(1)).save(captor.capture());
 
-        OutboxEvent saved = captor.getValue();
+        OutboxEventEntity saved = captor.getValue();
         assertEquals(MATCH_FINISHED_TOPIC, saved.getTopic());
         assertEquals("42", saved.getPartitionKey());
         assertEquals("MatchFinishedEvent", saved.getEventType());

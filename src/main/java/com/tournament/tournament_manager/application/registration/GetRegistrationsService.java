@@ -1,11 +1,11 @@
 package com.tournament.tournament_manager.application.registration;
 
+import com.tournament.tournament_manager.domain.model.PageRequest;
+import com.tournament.tournament_manager.domain.model.PageResult;
 import com.tournament.tournament_manager.domain.model.Registration;
 import com.tournament.tournament_manager.domain.port.in.registration.GetRegistrationsUseCase;
 import com.tournament.tournament_manager.domain.port.out.registration.LoadRegistrationPort;
 import com.tournament.tournament_manager.dto.response.registration.RegistrationResponse;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,8 +23,8 @@ public class GetRegistrationsService implements GetRegistrationsUseCase {
     }
 
     @Override
-    public Page<RegistrationResponse> getTournamentRegistrations(Long tournamentId, Pageable pageable) {
-        return loadRegistrationPort.loadByTournamentId(tournamentId, pageable)
+    public PageResult<RegistrationResponse> getTournamentRegistrations(Long tournamentId, PageRequest pageRequest) {
+        return loadRegistrationPort.loadByTournamentId(tournamentId, pageRequest)
                 .map(this::toResponse);
     }
 

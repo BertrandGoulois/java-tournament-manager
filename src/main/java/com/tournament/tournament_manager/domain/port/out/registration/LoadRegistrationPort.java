@@ -1,8 +1,8 @@
 package com.tournament.tournament_manager.domain.port.out.registration;
 
+import com.tournament.tournament_manager.domain.model.PageRequest;
+import com.tournament.tournament_manager.domain.model.PageResult;
 import com.tournament.tournament_manager.domain.model.Registration;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -21,8 +21,8 @@ public interface LoadRegistrationPort {
      * Charge les inscriptions d'un tournoi de façon paginée.
      *
      * @param tournamentId identifiant du tournoi
-     * @param pageable     paramètres de pagination
+     * @param pageRequest  paramètres de pagination
      * @return page des inscriptions
      */
-    Page<Registration> loadByTournamentId(Long tournamentId, Pageable pageable);
+    PageResult<Registration> loadByTournamentId(Long tournamentId, PageRequest pageRequest);
 }

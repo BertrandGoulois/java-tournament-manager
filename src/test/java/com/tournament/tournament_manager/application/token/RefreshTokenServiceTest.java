@@ -1,7 +1,7 @@
 package com.tournament.tournament_manager.application.token;
 
 import com.tournament.tournament_manager.config.security.JwtService;
-import com.tournament.tournament_manager.domain.model.entities.RefreshToken;
+import com.tournament.tournament_manager.domain.model.RefreshToken;
 import com.tournament.tournament_manager.domain.port.out.auth.DeleteRefreshTokenPort;
 import com.tournament.tournament_manager.domain.port.out.auth.LoadRefreshTokenPort;
 import com.tournament.tournament_manager.domain.port.out.auth.SaveRefreshTokenPort;

@@ -156,6 +156,8 @@ class RateLimitingFilterTest {
 
     @Test
     void rpcPlayerCreate_shouldBlock_whenLimitExceeded() throws Exception {
+        // Même bucket que POST /api/players : c'est la même opération, exposée par une
+        // seconde porte d'entrée (JSON-RPC) — le contournement que corrige ce point.
         for (int i = 0; i < 10; i++) {
             filter.doFilterInternal(
                     buildRpcRequest("player.create", "8.8.8.8"),
@@ -174,6 +176,7 @@ class RateLimitingFilterTest {
 
     @Test
     void rpcPlayerCreate_shouldShareBucket_withRestEndpoint() throws Exception {
+        // La même IP consomme le même bucket qu'elle passe par REST ou par JSON-RPC.
         String ip = "9.9.9.9";
         for (int i = 0; i < 6; i++) {
             filter.doFilterInternal(
@@ -187,6 +190,7 @@ class RateLimitingFilterTest {
                     new MockHttpServletResponse(),
                     filterChain);
         }
+        // Le 11e appel, quelle que soit la porte d'entrée, doit être bloqué.
         MockHttpServletResponse response = new MockHttpServletResponse();
         filter.doFilterInternal(buildRpcRequest("player.create", ip), response, filterChain);
 
@@ -205,6 +209,8 @@ class RateLimitingFilterTest {
 
     @Test
     void rpcRequest_shouldRemainReadable_byControllerDownstream() throws Exception {
+        // Le filtre doit lire le corps pour repérer "method", sans empêcher le contrôleur
+        // de le désérialiser normalement plus loin dans la chaîne.
         MockHttpServletRequest request = buildRpcRequest("tournament.getAll", "12.12.12.12");
         MockHttpServletResponse response = new MockHttpServletResponse();
 
@@ -236,6 +242,8 @@ class RateLimitingFilterTest {
                 response,
                 filterChain);
 
+        // Redis est en panne : on laisse passer plutôt que de renvoyer une 500 sur
+        // un endpoint qui n'a par ailleurs aucun rapport avec Redis.
         assertThat(response.getStatus()).isEqualTo(200);
         verify(filterChain, times(1)).doFilter(any(), any());
     }

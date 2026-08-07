@@ -1,6 +1,7 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.adapter;
 
 import com.tournament.tournament_manager.domain.model.EloHistory;
+import com.tournament.tournament_manager.domain.model.PageResult;
 import com.tournament.tournament_manager.domain.model.Player;
 import com.tournament.tournament_manager.domain.model.valueobjects.EloRating;
 import com.tournament.tournament_manager.exception.domain.PlayerNotFoundException;
@@ -138,9 +139,9 @@ class PlayerJpaAdapterTest {
         Page<PlayerEntity> page = new PageImpl<>(List.of(entityWithId(1L)));
         when(playerRepository.findAll(any(Pageable.class))).thenReturn(page);
 
-        Page<Player> result = playerJpaAdapter.loadAllPlayers(Pageable.unpaged());
+        PageResult<Player> result = playerJpaAdapter.loadAllPlayers(com.tournament.tournament_manager.domain.model.PageRequest.of(0, 20));
 
-        assertEquals(1, result.getTotalElements());
+        assertEquals(1, result.totalElements());
     }
 
     @Test

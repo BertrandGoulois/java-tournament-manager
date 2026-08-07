@@ -1,9 +1,9 @@
 package com.tournament.tournament_manager.domain.port.in.tournament;
 
+import com.tournament.tournament_manager.domain.model.PageRequest;
+import com.tournament.tournament_manager.domain.model.PageResult;
 import com.tournament.tournament_manager.dto.response.tournament.TournamentResponse;
 import com.tournament.tournament_manager.exception.domain.TournamentNotFoundException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 /**
  * Port entrant : cas d'utilisation pour consulter un ou plusieurs tournois.
@@ -24,5 +24,5 @@ public interface GetTournamentUseCase {
      *
      * @return page de tournois, vide si aucun tournoi enregistré
      */
-    Page<TournamentResponse> getAllTournaments(Pageable pageable);
+    PageResult<TournamentResponse> getAllTournaments(PageRequest pageRequest);
 }

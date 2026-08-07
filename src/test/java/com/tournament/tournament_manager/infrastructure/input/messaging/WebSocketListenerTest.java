@@ -22,7 +22,7 @@ class WebSocketListenerTest {
 
     @Test
     void onMatchFinished_shouldBroadcastEvent() {
-        MatchFinishedEvent event = new MatchFinishedEvent(1L);
+        MatchFinishedEvent event = new MatchFinishedEvent(1L, 0, 0);
 
         webSocketListener.onMatchFinished(event);
 

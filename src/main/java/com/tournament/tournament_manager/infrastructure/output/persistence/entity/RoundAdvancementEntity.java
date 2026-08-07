@@ -1,21 +1,22 @@
-package com.tournament.tournament_manager.domain.model.entities;
+package com.tournament.tournament_manager.infrastructure.output.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
 
 /**
- * Marqueur "ce round a déjà été créé pour ce tournoi", utilisé uniquement comme verrou
- * distribué (voir la contrainte {@code UNIQUE(tournament_id, round)} en base) — jamais lu
- * ni exposé ailleurs que dans {@code AdvanceBracketService}.
+ * Entité JPA pour la persistance du marqueur d'avancement de round. Contrepartie technique
+ * du domaine pur {@code domain.model.RoundAdvancement} — voir {@code RoundAdvancementMapper}.
  */
 @Entity
 @Table(name = "round_advancements")
 @Getter
 @Setter
-public class RoundAdvancement {
+@NoArgsConstructor
+public class RoundAdvancementEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

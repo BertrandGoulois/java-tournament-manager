@@ -1,10 +1,12 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.adapter;
 
-import com.tournament.tournament_manager.domain.model.entities.RefreshToken;
+import com.tournament.tournament_manager.domain.model.RefreshToken;
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.RefreshTokenEntity;
+import com.tournament.tournament_manager.infrastructure.output.persistence.mapper.RefreshTokenMapper;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.RefreshTokenRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -20,23 +22,36 @@ class RefreshTokenJpaAdapterTest {
     @Mock
     private RefreshTokenRepository refreshTokenRepository;
 
-    @InjectMocks
     private RefreshTokenJpaAdapter refreshTokenJpaAdapter;
 
+    @BeforeEach
+    void setUp() {
+        refreshTokenJpaAdapter = new RefreshTokenJpaAdapter(refreshTokenRepository, new RefreshTokenMapper());
+    }
+
     @Test
-    void saveRefreshToken_shouldReturnSavedToken() {
+    void saveRefreshToken_shouldCreateNewEntity_whenNoId() {
         RefreshToken token = new RefreshToken();
-        when(refreshTokenRepository.save(any())).thenReturn(token);
+        token.setToken("hash123");
+        token.setUsername("admin");
+        when(refreshTokenRepository.save(any())).thenAnswer(inv -> {
+            RefreshTokenEntity e = inv.getArgument(0);
+            e.setId(1L);
+            return e;
+        });
 
         RefreshToken result = refreshTokenJpaAdapter.saveRefreshToken(token);
 
         assertNotNull(result);
+        assertNotNull(result.getId());
     }
 
     @Test
     void loadByToken_shouldReturnToken_whenFound() {
-        RefreshToken token = new RefreshToken();
-        when(refreshTokenRepository.findByToken("abc")).thenReturn(Optional.of(token));
+        RefreshTokenEntity entity = new RefreshTokenEntity();
+        entity.setId(1L);
+        entity.setToken("abc");
+        when(refreshTokenRepository.findByToken("abc")).thenReturn(Optional.of(entity));
 
         Optional<RefreshToken> result = refreshTokenJpaAdapter.loadByToken("abc");
 

@@ -62,6 +62,9 @@ public class RegistrationController {
     @GetMapping("/{tournamentId}")
     public ResponseEntity<Page<RegistrationResponse>> getTournamentRegistrations(
             @Parameter(description = "ID du tournoi") @PathVariable Long tournamentId, Pageable pageable) {
-        return ResponseEntity.ok(getRegistrationsUseCase.getTournamentRegistrations(tournamentId, pageable));
+        var result = getRegistrationsUseCase.getTournamentRegistrations(tournamentId,
+                new com.tournament.tournament_manager.domain.model.PageRequest(pageable.getPageNumber(), pageable.getPageSize()));
+        return ResponseEntity.ok(new org.springframework.data.domain.PageImpl<>(
+                result.content(), pageable, result.totalElements()));
     }
 }

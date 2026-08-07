@@ -31,6 +31,6 @@ public class PlayerGetAllHandler extends AbstractJsonRpcHandler {
         java.util.Map<?, ?> map = params != null ? objectMapper.convertValue(params, java.util.Map.class) : java.util.Map.of();
         int page = map.containsKey("page") ? ((Number) map.get("page")).intValue() : 0;
         int size = map.containsKey("size") ? ((Number) map.get("size")).intValue() : 10;
-        return getPlayerUseCase.getAllPlayers(org.springframework.data.domain.PageRequest.of(page, size));
+        return getPlayerUseCase.getAllPlayers(com.tournament.tournament_manager.domain.model.PageRequest.of(page, size));
     }
 }

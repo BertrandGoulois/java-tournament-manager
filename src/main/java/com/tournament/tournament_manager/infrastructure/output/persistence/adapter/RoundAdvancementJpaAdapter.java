@@ -1,7 +1,8 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.adapter;
 
-import com.tournament.tournament_manager.domain.model.entities.RoundAdvancement;
 import com.tournament.tournament_manager.domain.port.out.tournament.ClaimRoundAdvancementPort;
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.RoundAdvancementEntity;
+import com.tournament.tournament_manager.infrastructure.output.persistence.mapper.RoundAdvancementMapper;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.RoundAdvancementRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -23,17 +24,18 @@ import org.springframework.transaction.annotation.Transactional;
 public class RoundAdvancementJpaAdapter implements ClaimRoundAdvancementPort {
 
     private final RoundAdvancementRepository roundAdvancementRepository;
+    private final RoundAdvancementMapper roundAdvancementMapper;
 
-    public RoundAdvancementJpaAdapter(RoundAdvancementRepository roundAdvancementRepository) {
+    public RoundAdvancementJpaAdapter(RoundAdvancementRepository roundAdvancementRepository,
+                                      RoundAdvancementMapper roundAdvancementMapper) {
         this.roundAdvancementRepository = roundAdvancementRepository;
+        this.roundAdvancementMapper = roundAdvancementMapper;
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public boolean tryClaim(Long tournamentId, int round) {
-        RoundAdvancement marker = new RoundAdvancement();
-        marker.setTournamentId(tournamentId);
-        marker.setRound(round);
+        RoundAdvancementEntity marker = roundAdvancementMapper.toNewEntity(tournamentId, round);
         try {
             roundAdvancementRepository.saveAndFlush(marker);
             return true;

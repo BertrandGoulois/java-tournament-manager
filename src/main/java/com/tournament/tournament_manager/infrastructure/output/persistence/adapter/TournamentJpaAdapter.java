@@ -1,12 +1,13 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.adapter;
 
+import com.tournament.tournament_manager.domain.model.PageRequest;
+import com.tournament.tournament_manager.domain.model.PageResult;
 import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.domain.port.out.tournament.*;
 import com.tournament.tournament_manager.exception.domain.TournamentNotFoundException;
 import com.tournament.tournament_manager.infrastructure.output.persistence.entity.TournamentEntity;
 import com.tournament.tournament_manager.infrastructure.output.persistence.mapper.TournamentMapper;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.TournamentRepository;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
@@ -54,8 +55,10 @@ public class TournamentJpaAdapter implements LoadTournamentPort, SaveTournamentP
     }
 
     @Override
-    public Page<Tournament> loadAllTournaments(Pageable pageable) {
-        return tournamentRepository.findAll(pageable).map(tournamentMapper::toDomain);
+    public PageResult<Tournament> loadAllTournaments(PageRequest pageRequest) {
+        Pageable pageable = org.springframework.data.domain.PageRequest.of(pageRequest.page(), pageRequest.size());
+        var page = tournamentRepository.findAll(pageable).map(tournamentMapper::toDomain);
+        return PageResult.of(page.getContent(), pageRequest.page(), pageRequest.size(), page.getTotalElements());
     }
 
     @Override

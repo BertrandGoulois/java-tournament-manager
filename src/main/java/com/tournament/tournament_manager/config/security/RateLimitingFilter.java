@@ -263,6 +263,8 @@ public class RateLimitingFilter extends OncePerRequestFilter {
 
                 @Override
                 public void setReadListener(ReadListener readListener) {
+                    // Corps déjà entièrement disponible en mémoire : lecture toujours synchrone,
+                    // aucune notification asynchrone à déclencher.
                 }
 
                 @Override

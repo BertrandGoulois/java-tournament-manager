@@ -1,5 +1,7 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.adapter;
 
+import com.tournament.tournament_manager.domain.model.PageRequest;
+import com.tournament.tournament_manager.domain.model.PageResult;
 import com.tournament.tournament_manager.domain.model.Registration;
 import com.tournament.tournament_manager.domain.port.out.registration.CountRegistrationPort;
 import com.tournament.tournament_manager.domain.port.out.registration.ExistsRegistrationPort;
@@ -12,7 +14,6 @@ import com.tournament.tournament_manager.infrastructure.output.persistence.mappe
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.PlayerRepository;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.RegistrationRepository;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.TournamentRepository;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
@@ -49,9 +50,11 @@ public class RegistrationJpaAdapter implements LoadRegistrationPort, SaveRegistr
     }
 
     @Override
-    public Page<Registration> loadByTournamentId(Long tournamentId, Pageable pageable) {
-        return registrationRepository.findByTournamentId(tournamentId, pageable)
+    public PageResult<Registration> loadByTournamentId(Long tournamentId, PageRequest pageRequest) {
+        Pageable pageable = org.springframework.data.domain.PageRequest.of(pageRequest.page(), pageRequest.size());
+        var page = registrationRepository.findByTournamentId(tournamentId, pageable)
                 .map(registrationMapper::toDomain);
+        return PageResult.of(page.getContent(), pageRequest.page(), pageRequest.size(), page.getTotalElements());
     }
 
     @Override

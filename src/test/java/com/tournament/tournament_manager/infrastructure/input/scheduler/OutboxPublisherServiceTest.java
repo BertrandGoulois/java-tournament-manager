@@ -1,6 +1,6 @@
 package com.tournament.tournament_manager.infrastructure.input.scheduler;
 
-import com.tournament.tournament_manager.domain.model.entities.OutboxEvent;
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.OutboxEventEntity;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.OutboxEventRepository;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
@@ -34,8 +34,8 @@ class OutboxPublisherServiceTest {
 
     private final tools.jackson.databind.ObjectMapper objectMapper = JsonMapper.builder().build();
 
-    private OutboxEvent pendingEvent(long id, String payload) {
-        OutboxEvent event = new OutboxEvent();
+    private OutboxEventEntity pendingEvent(long id, String payload) {
+        OutboxEventEntity event = new OutboxEventEntity();
         event.setId(id);
         event.setTopic(MATCH_FINISHED_TOPIC);
         event.setPartitionKey("42");
@@ -47,7 +47,7 @@ class OutboxPublisherServiceTest {
     @Test
     void publishPendingEvents_shouldMarkPublished_whenSendSucceeds() {
         outboxPublisherService = new OutboxPublisherService(outboxEventRepository, kafkaTemplate, objectMapper);
-        OutboxEvent event = pendingEvent(1L, "{\"matchId\":1,\"player1EloBefore\":1000,\"player2EloBefore\":1000}");
+        OutboxEventEntity event = pendingEvent(1L, "{\"matchId\":1,\"player1EloBefore\":1000,\"player2EloBefore\":1000}");
         when(outboxEventRepository.lockNextUnpublishedBatch(anyInt())).thenReturn(List.of(event));
 
         SendResult<String, Object> sendResult = new SendResult<>(
@@ -63,7 +63,7 @@ class OutboxPublisherServiceTest {
     @Test
     void publishPendingEvents_shouldLeaveUnpublished_whenSendFails() {
         outboxPublisherService = new OutboxPublisherService(outboxEventRepository, kafkaTemplate, objectMapper);
-        OutboxEvent event = pendingEvent(2L, "{\"matchId\":2,\"player1EloBefore\":1000,\"player2EloBefore\":1000}");
+        OutboxEventEntity event = pendingEvent(2L, "{\"matchId\":2,\"player1EloBefore\":1000,\"player2EloBefore\":1000}");
         when(outboxEventRepository.lockNextUnpublishedBatch(anyInt())).thenReturn(List.of(event));
 
         when(kafkaTemplate.send(eq(MATCH_FINISHED_TOPIC), eq("42"), any()))
@@ -88,8 +88,8 @@ class OutboxPublisherServiceTest {
     @Test
     void publishPendingEvents_shouldContinueWithRemainingEvents_whenOneFails() {
         outboxPublisherService = new OutboxPublisherService(outboxEventRepository, kafkaTemplate, objectMapper);
-        OutboxEvent failing = pendingEvent(3L, "{\"matchId\":3,\"player1EloBefore\":1000,\"player2EloBefore\":1000}");
-        OutboxEvent succeeding = pendingEvent(4L, "{\"matchId\":4,\"player1EloBefore\":1000,\"player2EloBefore\":1000}");
+        OutboxEventEntity failing = pendingEvent(3L, "{\"matchId\":3,\"player1EloBefore\":1000,\"player2EloBefore\":1000}");
+        OutboxEventEntity succeeding = pendingEvent(4L, "{\"matchId\":4,\"player1EloBefore\":1000,\"player2EloBefore\":1000}");
         when(outboxEventRepository.lockNextUnpublishedBatch(anyInt()))
                 .thenReturn(List.of(failing, succeeding));
 

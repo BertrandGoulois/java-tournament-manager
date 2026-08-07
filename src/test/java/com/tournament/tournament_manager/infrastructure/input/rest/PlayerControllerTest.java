@@ -26,8 +26,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
+import com.tournament.tournament_manager.domain.model.PageResult;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -120,8 +119,8 @@ class PlayerControllerTest {
 
     @Test
     void getAllPlayers_shouldReturn200() throws Exception {
-        Page<PlayerResponse> page = new PageImpl<>(List.of(samplePlayer()));
-        when(getPlayerUseCase.getAllPlayers(any(Pageable.class))).thenReturn(page);
+        PageResult<PlayerResponse> page = PageResult.of(List.of(samplePlayer()), 0, 20, 1);
+        when(getPlayerUseCase.getAllPlayers(any())).thenReturn(page);
 
         mockMvc.perform(get("/api/players").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())
@@ -188,8 +187,8 @@ class PlayerControllerTest {
 
     @Test
     void getAllPlayers_shouldReturn200_whenPlayerRole() throws Exception {
-        Page<PlayerResponse> page = new PageImpl<>(List.of(samplePlayer()));
-        when(getPlayerUseCase.getAllPlayers(any(Pageable.class))).thenReturn(page);
+        PageResult<PlayerResponse> page = PageResult.of(List.of(samplePlayer()), 0, 20, 1);
+        when(getPlayerUseCase.getAllPlayers(any())).thenReturn(page);
         mockMvc.perform(get("/api/players")
                         .with(user("player").roles("PLAYER")))
                 .andExpect(status().isOk());

@@ -1,6 +1,8 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.adapter;
 
 import com.tournament.tournament_manager.domain.model.EloHistory;
+import com.tournament.tournament_manager.domain.model.PageRequest;
+import com.tournament.tournament_manager.domain.model.PageResult;
 import com.tournament.tournament_manager.domain.model.Player;
 import com.tournament.tournament_manager.domain.port.out.player.*;
 import com.tournament.tournament_manager.exception.domain.PlayerNotFoundException;
@@ -10,7 +12,6 @@ import com.tournament.tournament_manager.infrastructure.output.persistence.mappe
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.EloHistoryRepository;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.MatchRepository;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.PlayerRepository;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
@@ -81,8 +82,10 @@ public class PlayerJpaAdapter implements LoadPlayerPort, SavePlayerPort,
     }
 
     @Override
-    public Page<Player> loadAllPlayers(Pageable pageable) {
-        return playerRepository.findAll(pageable).map(playerMapper::toDomain);
+    public PageResult<Player> loadAllPlayers(PageRequest pageRequest) {
+        Pageable pageable = org.springframework.data.domain.PageRequest.of(pageRequest.page(), pageRequest.size());
+        var page = playerRepository.findAll(pageable).map(playerMapper::toDomain);
+        return PageResult.of(page.getContent(), pageRequest.page(), pageRequest.size(), page.getTotalElements());
     }
 
     @Override

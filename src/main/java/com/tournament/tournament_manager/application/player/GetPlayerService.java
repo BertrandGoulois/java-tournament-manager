@@ -1,12 +1,12 @@
 package com.tournament.tournament_manager.application.player;
 
+import com.tournament.tournament_manager.domain.model.PageRequest;
+import com.tournament.tournament_manager.domain.model.PageResult;
 import com.tournament.tournament_manager.domain.model.Player;
 import com.tournament.tournament_manager.domain.port.in.player.GetPlayerUseCase;
 import com.tournament.tournament_manager.domain.port.out.player.LoadAllPlayersPort;
 import com.tournament.tournament_manager.domain.port.out.player.LoadPlayerPort;
 import com.tournament.tournament_manager.dto.response.player.PlayerResponse;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,8 +32,8 @@ public class GetPlayerService implements GetPlayerUseCase {
     }
 
     @Override
-    public Page<PlayerResponse> getAllPlayers(Pageable pageable) {
-        return loadAllPlayersPort.loadAllPlayers(pageable)
+    public PageResult<PlayerResponse> getAllPlayers(PageRequest pageRequest) {
+        return loadAllPlayersPort.loadAllPlayers(pageRequest)
                 .map(this::toResponse);
     }
 

@@ -32,7 +32,7 @@ class KafkaIntegrationTest {
 
     @Test
     void shouldReceiveMatchFinishedEvent() throws InterruptedException {
-        kafkaTemplate.send(KafkaConfig.MATCH_FINISHED_TOPIC, new MatchFinishedEvent(42L));
+        kafkaTemplate.send(KafkaConfig.MATCH_FINISHED_TOPIC, new MatchFinishedEvent(42L, 0, 0));
         boolean received = testKafkaConsumer.getLatch().await(120, TimeUnit.SECONDS);
         assertTrue(received, "L'\u00e9v\u00e9nement Kafka n'a pas \u00e9t\u00e9 re\u00e7u dans les d\u00e9lais");
     }

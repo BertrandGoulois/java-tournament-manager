@@ -1,5 +1,6 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.adapter;
 
+import com.tournament.tournament_manager.domain.model.PageResult;
 import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.exception.domain.TournamentNotFoundException;
 import com.tournament.tournament_manager.infrastructure.output.persistence.entity.TournamentEntity;
@@ -108,8 +109,9 @@ class TournamentJpaAdapterTest {
         Page<TournamentEntity> page = new PageImpl<>(List.of(entityWithId(1L)));
         when(tournamentRepository.findAll(any(Pageable.class))).thenReturn(page);
 
-        Page<Tournament> result = tournamentJpaAdapter.loadAllTournaments(Pageable.unpaged());
+        PageResult<Tournament> result = tournamentJpaAdapter.loadAllTournaments(
+                com.tournament.tournament_manager.domain.model.PageRequest.of(0, 20));
 
-        assertEquals(1, result.getTotalElements());
+        assertEquals(1, result.totalElements());
     }
 }

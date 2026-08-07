@@ -1,7 +1,7 @@
 package com.tournament.tournament_manager.infrastructure.input.scheduler;
 
 import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
-import com.tournament.tournament_manager.domain.model.entities.OutboxEvent;
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.OutboxEventEntity;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.OutboxEventRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -47,17 +47,17 @@ public class OutboxPublisherService {
     @Scheduled(fixedDelay = 500)
     @Transactional
     public void publishPendingEvents() {
-        List<OutboxEvent> batch = outboxEventRepository.lockNextUnpublishedBatch(BATCH_SIZE);
+        List<OutboxEventEntity> batch = outboxEventRepository.lockNextUnpublishedBatch(BATCH_SIZE);
         if (batch.isEmpty()) {
             return;
         }
         log.debug("Publication de {} événement(s) en attente depuis l'outbox", batch.size());
-        for (OutboxEvent event : batch) {
+        for (OutboxEventEntity event : batch) {
             publishOne(event);
         }
     }
 
-    private void publishOne(OutboxEvent event) {
+    private void publishOne(OutboxEventEntity event) {
         try {
             Object payload = deserializePayload(event);
             kafkaTemplate.send(event.getTopic(), event.getPartitionKey(), payload)
@@ -72,7 +72,7 @@ public class OutboxPublisherService {
         }
     }
 
-    private Object deserializePayload(OutboxEvent event) {
+    private Object deserializePayload(OutboxEventEntity event) {
         // Un seul type d'événement existe aujourd'hui dans tout le système. À généraliser
         // (switch sur event.getEventType()) si un second type d'événement outbox apparaît.
         return objectMapper.readValue(event.getPayload(), MatchFinishedEvent.class);

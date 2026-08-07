@@ -143,7 +143,7 @@ class CommentaryListenerTest {
 
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
 
-        commentaryListener.onMatchFinished(new MatchFinishedEvent(1L));
+        commentaryListener.onMatchFinished(new MatchFinishedEvent(1L, 0, 0));
 
         verifyNoInteractions(generateCommentaryPort);
         verifyNoInteractions(saveCommentaryPort);

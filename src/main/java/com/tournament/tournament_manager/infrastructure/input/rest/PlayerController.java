@@ -63,7 +63,10 @@ public class PlayerController {
     @ApiResponse(responseCode = "200", description = "Liste des joueurs")
     @GetMapping
     public ResponseEntity<Page<PlayerResponse>> getAllPlayers(Pageable pageable) {
-        return ResponseEntity.ok(getPlayerUseCase.getAllPlayers(pageable));
+        var result = getPlayerUseCase.getAllPlayers(
+                new com.tournament.tournament_manager.domain.model.PageRequest(pageable.getPageNumber(), pageable.getPageSize()));
+        return ResponseEntity.ok(new org.springframework.data.domain.PageImpl<>(
+                result.content(), pageable, result.totalElements()));
     }
 
     @Operation(summary = "Obtenir un joueur par ID")

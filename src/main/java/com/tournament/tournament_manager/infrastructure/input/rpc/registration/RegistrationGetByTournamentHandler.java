@@ -2,11 +2,10 @@ package com.tournament.tournament_manager.infrastructure.input.rpc.registration;
 
 import tools.jackson.databind.ObjectMapper;
 import jakarta.validation.Validator;
+import com.tournament.tournament_manager.domain.model.PageRequest;
 import com.tournament.tournament_manager.domain.port.in.registration.GetRegistrationsUseCase;
 import com.tournament.tournament_manager.dto.request.rpc.RegistrationGetByTournamentParams;
 import com.tournament.tournament_manager.infrastructure.input.rpc.AbstractJsonRpcHandler;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 /**
@@ -34,11 +33,11 @@ public class RegistrationGetByTournamentHandler extends AbstractJsonRpcHandler {
         RegistrationGetByTournamentParams request =
                 objectMapper.convertValue(params, RegistrationGetByTournamentParams.class);
 
-        Pageable pageable = PageRequest.of(request.page(), request.size());
+        PageRequest pageRequest = PageRequest.of(request.page(), request.size());
 
         return getRegistrationsUseCase.getTournamentRegistrations(
                 request.tournamentId(),
-                pageable
+                pageRequest
         );
     }
 }

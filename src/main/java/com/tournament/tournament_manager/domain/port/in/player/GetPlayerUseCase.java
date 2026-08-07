@@ -1,9 +1,9 @@
 package com.tournament.tournament_manager.domain.port.in.player;
 
+import com.tournament.tournament_manager.domain.model.PageRequest;
+import com.tournament.tournament_manager.domain.model.PageResult;
 import com.tournament.tournament_manager.dto.response.player.PlayerResponse;
 import com.tournament.tournament_manager.exception.domain.PlayerNotFoundException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 /**
  * Port entrant : cas d'utilisation pour consulter un ou plusieurs joueurs.
@@ -23,5 +23,5 @@ public interface GetPlayerUseCase {
      *
      * @return page de joueurs, vide si aucun joueur enregistré
      */
-    Page<PlayerResponse> getAllPlayers(Pageable pageable);
+    PageResult<PlayerResponse> getAllPlayers(PageRequest pageRequest);
 }
