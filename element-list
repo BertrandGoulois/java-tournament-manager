@@ -17,7 +17,6 @@ com.tournament.tournament_manager.config.security
 com.tournament.tournament_manager.config.websocket
 com.tournament.tournament_manager.domain.event
 com.tournament.tournament_manager.domain.model
-com.tournament.tournament_manager.domain.model.entities
 com.tournament.tournament_manager.domain.model.enums
 com.tournament.tournament_manager.domain.model.valueobjects
 com.tournament.tournament_manager.domain.port.in.auth
