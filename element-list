@@ -16,6 +16,7 @@ com.tournament.tournament_manager.config.kafka
 com.tournament.tournament_manager.config.security
 com.tournament.tournament_manager.config.websocket
 com.tournament.tournament_manager.domain.event
+com.tournament.tournament_manager.domain.model
 com.tournament.tournament_manager.domain.model.entities
 com.tournament.tournament_manager.domain.model.enums
 com.tournament.tournament_manager.domain.model.valueobjects
@@ -58,4 +59,6 @@ com.tournament.tournament_manager.infrastructure.input.scheduler
 com.tournament.tournament_manager.infrastructure.output.client
 com.tournament.tournament_manager.infrastructure.output.messaging
 com.tournament.tournament_manager.infrastructure.output.persistence.adapter
+com.tournament.tournament_manager.infrastructure.output.persistence.entity
+com.tournament.tournament_manager.infrastructure.output.persistence.mapper
 com.tournament.tournament_manager.infrastructure.output.persistence.repository
