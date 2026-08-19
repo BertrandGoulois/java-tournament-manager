@@ -47,6 +47,7 @@ com.tournament.tournament_manager.dto.response.rpc
 com.tournament.tournament_manager.dto.response.tournament
 com.tournament.tournament_manager.exception.domain
 com.tournament.tournament_manager.exception.handler
+com.tournament.tournament_manager.infrastructure.input.mapper
 com.tournament.tournament_manager.infrastructure.input.messaging
 com.tournament.tournament_manager.infrastructure.input.rest
 com.tournament.tournament_manager.infrastructure.input.rpc
