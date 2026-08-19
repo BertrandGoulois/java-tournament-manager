@@ -4,7 +4,6 @@ import com.tournament.tournament_manager.domain.model.PageResult;
 import com.tournament.tournament_manager.domain.model.Player;
 import com.tournament.tournament_manager.domain.port.out.player.LoadAllPlayersPort;
 import com.tournament.tournament_manager.domain.port.out.player.LoadPlayerPort;
-import com.tournament.tournament_manager.dto.response.player.PlayerResponse;
 import com.tournament.tournament_manager.exception.domain.PlayerNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -42,8 +41,8 @@ class GetPlayerServiceTest {
         player.setUsername("toto");
         player.setEmail("toto@mail.com");
         when(loadPlayerPort.loadPlayer(1L)).thenReturn(player);
-        PlayerResponse response = getPlayerService.getPlayerById(1L);
-        assertEquals("toto", response.username());
+        Player result = getPlayerService.getPlayerById(1L);
+        assertEquals("toto", result.getUsername());
     }
 
     @Test
@@ -53,9 +52,9 @@ class GetPlayerServiceTest {
         player.setEmail("toto@mail.com");
         PageResult<Player> page = PageResult.of(List.of(player), 0, 20, 1);
         when(loadAllPlayersPort.loadAllPlayers(any())).thenReturn(page);
-        PageResult<PlayerResponse> responses = getPlayerService.getAllPlayers(
+        PageResult<Player> responses = getPlayerService.getAllPlayers(
                 com.tournament.tournament_manager.domain.model.PageRequest.of(0, 20));
         assertEquals(1, responses.totalElements());
-        assertEquals("toto", responses.content().get(0).username());
+        assertEquals("toto", responses.content().get(0).getUsername());
     }
 }

@@ -2,13 +2,12 @@ package com.tournament.tournament_manager.application.match;
 
 import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
 import com.tournament.tournament_manager.domain.model.Match;
+import com.tournament.tournament_manager.domain.model.RecordMatchResultCommand;
 import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 import com.tournament.tournament_manager.domain.port.in.match.RecordMatchResultUseCase;
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchPort;
 import com.tournament.tournament_manager.domain.port.out.match.PublishMatchEventPort;
 import com.tournament.tournament_manager.domain.port.out.match.SaveMatchPort;
-import com.tournament.tournament_manager.dto.request.match.RecordMatchResultRequest;
-import com.tournament.tournament_manager.dto.response.match.MatchResponse;
 import com.tournament.tournament_manager.exception.domain.InvalidException;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -19,7 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 
 /**
- * Cas d'utilisation : enregistrement du résultat d'un match.
+ * Cas d'utilisation : enregistrement du résultat d'un match. Retourne un objet de domaine
+ * pur — voir la Javadoc de {@code GetPlayerService}.
  */
 @Slf4j
 @Service
@@ -44,7 +44,7 @@ public class RecordMatchResultService implements RecordMatchResultUseCase {
     }
 
     @Override
-    public MatchResponse recordMatchResult(Long matchId, RecordMatchResultRequest request) {
+    public Match recordMatchResult(Long matchId, RecordMatchResultCommand command) {
         Match match = loadMatchPort.loadMatch(matchId);
 
         if (match.getStatus() == MatchStatus.FINISHED) {
@@ -52,16 +52,16 @@ public class RecordMatchResultService implements RecordMatchResultUseCase {
             throw new InvalidException("Match already finished");
         }
 
-        if (!request.winnerId().equals(match.getPlayer1().getId()) &&
-                (match.getPlayer2() == null || !request.winnerId().equals(match.getPlayer2().getId()))) {
+        if (!command.winnerId().equals(match.getPlayer1().getId()) &&
+                (match.getPlayer2() == null || !command.winnerId().equals(match.getPlayer2().getId()))) {
             log.warn("Vainqueur invalide [matchId={}, winnerId={}, player1={}, player2={}]",
-                    matchId, request.winnerId(),
+                    matchId, command.winnerId(),
                     match.getPlayer1().getId(),
                     match.getPlayer2() != null ? match.getPlayer2().getId() : null);
             throw new InvalidException("Winner is not a player of this match");
         }
 
-        match.setWinner(match.getPlayer1().getId().equals(request.winnerId())
+        match.setWinner(match.getPlayer1().getId().equals(command.winnerId())
                 ? match.getPlayer1()
                 : match.getPlayer2());
         match.setStatus(MatchStatus.FINISHED);
@@ -82,20 +82,6 @@ public class RecordMatchResultService implements RecordMatchResultUseCase {
                 saved.getWinner().getUsername());
 
         matchResultRecordedCounter.increment();
-        return toResponse(saved);
-    }
-
-    private MatchResponse toResponse(Match match) {
-        return new MatchResponse(
-                match.getId(),
-                match.getRound(),
-                match.getPosition(),
-                match.getStatus(),
-                match.getPlayedAt(),
-                match.getTournament().getId(),
-                match.getPlayer1().getId(),
-                match.getPlayer2() != null ? match.getPlayer2().getId() : null,
-                match.getWinner() != null ? match.getWinner().getId() : null
-        );
+        return saved;
     }
 }

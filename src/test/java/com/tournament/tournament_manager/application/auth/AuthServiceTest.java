@@ -2,8 +2,7 @@ package com.tournament.tournament_manager.application.auth;
 
 import com.tournament.tournament_manager.application.token.RefreshTokenService;
 import com.tournament.tournament_manager.config.security.JwtService;
-import com.tournament.tournament_manager.dto.request.auth.LoginRequest;
-import com.tournament.tournament_manager.dto.response.auth.AuthResponse;
+import com.tournament.tournament_manager.domain.model.AuthResult;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -34,17 +33,16 @@ class AuthServiceTest {
 
     @Test
     void login_shouldReturnToken_whenValidCredentials() {
-        LoginRequest request = new LoginRequest("admin", "password123");
         when(authenticationManager.authenticate(any())).thenReturn(
                 new UsernamePasswordAuthenticationToken("admin", "password123")
         );
         when(jwtService.generateToken("admin")).thenReturn("jwt-token");
         when(refreshTokenService.generateRefreshToken("admin")).thenReturn("refresh-token");
 
-        AuthResponse response = authService.login(request);
+        AuthResult result = authService.login("admin", "password123");
 
-        assertEquals("jwt-token", response.token());
-        assertEquals("refresh-token", response.refreshToken());
+        assertEquals("jwt-token", result.accessToken());
+        assertEquals("refresh-token", result.refreshToken());
         verify(authenticationManager, times(1)).authenticate(any());
         verify(jwtService, times(1)).generateToken("admin");
         verify(refreshTokenService, times(1)).generateRefreshToken("admin");
@@ -52,12 +50,11 @@ class AuthServiceTest {
 
     @Test
     void login_shouldThrow_whenInvalidCredentials() {
-        LoginRequest request = new LoginRequest("admin", "wrongpassword");
         when(authenticationManager.authenticate(any())).thenThrow(
                 new BadCredentialsException("Bad credentials")
         );
 
         assertThrows(BadCredentialsException.class,
-                () -> authService.login(request));
+                () -> authService.login("admin", "wrongpassword"));
     }
 }

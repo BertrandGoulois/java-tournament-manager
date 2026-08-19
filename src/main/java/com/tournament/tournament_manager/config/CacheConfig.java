@@ -22,7 +22,7 @@ import java.time.Duration;
  * Java native exposerait toute clé de cache écrivable (Redis, accessible sans
  * authentification par ailleurs) à une exécution de code arbitraire via {@code readObject()}.
  *
- * <p>Les DTOs mis en cache (ex. {@code PlayerStatsResponse}, {@code EloHistoryResponse})
+ * <p>Les objets mis en cache (ex. {@code PlayerStats}, dans {@code domain.model})
  * n'ont pas besoin d'implémenter {@code Serializable}.
  */
 @Configuration
@@ -31,7 +31,7 @@ public class CacheConfig {
     @Bean
     public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
         PolymorphicTypeValidator typeValidator = BasicPolymorphicTypeValidator.builder()
-                .allowIfSubType("com.tournament.tournament_manager.dto.response")
+                .allowIfSubType("com.tournament.tournament_manager.domain.model")
                 .allowIfSubType("java.util")
                 .build();
 

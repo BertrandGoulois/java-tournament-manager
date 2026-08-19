@@ -1,22 +1,19 @@
 package com.tournament.tournament_manager.application.auth;
 
-import com.tournament.tournament_manager.config.security.JwtService;
-import com.tournament.tournament_manager.dto.request.auth.LoginRequest;
-import com.tournament.tournament_manager.dto.response.auth.AuthResponse;
 import com.tournament.tournament_manager.application.token.RefreshTokenService;
+import com.tournament.tournament_manager.config.security.JwtService;
+import com.tournament.tournament_manager.domain.model.AuthResult;
+import com.tournament.tournament_manager.domain.port.in.auth.LoginUseCase;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 
 /**
- * Vérifie qu'un entier est une puissance de 2.
- * Utilise l'astuce bit-à-bit : {@code n > 0 && (n & (n - 1)) == 0}.
- *
- * @param n la valeur à tester
- * @return {@code true} si {@code n} est une puissance de 2
+ * Cas d'utilisation : authentification par mot de passe. Retourne un objet de domaine pur
+ * ({@link AuthResult}) — voir la Javadoc de {@code GetPlayerService}.
  */
 @Service
-public class AuthService {
+public class AuthService implements LoginUseCase {
 
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
@@ -35,17 +32,19 @@ public class AuthService {
      * de Spring Security. En cas d'échec, Spring lève une
      * {@code BadCredentialsException} avant même d'atteindre la génération du token.
      *
-     * @param request contient le username et le password
-     * @return un token JWT valide
+     * @param username le nom d'utilisateur
+     * @param password le mot de passe en clair
+     * @return un access token JWT valide et un refresh token
      * @throws org.springframework.security.authentication.BadCredentialsException
      *         si le username ou le password est incorrect
      */
-    public AuthResponse login(LoginRequest request) {
+    @Override
+    public AuthResult login(String username, String password) {
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.username(), request.password())
+                new UsernamePasswordAuthenticationToken(username, password)
         );
-        String accessToken  = jwtService.generateToken(request.username());
-        String refreshToken = refreshTokenService.generateRefreshToken(request.username());
-        return new AuthResponse(accessToken, refreshToken);
+        String accessToken = jwtService.generateToken(username);
+        String refreshToken = refreshTokenService.generateRefreshToken(username);
+        return new AuthResult(accessToken, refreshToken);
     }
 }

@@ -1,8 +1,8 @@
 package com.tournament.tournament_manager.integration;
 
 import com.tournament.tournament_manager.TestcontainersConfiguration;
-import com.tournament.tournament_manager.dto.request.player.CreatePlayerRequest;
-import com.tournament.tournament_manager.dto.response.player.PlayerResponse;
+import com.tournament.tournament_manager.domain.model.CreatePlayerCommand;
+import com.tournament.tournament_manager.domain.model.Player;
 import com.tournament.tournament_manager.exception.domain.PlayerNotFoundException;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.PlayerRepository;
 import com.tournament.tournament_manager.application.player.CreatePlayerService;
@@ -31,19 +31,19 @@ class PlayerIntegrationTest {
 
     @Test
     void createPlayer_shouldPersistInDatabase() {
-        CreatePlayerRequest request = new CreatePlayerRequest("toto", "toto@mail.com");
-        PlayerResponse response = createPlayerService.createPlayer(request);
+        CreatePlayerCommand command = new CreatePlayerCommand("toto", "toto@mail.com");
+        Player result = createPlayerService.createPlayer(command);
 
-        assertEquals("toto", response.username());
-        assertEquals(1000, response.eloRating());
+        assertEquals("toto", result.getUsername());
+        assertEquals(1000, result.getEloRating().value());
         assertTrue(playerRepository.existsByUsername("toto"));
     }
 
     @Test
     void createPlayer_shouldHaveDefaultElo() {
-        CreatePlayerRequest request = new CreatePlayerRequest("toto", "toto@mail.com");
-        PlayerResponse response = createPlayerService.createPlayer(request);
-        assertEquals(1000, response.eloRating());
+        CreatePlayerCommand command = new CreatePlayerCommand("toto", "toto@mail.com");
+        Player result = createPlayerService.createPlayer(command);
+        assertEquals(1000, result.getEloRating().value());
     }
 
     @Test
@@ -53,8 +53,8 @@ class PlayerIntegrationTest {
 
     @Test
     void createPlayer_shouldThrow_whenUsernameAlreadyExists() {
-        createPlayerService.createPlayer(new CreatePlayerRequest("toto", "toto@mail.com"));
+        createPlayerService.createPlayer(new CreatePlayerCommand("toto", "toto@mail.com"));
         assertThrows(Exception.class, () ->
-                createPlayerService.createPlayer(new CreatePlayerRequest("toto", "other@mail.com")));
+                createPlayerService.createPlayer(new CreatePlayerCommand("toto", "other@mail.com")));
     }
 }

@@ -5,6 +5,7 @@ import com.tournament.tournament_manager.domain.port.in.registration.RegisterPla
 import com.tournament.tournament_manager.dto.request.registration.CreateRegistrationRequest;
 import com.tournament.tournament_manager.dto.response.registration.RegistrationResponse;
 import com.tournament.tournament_manager.exception.handler.ErrorResponse;
+import com.tournament.tournament_manager.infrastructure.input.mapper.RegistrationRestMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -14,14 +15,16 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 /**
  * Point d'entrée HTTP pour la gestion des inscriptions aux tournois.
+ *
+ * <p>Convertit entre les DTO REST et le domaine pur via {@link RegistrationRestMapper} —
+ * voir la Javadoc de {@code PlayerController}.
  */
 @RestController
 @RequestMapping("/api/registrations")
@@ -30,11 +33,14 @@ public class RegistrationController {
 
     private final RegisterPlayerUseCase registerPlayerUseCase;
     private final GetRegistrationsUseCase getRegistrationsUseCase;
+    private final RegistrationRestMapper registrationRestMapper;
 
     public RegistrationController(RegisterPlayerUseCase registerPlayerUseCase,
-                                  GetRegistrationsUseCase getRegistrationsUseCase) {
+                                  GetRegistrationsUseCase getRegistrationsUseCase,
+                                  RegistrationRestMapper registrationRestMapper) {
         this.registerPlayerUseCase = registerPlayerUseCase;
         this.getRegistrationsUseCase = getRegistrationsUseCase;
+        this.registrationRestMapper = registrationRestMapper;
     }
 
     @Operation(summary = "Inscrire un joueur à un tournoi",
@@ -49,7 +55,8 @@ public class RegistrationController {
     @PostMapping
     public ResponseEntity<RegistrationResponse> createRegistration(
             @Valid @RequestBody CreateRegistrationRequest req) {
-        return ResponseEntity.status(201).body(registerPlayerUseCase.registerPlayer(req));
+        var registration = registerPlayerUseCase.registerPlayer(registrationRestMapper.toCommand(req));
+        return ResponseEntity.status(201).body(registrationRestMapper.toResponse(registration));
     }
 
     @Operation(summary = "Lister les inscriptions d'un tournoi",
@@ -64,7 +71,7 @@ public class RegistrationController {
             @Parameter(description = "ID du tournoi") @PathVariable Long tournamentId, Pageable pageable) {
         var result = getRegistrationsUseCase.getTournamentRegistrations(tournamentId,
                 new com.tournament.tournament_manager.domain.model.PageRequest(pageable.getPageNumber(), pageable.getPageSize()));
-        return ResponseEntity.ok(new org.springframework.data.domain.PageImpl<>(
-                result.content(), pageable, result.totalElements()));
+        var content = result.content().stream().map(registrationRestMapper::toResponse).toList();
+        return ResponseEntity.ok(new PageImpl<>(content, pageable, result.totalElements()));
     }
 }

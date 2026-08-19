@@ -3,6 +3,7 @@ package com.tournament.tournament_manager.infrastructure.input.rpc.match;
 import tools.jackson.databind.ObjectMapper;
 import jakarta.validation.Validator;
 import com.tournament.tournament_manager.domain.port.in.match.GetMatchCommentaryUseCase;
+import com.tournament.tournament_manager.infrastructure.input.mapper.MatchRestMapper;
 import com.tournament.tournament_manager.infrastructure.input.rpc.AbstractJsonRpcHandler;
 import org.springframework.stereotype.Component;
 
@@ -15,10 +16,13 @@ import org.springframework.stereotype.Component;
 public class MatchGetCommentaryHandler extends AbstractJsonRpcHandler {
 
     private final GetMatchCommentaryUseCase getMatchCommentaryUseCase;
+    private final MatchRestMapper matchRestMapper;
 
-    public MatchGetCommentaryHandler(GetMatchCommentaryUseCase getMatchCommentaryUseCase, ObjectMapper objectMapper, Validator validator) {
+    public MatchGetCommentaryHandler(GetMatchCommentaryUseCase getMatchCommentaryUseCase, ObjectMapper objectMapper,
+                                     Validator validator, MatchRestMapper matchRestMapper) {
         super(objectMapper, validator);
         this.getMatchCommentaryUseCase = getMatchCommentaryUseCase;
+        this.matchRestMapper = matchRestMapper;
     }
 
     @Override
@@ -28,6 +32,6 @@ public class MatchGetCommentaryHandler extends AbstractJsonRpcHandler {
 
     @Override
     public Object handle(Object params) {
-        return getMatchCommentaryUseCase.getMatchCommentary(getLong(params, "matchId"));
+        return matchRestMapper.toResponse(getMatchCommentaryUseCase.getMatchCommentary(getLong(params, "matchId")));
     }
 }

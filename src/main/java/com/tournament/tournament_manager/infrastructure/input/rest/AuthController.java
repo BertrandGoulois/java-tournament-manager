@@ -1,11 +1,12 @@
 package com.tournament.tournament_manager.infrastructure.input.rest;
 
-import com.tournament.tournament_manager.application.auth.AuthService;
+import com.tournament.tournament_manager.domain.port.in.auth.LoginUseCase;
 import com.tournament.tournament_manager.domain.port.in.auth.RefreshTokenUseCase;
 import com.tournament.tournament_manager.dto.request.auth.LoginRequest;
 import com.tournament.tournament_manager.dto.request.auth.RefreshTokenRequest;
 import com.tournament.tournament_manager.dto.response.auth.AuthResponse;
 import com.tournament.tournament_manager.exception.handler.ErrorResponse;
+import com.tournament.tournament_manager.infrastructure.input.mapper.AuthRestMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -22,19 +23,26 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * Point d'entrée HTTP pour l'authentification.
  * Endpoint public, non protégé par le filtre JWT.
+ *
+ * <p>Convertit entre les DTO REST et le domaine pur via {@link AuthRestMapper} — voir la
+ * Javadoc de {@code PlayerController}. Dépend désormais de {@link LoginUseCase} (un vrai
+ * port de domaine) plutôt que de la classe concrète {@code AuthService}.
  */
 @RestController
 @RequestMapping("/api/auth")
 @Tag(name = "Authentication", description = "Authentification JWT (login, refresh token, logout)")
 public class AuthController {
 
-    private final AuthService authService;
+    private final LoginUseCase loginUseCase;
     private final RefreshTokenUseCase refreshTokenUseCase;
+    private final AuthRestMapper authRestMapper;
 
-    public AuthController(AuthService authService,
-                          RefreshTokenUseCase refreshTokenUseCase) {
-        this.authService = authService;
+    public AuthController(LoginUseCase loginUseCase,
+                          RefreshTokenUseCase refreshTokenUseCase,
+                          AuthRestMapper authRestMapper) {
+        this.loginUseCase = loginUseCase;
         this.refreshTokenUseCase = refreshTokenUseCase;
+        this.authRestMapper = authRestMapper;
     }
 
     @Operation(summary = "Se connecter",
@@ -46,7 +54,8 @@ public class AuthController {
     })
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-        return ResponseEntity.ok(authService.login(request));
+        var result = loginUseCase.login(request.username(), request.password());
+        return ResponseEntity.ok(authRestMapper.toResponse(result));
     }
 
     @Operation(summary = "Rafraîchir le token",
@@ -58,7 +67,8 @@ public class AuthController {
     })
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshTokenRequest request) {
-        return ResponseEntity.ok(refreshTokenUseCase.refresh(request.refreshToken()));
+        var result = refreshTokenUseCase.refresh(request.refreshToken());
+        return ResponseEntity.ok(authRestMapper.toResponse(result));
     }
 
     @Operation(summary = "Se déconnecter",

@@ -6,8 +6,8 @@ import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchesByTournamentPort;
 import com.tournament.tournament_manager.domain.port.out.tournament.LoadTournamentPort;
-import com.tournament.tournament_manager.dto.response.tournament.StandingEntryResponse;
-import com.tournament.tournament_manager.dto.response.tournament.StandingsResponse;
+import com.tournament.tournament_manager.domain.model.StandingEntry;
+import com.tournament.tournament_manager.domain.model.Standings;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -55,22 +55,22 @@ class GetStandingsServiceTest {
         when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
         when(loadMatchesByTournamentPort.loadByTournamentId(1L)).thenReturn(List.of(m1, m2, m3));
 
-        StandingsResponse standings = getStandingsService.getStandings(1L);
+        Standings standings = getStandingsService.getStandings(1L);
 
         assertEquals(3, standings.standings().size());
 
-        StandingEntryResponse first = standings.standings().get(0);
-        assertEquals("alice", first.username());
+        StandingEntry first = standings.standings().get(0);
+        assertEquals("alice", first.player().getUsername());
         assertEquals(2, first.wins());
         assertEquals(6, first.points());
 
-        StandingEntryResponse second = standings.standings().get(1);
-        assertEquals("bob", second.username());
+        StandingEntry second = standings.standings().get(1);
+        assertEquals("bob", second.player().getUsername());
         assertEquals(1, second.wins());
         assertEquals(1, second.losses());
 
-        StandingEntryResponse third = standings.standings().get(2);
-        assertEquals("carol", third.username());
+        StandingEntry third = standings.standings().get(2);
+        assertEquals("carol", third.player().getUsername());
         assertEquals(0, third.wins());
         assertEquals(2, third.losses());
     }
@@ -96,7 +96,7 @@ class GetStandingsServiceTest {
         when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
         when(loadMatchesByTournamentPort.loadByTournamentId(1L)).thenReturn(List.of(pending));
 
-        StandingsResponse standings = getStandingsService.getStandings(1L);
+        Standings standings = getStandingsService.getStandings(1L);
 
         assertEquals(2, standings.standings().size());
         assertTrue(standings.standings().stream().allMatch(s -> s.points() == 0));
@@ -121,7 +121,7 @@ class GetStandingsServiceTest {
         when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
         when(loadMatchesByTournamentPort.loadByTournamentId(1L)).thenReturn(List.of(bye));
 
-        StandingsResponse standings = getStandingsService.getStandings(1L);
+        Standings standings = getStandingsService.getStandings(1L);
 
         assertEquals(1, standings.standings().size());
         assertEquals(3, standings.standings().get(0).points());

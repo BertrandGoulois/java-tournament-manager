@@ -1,6 +1,6 @@
 package com.tournament.tournament_manager.domain.port.in.player;
 
-import com.tournament.tournament_manager.dto.response.player.PlayerStatsResponse;
+import com.tournament.tournament_manager.domain.model.PlayerStats;
 import com.tournament.tournament_manager.exception.domain.PlayerNotFoundException;
 
 /**
@@ -18,5 +18,5 @@ public interface GetPlayerStatsUseCase {
      * @return les statistiques du joueur
      * @throws PlayerNotFoundException si le joueur n'existe pas
      */
-    PlayerStatsResponse getPlayerStats(Long id);
+    PlayerStats getPlayerStats(Long id);
 }

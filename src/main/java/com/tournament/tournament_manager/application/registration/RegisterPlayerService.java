@@ -1,6 +1,7 @@
 package com.tournament.tournament_manager.application.registration;
 
 import com.tournament.tournament_manager.domain.model.Player;
+import com.tournament.tournament_manager.domain.model.RegisterPlayerCommand;
 import com.tournament.tournament_manager.domain.model.Registration;
 import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
@@ -10,15 +11,14 @@ import com.tournament.tournament_manager.domain.port.out.registration.CountRegis
 import com.tournament.tournament_manager.domain.port.out.registration.ExistsRegistrationPort;
 import com.tournament.tournament_manager.domain.port.out.registration.SaveRegistrationPort;
 import com.tournament.tournament_manager.domain.port.out.tournament.LoadTournamentPort;
-import com.tournament.tournament_manager.dto.request.registration.CreateRegistrationRequest;
-import com.tournament.tournament_manager.dto.response.registration.RegistrationResponse;
 import com.tournament.tournament_manager.exception.domain.InvalidException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Cas d'utilisation : inscription d'un joueur à un tournoi.
+ * Cas d'utilisation : inscription d'un joueur à un tournoi. Retourne un objet de domaine
+ * pur — voir la Javadoc de {@code GetPlayerService}.
  */
 @Slf4j
 @Service
@@ -44,42 +44,33 @@ public class RegisterPlayerService implements RegisterPlayerUseCase {
     }
 
     @Override
-    public RegistrationResponse registerPlayer(CreateRegistrationRequest request) {
-        Player player = loadPlayerPort.loadPlayer(request.playerId());
-        Tournament tournament = loadTournamentPort.loadTournament(request.tournamentId());
+    public Registration registerPlayer(RegisterPlayerCommand command) {
+        Player player = loadPlayerPort.loadPlayer(command.playerId());
+        Tournament tournament = loadTournamentPort.loadTournament(command.tournamentId());
 
         if (tournament.getStatus() != TournamentStatus.OPEN) {
             log.warn("Tentative d'inscription à un tournoi non ouvert [tournamentId={}, status={}]",
-                    request.tournamentId(), tournament.getStatus());
+                    command.tournamentId(), tournament.getStatus());
             throw new InvalidException("Tournament is not open for registration");
         }
         if (existsRegistrationPort.existsByPlayerIdAndTournamentId(
-                request.playerId(), request.tournamentId())) {
+                command.playerId(), command.tournamentId())) {
             log.warn("Joueur déjà inscrit [playerId={}, tournamentId={}]",
-                    request.playerId(), request.tournamentId());
+                    command.playerId(), command.tournamentId());
             throw new InvalidException("Player already registered in this tournament");
         }
-        if (countRegistrationPort.countByTournamentId(request.tournamentId())
+        if (countRegistrationPort.countByTournamentId(command.tournamentId())
                 >= tournament.getMaxPlayers()) {
-            log.warn("Tournoi complet [tournamentId={}]", request.tournamentId());
+            log.warn("Tournoi complet [tournamentId={}]", command.tournamentId());
             throw new InvalidException("Tournament is full");
         }
 
         Registration registration = new Registration();
         registration.setPlayer(player);
         registration.setTournament(tournament);
-        RegistrationResponse response = toResponse(saveRegistrationPort.saveRegistration(registration));
+        Registration saved = saveRegistrationPort.saveRegistration(registration);
         log.info("Joueur inscrit [playerId={}, tournamentId={}]",
-                request.playerId(), request.tournamentId());
-        return response;
-    }
-
-    private RegistrationResponse toResponse(Registration registration) {
-        return new RegistrationResponse(
-                registration.getId(),
-                registration.getPlayer().getId(),
-                registration.getTournament().getId(),
-                registration.getRegisteredAt()
-        );
+                command.playerId(), command.tournamentId());
+        return saved;
     }
 }

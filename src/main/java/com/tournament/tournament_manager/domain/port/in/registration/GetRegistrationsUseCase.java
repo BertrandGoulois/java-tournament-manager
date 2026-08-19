@@ -2,7 +2,7 @@ package com.tournament.tournament_manager.domain.port.in.registration;
 
 import com.tournament.tournament_manager.domain.model.PageRequest;
 import com.tournament.tournament_manager.domain.model.PageResult;
-import com.tournament.tournament_manager.dto.response.registration.RegistrationResponse;
+import com.tournament.tournament_manager.domain.model.Registration;
 
 /**
  * Port entrant : cas d'utilisation pour consulter les inscriptions d'un tournoi.
@@ -16,5 +16,5 @@ public interface GetRegistrationsUseCase {
      * @param pageRequest  paramètres de pagination
      * @return page des inscriptions
      */
-    PageResult<RegistrationResponse> getTournamentRegistrations(Long tournamentId, PageRequest pageRequest);
+    PageResult<Registration> getTournamentRegistrations(Long tournamentId, PageRequest pageRequest);
 }

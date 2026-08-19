@@ -9,9 +9,9 @@ import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
 import com.tournament.tournament_manager.domain.port.in.tournament.*;
 import com.tournament.tournament_manager.dto.request.tournament.CreateTournamentRequest;
-import com.tournament.tournament_manager.dto.response.tournament.BracketResponse;
-import com.tournament.tournament_manager.dto.response.tournament.StandingsResponse;
-import com.tournament.tournament_manager.dto.response.tournament.TournamentResponse;
+import com.tournament.tournament_manager.domain.model.Bracket;
+import com.tournament.tournament_manager.domain.model.Standings;
+import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.exception.domain.InvalidException;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.cache.CacheManager;
+import com.tournament.tournament_manager.infrastructure.input.mapper.TournamentRestMapper;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import com.tournament.tournament_manager.domain.model.PageResult;
@@ -39,7 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(TournamentController.class)
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, TournamentRestMapper.class})
 class TournamentControllerTest {
 
     @Autowired
@@ -79,8 +80,14 @@ class TournamentControllerTest {
         }).when(jwtAuthenticationFilter).doFilter(any(), any(), any());
     }
 
-    private TournamentResponse sampleTournament() {
-        return new TournamentResponse(1L, "Spring Championship", TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, 8, null, null, null);
+    private Tournament sampleTournament() {
+        Tournament tournament = new Tournament();
+        tournament.setId(1L);
+        tournament.setName("Spring Championship");
+        tournament.setStatus(TournamentStatus.OPEN);
+        tournament.setFormat(TournamentFormat.SINGLE_ELIMINATION);
+        tournament.setMaxPlayers(8);
+        return tournament;
     }
 
     @Test
@@ -108,7 +115,7 @@ class TournamentControllerTest {
 
     @Test
     void getAllTournaments_shouldReturn200() throws Exception {
-        PageResult<TournamentResponse> page = PageResult.of(List.of(sampleTournament()), 0, 20, 1);
+        PageResult<Tournament> page = PageResult.of(List.of(sampleTournament()), 0, 20, 1);
         when(getTournamentUseCase.getAllTournaments(any())).thenReturn(page);
 
         mockMvc.perform(get("/api/tournaments").with(user("admin").roles("ADMIN")))
@@ -148,7 +155,7 @@ class TournamentControllerTest {
 
     @Test
     void getBracket_shouldReturn200() throws Exception {
-        BracketResponse bracket = new BracketResponse(1L, "Spring Championship", TournamentStatus.OPEN, List.of());
+        Bracket bracket = new Bracket(1L, "Spring Championship", TournamentStatus.OPEN, List.of());
         when(getBracketUseCase.getBracket(1L)).thenReturn(bracket);
 
         mockMvc.perform(get("/api/tournaments/1/bracket").with(user("admin").roles("ADMIN")))
@@ -159,7 +166,7 @@ class TournamentControllerTest {
 
     @Test
     void getStandings_shouldReturn200() throws Exception {
-        StandingsResponse standings = new StandingsResponse(1L, "Spring Championship", List.of());
+        Standings standings = new Standings(1L, "Spring Championship", List.of());
         when(getStandingsUseCase.getStandings(1L)).thenReturn(standings);
 
         mockMvc.perform(get("/api/tournaments/1/standings").with(user("admin").roles("ADMIN")))

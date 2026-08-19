@@ -1,13 +1,13 @@
 package com.tournament.tournament_manager.application.token;
 
 import com.tournament.tournament_manager.config.security.JwtService;
+import com.tournament.tournament_manager.domain.model.AuthResult;
 import com.tournament.tournament_manager.domain.model.RefreshToken;
 import com.tournament.tournament_manager.domain.port.in.auth.RefreshTokenUseCase;
 import com.tournament.tournament_manager.domain.port.out.auth.DeleteRefreshTokenPort;
 import com.tournament.tournament_manager.domain.port.out.auth.LoadRefreshTokenPort;
 import com.tournament.tournament_manager.domain.port.out.auth.SaveRefreshTokenPort;
 import com.tournament.tournament_manager.domain.port.out.auth.UserExistsPort;
-import com.tournament.tournament_manager.dto.response.auth.AuthResponse;
 import com.tournament.tournament_manager.exception.domain.InvalidException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -93,7 +93,7 @@ public class RefreshTokenService implements RefreshTokenUseCase {
      */
     @Override
     @Transactional
-    public AuthResponse refresh(String rawRefreshToken) {
+    public AuthResult refresh(String rawRefreshToken) {
         RefreshToken token = loadRefreshTokenPort.loadByToken(hash(rawRefreshToken))
                 .orElseThrow(() -> new InvalidException("Refresh token invalide"));
 
@@ -117,7 +117,7 @@ public class RefreshTokenService implements RefreshTokenUseCase {
 
         String newAccessToken = jwtService.generateToken(token.getUsername());
         String newRefreshToken = issueNewToken(token.getUsername());
-        return new AuthResponse(newAccessToken, newRefreshToken);
+        return new AuthResult(newAccessToken, newRefreshToken);
     }
 
     /**

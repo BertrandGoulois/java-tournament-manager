@@ -7,7 +7,7 @@ import com.tournament.tournament_manager.domain.model.valueobjects.EloRating;
 import com.tournament.tournament_manager.domain.port.out.player.CountMatchesByPlayerPort;
 import com.tournament.tournament_manager.domain.port.out.player.LoadEloHistoryPort;
 import com.tournament.tournament_manager.domain.port.out.player.LoadPlayerPort;
-import com.tournament.tournament_manager.dto.response.player.PlayerStatsResponse;
+import com.tournament.tournament_manager.domain.model.PlayerStats;
 import com.tournament.tournament_manager.exception.domain.PlayerNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -54,7 +54,7 @@ class GetPlayerStatsServiceTest {
         when(countMatchesByPlayerPort.countWinsByPlayer(1L)).thenReturn(2L);
         when(loadEloHistoryPort.loadByPlayerIdOrderByDateDesc(1L)).thenReturn(List.of(history));
 
-        PlayerStatsResponse stats = getPlayerStatsService.getPlayerStats(1L);
+        PlayerStats stats = getPlayerStatsService.getPlayerStats(1L);
 
         assertEquals(3, stats.matchesPlayed());
         assertEquals(2, stats.wins());
@@ -74,7 +74,7 @@ class GetPlayerStatsServiceTest {
         when(countMatchesByPlayerPort.countWinsByPlayer(1L)).thenReturn(0L);
         when(loadEloHistoryPort.loadByPlayerIdOrderByDateDesc(1L)).thenReturn(List.of());
 
-        PlayerStatsResponse response = getPlayerStatsService.getPlayerStats(1L);
+        PlayerStats response = getPlayerStatsService.getPlayerStats(1L);
 
         assertEquals(0.0, response.winRate());
         assertEquals(0, response.matchesPlayed());
@@ -100,7 +100,7 @@ class GetPlayerStatsServiceTest {
         when(countMatchesByPlayerPort.countWinsByPlayer(1L)).thenReturn(2L);
         when(loadEloHistoryPort.loadByPlayerIdOrderByDateDesc(1L)).thenReturn(List.of());
 
-        PlayerStatsResponse response = getPlayerStatsService.getPlayerStats(1L);
+        PlayerStats response = getPlayerStatsService.getPlayerStats(1L);
 
         assertEquals(66.67, response.winRate());
         assertEquals(3, response.matchesPlayed());
@@ -129,11 +129,11 @@ class GetPlayerStatsServiceTest {
         when(countMatchesByPlayerPort.countWinsByPlayer(1L)).thenReturn(1L);
         when(loadEloHistoryPort.loadByPlayerIdOrderByDateDesc(1L)).thenReturn(List.of(history));
 
-        PlayerStatsResponse response = getPlayerStatsService.getPlayerStats(1L);
+        PlayerStats response = getPlayerStatsService.getPlayerStats(1L);
 
         assertEquals(1, response.eloHistory().size());
-        assertEquals(16, response.eloHistory().get(0).eloChange());
-        assertEquals(1016, response.eloHistory().get(0).eloAfter());
-        assertEquals(5L, response.eloHistory().get(0).matchId());
+        assertEquals(16, response.eloHistory().get(0).getEloChange());
+        assertEquals(1016, response.eloHistory().get(0).getEloAfter());
+        assertEquals(5L, response.eloHistory().get(0).getMatch().getId());
     }
 }

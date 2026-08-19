@@ -2,14 +2,14 @@ package com.tournament.tournament_manager.infrastructure.input.rest;
 
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
-import com.tournament.tournament_manager.application.auth.AuthService;
 import com.tournament.tournament_manager.config.security.JwtAuthenticationFilter;
 import com.tournament.tournament_manager.config.security.SecurityConfig;
 import com.tournament.tournament_manager.config.security.UserDetailsServiceImpl;
+import com.tournament.tournament_manager.domain.model.AuthResult;
+import com.tournament.tournament_manager.domain.port.in.auth.LoginUseCase;
 import com.tournament.tournament_manager.domain.port.in.auth.RefreshTokenUseCase;
 import com.tournament.tournament_manager.dto.request.auth.LoginRequest;
 import com.tournament.tournament_manager.dto.request.auth.RefreshTokenRequest;
-import com.tournament.tournament_manager.dto.response.auth.AuthResponse;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.distributed.BucketProxy;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
@@ -22,6 +22,7 @@ import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.cache.CacheManager;
+import com.tournament.tournament_manager.infrastructure.input.mapper.AuthRestMapper;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -30,6 +31,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.function.Supplier;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -37,14 +39,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AuthController.class)
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, AuthRestMapper.class})
 class AuthControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @MockitoBean
-    private AuthService authService;
+    private LoginUseCase loginUseCase;
 
     @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -88,7 +90,7 @@ class AuthControllerTest {
 
     @Test
     void login_shouldReturn200() throws Exception {
-        when(authService.login(any())).thenReturn(new AuthResponse("jwt-token", "refresh-token"));
+        when(loginUseCase.login(anyString(), anyString())).thenReturn(new AuthResult("jwt-token", "refresh-token"));
 
         mockMvc.perform(post("/api/auth/login")
                         .with(csrf())
@@ -109,7 +111,7 @@ class AuthControllerTest {
 
     @Test
     void refresh_shouldReturn200() throws Exception {
-        when(refreshTokenUseCase.refresh(any())).thenReturn(new AuthResponse("new-jwt-token", "refresh-token"));
+        when(refreshTokenUseCase.refresh(any())).thenReturn(new AuthResult("new-jwt-token", "refresh-token"));
 
         mockMvc.perform(post("/api/auth/refresh")
                         .with(csrf())

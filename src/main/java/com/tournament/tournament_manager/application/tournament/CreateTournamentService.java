@@ -1,12 +1,11 @@
 package com.tournament.tournament_manager.application.tournament;
 
+import com.tournament.tournament_manager.domain.model.CreateTournamentCommand;
 import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 import com.tournament.tournament_manager.domain.port.in.tournament.CreateTournamentUseCase;
 import com.tournament.tournament_manager.domain.port.out.tournament.ExistsTournamentPort;
 import com.tournament.tournament_manager.domain.port.out.tournament.SaveTournamentPort;
-import com.tournament.tournament_manager.dto.request.tournament.CreateTournamentRequest;
-import com.tournament.tournament_manager.dto.response.tournament.TournamentResponse;
 import com.tournament.tournament_manager.exception.domain.InvalidTournamentException;
 import com.tournament.tournament_manager.exception.domain.TournamentAlreadyExistsException;
 import io.micrometer.core.instrument.Counter;
@@ -15,7 +14,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Cas d'utilisation : création d'un tournoi.
+ * Cas d'utilisation : création d'un tournoi. Retourne un objet de domaine pur — voir la
+ * Javadoc de {@code GetPlayerService}.
+ *
+ * <p>La valeur par défaut du format ({@code SINGLE_ELIMINATION} si non précisé) est
+ * désormais résolue par l'adaptateur d'entrée (contrôleur REST, handler JSON-RPC) au
+ * moment de construire {@link CreateTournamentCommand} — pas ici. Ce service reçoit
+ * toujours un format déjà résolu.
  */
 @Service
 @Transactional
@@ -36,53 +41,53 @@ public class CreateTournamentService implements CreateTournamentUseCase {
     }
 
     @Override
-    public TournamentResponse createTournament(CreateTournamentRequest request) {
-        if (existsTournamentPort.existsByName(request.name())) {
-            throw new TournamentAlreadyExistsException(request.name());
+    public Tournament createTournament(CreateTournamentCommand command) {
+        if (existsTournamentPort.existsByName(command.name())) {
+            throw new TournamentAlreadyExistsException(command.name());
         }
 
-        TournamentFormat format = request.format();
+        TournamentFormat format = command.format();
 
-        if (format == TournamentFormat.SINGLE_ELIMINATION && !isPowerOfTwo(request.maxPlayers())) {
-            throw new InvalidTournamentException(request.maxPlayers());
+        if (format == TournamentFormat.SINGLE_ELIMINATION && !isPowerOfTwo(command.maxPlayers())) {
+            throw new InvalidTournamentException(command.maxPlayers());
         }
 
         Integer numberOfGroups = null;
         Integer qualifiersPerGroup = null;
 
         if (format == TournamentFormat.GROUPS_THEN_KNOCKOUT) {
-            numberOfGroups = validateAndResolveNumberOfGroups(request);
-            qualifiersPerGroup = validateAndResolveQualifiersPerGroup(request, numberOfGroups);
+            numberOfGroups = validateAndResolveNumberOfGroups(command);
+            qualifiersPerGroup = validateAndResolveQualifiersPerGroup(command, numberOfGroups);
         }
 
         Tournament tournament = new Tournament();
-        tournament.setName(request.name());
-        tournament.setMaxPlayers(request.maxPlayers());
+        tournament.setName(command.name());
+        tournament.setMaxPlayers(command.maxPlayers());
         tournament.setFormat(format);
         tournament.setNumberOfGroups(numberOfGroups);
         tournament.setQualifiersPerGroup(qualifiersPerGroup);
-        TournamentResponse response = toResponse(saveTournamentPort.saveTournament(tournament));
+        Tournament saved = saveTournamentPort.saveTournament(tournament);
 
         tournamentCreatedCounter.increment();
-        return response;
+        return saved;
     }
 
-    private int validateAndResolveNumberOfGroups(CreateTournamentRequest request) {
-        Integer numberOfGroups = request.numberOfGroups();
+    private int validateAndResolveNumberOfGroups(CreateTournamentCommand command) {
+        Integer numberOfGroups = command.numberOfGroups();
         if (numberOfGroups == null || numberOfGroups < 2) {
             throw new InvalidTournamentException(
                     "numberOfGroups doit être renseigné et >= 2 pour le format GROUPS_THEN_KNOCKOUT");
         }
-        if (request.maxPlayers() % numberOfGroups != 0) {
+        if (command.maxPlayers() % numberOfGroups != 0) {
             throw new InvalidTournamentException(
-                    "maxPlayers (" + request.maxPlayers() + ") doit être divisible par numberOfGroups (" + numberOfGroups + ")");
+                    "maxPlayers (" + command.maxPlayers() + ") doit être divisible par numberOfGroups (" + numberOfGroups + ")");
         }
         return numberOfGroups;
     }
 
-    private int validateAndResolveQualifiersPerGroup(CreateTournamentRequest request, int numberOfGroups) {
-        Integer qualifiersPerGroup = request.qualifiersPerGroup();
-        int groupSize = request.maxPlayers() / numberOfGroups;
+    private int validateAndResolveQualifiersPerGroup(CreateTournamentCommand command, int numberOfGroups) {
+        Integer qualifiersPerGroup = command.qualifiersPerGroup();
+        int groupSize = command.maxPlayers() / numberOfGroups;
 
         if (qualifiersPerGroup == null || qualifiersPerGroup < 1) {
             throw new InvalidTournamentException(
@@ -98,19 +103,6 @@ public class CreateTournamentService implements CreateTournamentUseCase {
                     "Le nombre total de qualifiés (" + totalQualifiers + ") doit être une puissance de 2 pour le bracket final");
         }
         return qualifiersPerGroup;
-    }
-
-    private TournamentResponse toResponse(Tournament tournament) {
-        return new TournamentResponse(
-                tournament.getId(),
-                tournament.getName(),
-                tournament.getStatus(),
-                tournament.getFormat(),
-                tournament.getMaxPlayers(),
-                tournament.getNumberOfGroups(),
-                tournament.getQualifiersPerGroup(),
-                tournament.getCreatedAt()
-        );
     }
 
     private boolean isPowerOfTwo(int n) {

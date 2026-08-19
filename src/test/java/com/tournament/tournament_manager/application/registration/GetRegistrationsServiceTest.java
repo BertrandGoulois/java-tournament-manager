@@ -6,7 +6,6 @@ import com.tournament.tournament_manager.domain.model.Player;
 import com.tournament.tournament_manager.domain.model.Registration;
 import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.domain.port.out.registration.LoadRegistrationPort;
-import com.tournament.tournament_manager.dto.response.registration.RegistrationResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -46,11 +45,11 @@ class GetRegistrationsServiceTest {
         when(loadRegistrationPort.loadByTournamentId(eq(1L), any()))
                 .thenReturn(PageResult.of(List.of(registration), 0, 20, 1));
 
-        PageResult<RegistrationResponse> responses =
+        PageResult<Registration> responses =
                 getRegistrationsService.getTournamentRegistrations(1L, pageRequest);
 
         assertEquals(1, responses.content().size());
-        assertEquals(1L, responses.content().get(0).id());
+        assertEquals(1L, responses.content().get(0).getId());
     }
 
     @Test
@@ -58,7 +57,7 @@ class GetRegistrationsServiceTest {
         PageRequest pageRequest = PageRequest.of(0, 20);
         when(loadRegistrationPort.loadByTournamentId(1L, pageRequest))
                 .thenReturn(PageResult.of(List.of(), 0, 20, 0));
-        PageResult<RegistrationResponse> responses =
+        PageResult<Registration> responses =
                 getRegistrationsService.getTournamentRegistrations(1L, pageRequest);
         assertTrue(responses.content().isEmpty());
     }

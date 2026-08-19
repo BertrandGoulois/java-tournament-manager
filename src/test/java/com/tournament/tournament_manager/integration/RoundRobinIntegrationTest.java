@@ -2,16 +2,16 @@ package com.tournament.tournament_manager.integration;
 
 import com.tournament.tournament_manager.TestcontainersConfiguration;
 import com.tournament.tournament_manager.application.tournament.*;
+import com.tournament.tournament_manager.domain.model.CreatePlayerCommand;
+import com.tournament.tournament_manager.domain.model.CreateTournamentCommand;
+import com.tournament.tournament_manager.domain.model.Player;
+import com.tournament.tournament_manager.domain.model.RecordMatchResultCommand;
+import com.tournament.tournament_manager.domain.model.RegisterPlayerCommand;
+import com.tournament.tournament_manager.domain.model.Standings;
+import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
-import com.tournament.tournament_manager.dto.request.match.RecordMatchResultRequest;
-import com.tournament.tournament_manager.dto.request.player.CreatePlayerRequest;
-import com.tournament.tournament_manager.dto.request.registration.CreateRegistrationRequest;
-import com.tournament.tournament_manager.dto.request.tournament.CreateTournamentRequest;
-import com.tournament.tournament_manager.dto.response.match.MatchResponse;
-import com.tournament.tournament_manager.dto.response.player.PlayerResponse;
-import com.tournament.tournament_manager.dto.response.tournament.StandingsResponse;
-import com.tournament.tournament_manager.dto.response.tournament.TournamentResponse;
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.MatchEntity;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.MatchRepository;
 import com.tournament.tournament_manager.infrastructure.output.persistence.mapper.TournamentMapper;
 import com.tournament.tournament_manager.application.match.RecordMatchResultService;
@@ -69,52 +69,48 @@ class RoundRobinIntegrationTest {
     @Test
     void roundRobinTournament_shouldCompleteFullFlow() {
         // Création de 4 joueurs
-        PlayerResponse p1 = createPlayerService.createPlayer(new CreatePlayerRequest("rr_alice", "rr_alice@mail.com"));
-        PlayerResponse p2 = createPlayerService.createPlayer(new CreatePlayerRequest("rr_bob", "rr_bob@mail.com"));
-        PlayerResponse p3 = createPlayerService.createPlayer(new CreatePlayerRequest("rr_carol", "rr_carol@mail.com"));
-        PlayerResponse p4 = createPlayerService.createPlayer(new CreatePlayerRequest("rr_dave", "rr_dave@mail.com"));
+        Player p1 = createPlayerService.createPlayer(new CreatePlayerCommand("rr_alice", "rr_alice@mail.com"));
+        Player p2 = createPlayerService.createPlayer(new CreatePlayerCommand("rr_bob", "rr_bob@mail.com"));
+        Player p3 = createPlayerService.createPlayer(new CreatePlayerCommand("rr_carol", "rr_carol@mail.com"));
+        Player p4 = createPlayerService.createPlayer(new CreatePlayerCommand("rr_dave", "rr_dave@mail.com"));
 
         // Création du tournoi en round-robin
-        TournamentResponse tournament = createTournamentService.createTournament(
-                new CreateTournamentRequest("RR Integration Cup", 4, TournamentFormat.ROUND_ROBIN, null, null));
-        assertEquals(TournamentFormat.ROUND_ROBIN, tournament.format());
+        Tournament tournament = createTournamentService.createTournament(
+                new CreateTournamentCommand("RR Integration Cup", 4, TournamentFormat.ROUND_ROBIN, null, null));
+        assertEquals(TournamentFormat.ROUND_ROBIN, tournament.getFormat());
 
         // Inscription des 4 joueurs
-        registerPlayerService.registerPlayer(new CreateRegistrationRequest(p1.id(), tournament.id()));
-        registerPlayerService.registerPlayer(new CreateRegistrationRequest(p2.id(), tournament.id()));
-        registerPlayerService.registerPlayer(new CreateRegistrationRequest(p3.id(), tournament.id()));
-        registerPlayerService.registerPlayer(new CreateRegistrationRequest(p4.id(), tournament.id()));
+        registerPlayerService.registerPlayer(new RegisterPlayerCommand(p1.getId(), tournament.getId()));
+        registerPlayerService.registerPlayer(new RegisterPlayerCommand(p2.getId(), tournament.getId()));
+        registerPlayerService.registerPlayer(new RegisterPlayerCommand(p3.getId(), tournament.getId()));
+        registerPlayerService.registerPlayer(new RegisterPlayerCommand(p4.getId(), tournament.getId()));
 
         // Démarrage : génère 6 matchs (C(4,2))
-        startTournamentService.startTournament(tournament.id());
+        startTournamentService.startTournament(tournament.getId());
 
-        List<MatchResponse> matches = matchRepository.findByTournamentId(tournament.id()).stream()
-                .map(m -> new MatchResponse(m.getId(), m.getRound(), m.getPosition(), m.getStatus(), m.getPlayedAt(),
-                        m.getTournament().getId(), m.getPlayer1().getId(),
-                        m.getPlayer2() != null ? m.getPlayer2().getId() : null,
-                        m.getWinner() != null ? m.getWinner().getId() : null))
-                .toList();
+        List<MatchEntity> matches = matchRepository.findByTournamentId(tournament.getId());
         assertEquals(6, matches.size());
 
         // Enregistrement de tous les résultats : chaque match est gagné par player1.
         // En production, chaque enregistrement déclenche un événement Kafka
         // qui appelle CheckTournamentCompletionService de façon asynchrone via BracketListener.
         // On simule cet appel directement ici (cf. Javadoc de la classe).
-        for (MatchResponse match : matches) {
-            recordMatchResultService.recordMatchResult(match.id(), new RecordMatchResultRequest(match.player1Id()));
+        for (MatchEntity match : matches) {
+            recordMatchResultService.recordMatchResult(
+                    match.getId(), new RecordMatchResultCommand(match.getPlayer1().getId()));
         }
 
         // On recharge le tournoi pour avoir l'entité à jour, puis on déclenche
         // manuellement la vérification de fin de tournoi (équivalent du listener Kafka).
-        var allMatches = matchRepository.findByTournamentId(tournament.id());
+        var allMatches = matchRepository.findByTournamentId(tournament.getId());
         var loadedTournament = tournamentMapper.toDomain(allMatches.get(0).getTournament());
         checkTournamentCompletionService.checkCompletion(loadedTournament);
 
-        TournamentResponse finished = getTournamentService.getTournamentById(tournament.id());
-        assertEquals(TournamentStatus.FINISHED, finished.status());
+        Tournament finished = getTournamentService.getTournamentById(tournament.getId());
+        assertEquals(TournamentStatus.FINISHED, finished.getStatus());
 
         // Le classement doit refléter les victoires
-        StandingsResponse standings = getStandingsService.getStandings(tournament.id());
+        Standings standings = getStandingsService.getStandings(tournament.getId());
         assertEquals(4, standings.standings().size());
     }
 }

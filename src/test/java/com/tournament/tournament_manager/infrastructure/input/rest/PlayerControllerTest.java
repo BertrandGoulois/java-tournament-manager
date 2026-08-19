@@ -9,9 +9,9 @@ import com.tournament.tournament_manager.domain.port.in.player.CreatePlayerUseCa
 import com.tournament.tournament_manager.domain.port.in.player.DeletePlayerUseCase;
 import com.tournament.tournament_manager.domain.port.in.player.GetPlayerStatsUseCase;
 import com.tournament.tournament_manager.domain.port.in.player.GetPlayerUseCase;
+import com.tournament.tournament_manager.domain.model.Player;
+import com.tournament.tournament_manager.domain.model.PlayerStats;
 import com.tournament.tournament_manager.dto.request.player.CreatePlayerRequest;
-import com.tournament.tournament_manager.dto.response.player.PlayerResponse;
-import com.tournament.tournament_manager.dto.response.player.PlayerStatsResponse;
 import com.tournament.tournament_manager.exception.domain.PlayerNotFoundException;
 import io.github.bucket4j.BucketConfiguration;
 import io.github.bucket4j.distributed.BucketProxy;
@@ -24,6 +24,7 @@ import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.cache.CacheManager;
+import com.tournament.tournament_manager.infrastructure.input.mapper.PlayerRestMapper;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import com.tournament.tournament_manager.domain.model.PageResult;
@@ -44,7 +45,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(PlayerController.class)
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, PlayerRestMapper.class})
 class PlayerControllerTest {
 
     @Autowired
@@ -71,8 +72,13 @@ class PlayerControllerTest {
 
     private final ObjectMapper objectMapper = JsonMapper.builder().build();
 
-    private PlayerResponse samplePlayer() {
-        return new PlayerResponse(1L, "player1", "player1@mail.com", 1000, Instant.now());
+    private Player samplePlayer() {
+        Player player = new Player();
+        player.setId(1L);
+        player.setUsername("player1");
+        player.setEmail("player1@mail.com");
+        player.setCreatedAt(Instant.now());
+        return player;
     }
 
     @BeforeEach
@@ -119,7 +125,7 @@ class PlayerControllerTest {
 
     @Test
     void getAllPlayers_shouldReturn200() throws Exception {
-        PageResult<PlayerResponse> page = PageResult.of(List.of(samplePlayer()), 0, 20, 1);
+        PageResult<Player> page = PageResult.of(List.of(samplePlayer()), 0, 20, 1);
         when(getPlayerUseCase.getAllPlayers(any())).thenReturn(page);
 
         mockMvc.perform(get("/api/players").with(user("admin").roles("ADMIN")))
@@ -146,7 +152,7 @@ class PlayerControllerTest {
 
     @Test
     void getPlayerStats_shouldReturn200() throws Exception {
-        PlayerStatsResponse stats = new PlayerStatsResponse(1L, "player1", 1000, 3, 2, 1, 66.67, List.of());
+        PlayerStats stats = new PlayerStats(samplePlayer(), 3, 2, 1, 66.67, List.of());
         when(getPlayerStatsUseCase.getPlayerStats(1L)).thenReturn(stats);
 
         mockMvc.perform(get("/api/players/1/stats").with(user("admin").roles("ADMIN")))
@@ -187,7 +193,7 @@ class PlayerControllerTest {
 
     @Test
     void getAllPlayers_shouldReturn200_whenPlayerRole() throws Exception {
-        PageResult<PlayerResponse> page = PageResult.of(List.of(samplePlayer()), 0, 20, 1);
+        PageResult<Player> page = PageResult.of(List.of(samplePlayer()), 0, 20, 1);
         when(getPlayerUseCase.getAllPlayers(any())).thenReturn(page);
         mockMvc.perform(get("/api/players")
                         .with(user("player").roles("PLAYER")))

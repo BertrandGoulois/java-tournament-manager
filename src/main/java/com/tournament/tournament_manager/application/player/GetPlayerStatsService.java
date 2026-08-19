@@ -1,21 +1,21 @@
 package com.tournament.tournament_manager.application.player;
 
+import com.tournament.tournament_manager.domain.model.EloHistory;
 import com.tournament.tournament_manager.domain.model.Player;
+import com.tournament.tournament_manager.domain.model.PlayerStats;
 import com.tournament.tournament_manager.domain.port.in.player.GetPlayerStatsUseCase;
 import com.tournament.tournament_manager.domain.port.out.player.CountMatchesByPlayerPort;
 import com.tournament.tournament_manager.domain.port.out.player.LoadEloHistoryPort;
 import com.tournament.tournament_manager.domain.port.out.player.LoadPlayerPort;
-import com.tournament.tournament_manager.dto.response.player.EloHistoryResponse;
-import com.tournament.tournament_manager.dto.response.player.PlayerStatsResponse;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
- * Cas d'utilisation : consultation des statistiques d'un joueur.
+ * Cas d'utilisation : consultation des statistiques d'un joueur. Retourne un objet de
+ * domaine pur ({@link PlayerStats}) — voir la Javadoc de {@code GetPlayerService}.
  */
 @Service
 @Transactional(readOnly = true)
@@ -35,7 +35,7 @@ public class GetPlayerStatsService implements GetPlayerStatsUseCase {
 
     @Override
     @Cacheable(value = "playerStats", key = "#id")
-    public PlayerStatsResponse getPlayerStats(Long id) {
+    public PlayerStats getPlayerStats(Long id) {
         Player player = loadPlayerPort.loadPlayer(id);
 
         long matchesPlayed = countMatchesByPlayerPort.countByPlayer(id);
@@ -43,19 +43,10 @@ public class GetPlayerStatsService implements GetPlayerStatsUseCase {
         long losses = matchesPlayed - wins;
         double winRate = matchesPlayed == 0 ? 0 : (double) wins / matchesPlayed * 100;
 
-        List<EloHistoryResponse> history = loadEloHistoryPort.loadByPlayerIdOrderByDateDesc(id)
-                .stream()
-                .map(e -> new EloHistoryResponse(
-                        e.getEloChange(),
-                        e.getEloAfter(),
-                        e.getCreatedAt(),
-                        e.getMatch().getId()))
-                .collect(Collectors.toList());
+        List<EloHistory> history = loadEloHistoryPort.loadByPlayerIdOrderByDateDesc(id);
 
-        return new PlayerStatsResponse(
-                player.getId(),
-                player.getUsername(),
-                player.getEloRating().value(),
+        return new PlayerStats(
+                player,
                 (int) matchesPlayed,
                 (int) wins,
                 (int) losses,

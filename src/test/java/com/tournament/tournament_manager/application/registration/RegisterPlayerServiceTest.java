@@ -9,8 +9,7 @@ import com.tournament.tournament_manager.domain.port.out.registration.CountRegis
 import com.tournament.tournament_manager.domain.port.out.registration.ExistsRegistrationPort;
 import com.tournament.tournament_manager.domain.port.out.registration.SaveRegistrationPort;
 import com.tournament.tournament_manager.domain.port.out.tournament.LoadTournamentPort;
-import com.tournament.tournament_manager.dto.request.registration.CreateRegistrationRequest;
-import com.tournament.tournament_manager.dto.response.registration.RegistrationResponse;
+import com.tournament.tournament_manager.domain.model.RegisterPlayerCommand;
 import com.tournament.tournament_manager.exception.domain.InvalidException;
 import com.tournament.tournament_manager.exception.domain.PlayerNotFoundException;
 import com.tournament.tournament_manager.exception.domain.TournamentNotFoundException;
@@ -47,7 +46,7 @@ class RegisterPlayerServiceTest {
     void registerPlayer_shouldThrow_whenPlayerNotFound() {
         when(loadPlayerPort.loadPlayer(1L)).thenThrow(new PlayerNotFoundException(1L));
         assertThrows(PlayerNotFoundException.class,
-                () -> registerPlayerService.registerPlayer(new CreateRegistrationRequest(1L, 1L)));
+                () -> registerPlayerService.registerPlayer(new RegisterPlayerCommand(1L, 1L)));
     }
 
     @Test
@@ -55,7 +54,7 @@ class RegisterPlayerServiceTest {
         when(loadPlayerPort.loadPlayer(1L)).thenReturn(new Player());
         when(loadTournamentPort.loadTournament(1L)).thenThrow(new TournamentNotFoundException(1L));
         assertThrows(TournamentNotFoundException.class,
-                () -> registerPlayerService.registerPlayer(new CreateRegistrationRequest(1L, 1L)));
+                () -> registerPlayerService.registerPlayer(new RegisterPlayerCommand(1L, 1L)));
     }
 
     @Test
@@ -66,7 +65,7 @@ class RegisterPlayerServiceTest {
         when(loadPlayerPort.loadPlayer(1L)).thenReturn(player);
         when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
         assertThrows(InvalidException.class,
-                () -> registerPlayerService.registerPlayer(new CreateRegistrationRequest(1L, 1L)));
+                () -> registerPlayerService.registerPlayer(new RegisterPlayerCommand(1L, 1L)));
     }
 
     @Test
@@ -79,7 +78,7 @@ class RegisterPlayerServiceTest {
         when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
         when(existsRegistrationPort.existsByPlayerIdAndTournamentId(1L, 1L)).thenReturn(true);
         assertThrows(InvalidException.class,
-                () -> registerPlayerService.registerPlayer(new CreateRegistrationRequest(1L, 1L)));
+                () -> registerPlayerService.registerPlayer(new RegisterPlayerCommand(1L, 1L)));
     }
 
     @Test
@@ -93,7 +92,7 @@ class RegisterPlayerServiceTest {
         when(existsRegistrationPort.existsByPlayerIdAndTournamentId(1L, 1L)).thenReturn(false);
         when(countRegistrationPort.countByTournamentId(1L)).thenReturn(4L);
         assertThrows(InvalidException.class,
-                () -> registerPlayerService.registerPlayer(new CreateRegistrationRequest(1L, 1L)));
+                () -> registerPlayerService.registerPlayer(new RegisterPlayerCommand(1L, 1L)));
     }
 
     @Test
@@ -113,9 +112,9 @@ class RegisterPlayerServiceTest {
         when(existsRegistrationPort.existsByPlayerIdAndTournamentId(1L, 1L)).thenReturn(false);
         when(countRegistrationPort.countByTournamentId(1L)).thenReturn(0L);
         when(saveRegistrationPort.saveRegistration(any())).thenReturn(registration);
-        RegistrationResponse response = registerPlayerService.registerPlayer(
-                new CreateRegistrationRequest(1L, 1L));
-        assertEquals(1L, response.id());
+        Registration result = registerPlayerService.registerPlayer(
+                new RegisterPlayerCommand(1L, 1L));
+        assertEquals(1L, result.getId());
     }
 
     @Test
@@ -137,11 +136,11 @@ class RegisterPlayerServiceTest {
         when(countRegistrationPort.countByTournamentId(1L)).thenReturn(0L);
         when(saveRegistrationPort.saveRegistration(any())).thenReturn(registration);
 
-        RegistrationResponse response = registerPlayerService.registerPlayer(
-                new CreateRegistrationRequest(1L, 1L));
+        Registration result = registerPlayerService.registerPlayer(
+                new RegisterPlayerCommand(1L, 1L));
 
-        assertEquals(1L, response.playerId());
-        assertEquals(1L, response.tournamentId());
+        assertEquals(1L, result.getPlayer().getId());
+        assertEquals(1L, result.getTournament().getId());
     }
 
     @Test
@@ -156,7 +155,7 @@ class RegisterPlayerServiceTest {
         when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
 
         assertThrows(InvalidException.class,
-                () -> registerPlayerService.registerPlayer(new CreateRegistrationRequest(1L, 1L)));
+                () -> registerPlayerService.registerPlayer(new RegisterPlayerCommand(1L, 1L)));
     }
 
     @Test
@@ -171,7 +170,7 @@ class RegisterPlayerServiceTest {
         when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
 
         assertThrows(InvalidException.class,
-                () -> registerPlayerService.registerPlayer(new CreateRegistrationRequest(1L, 1L)));
+                () -> registerPlayerService.registerPlayer(new RegisterPlayerCommand(1L, 1L)));
     }
 
     @Test
@@ -197,7 +196,7 @@ class RegisterPlayerServiceTest {
                 Registration.class);
         when(saveRegistrationPort.saveRegistration(captor.capture())).thenReturn(saved);
 
-        registerPlayerService.registerPlayer(new CreateRegistrationRequest(1L, 1L));
+        registerPlayerService.registerPlayer(new RegisterPlayerCommand(1L, 1L));
 
         assertEquals(player, captor.getValue().getPlayer());
         assertEquals(tournament, captor.getValue().getTournament());

@@ -3,6 +3,7 @@ package com.tournament.tournament_manager.infrastructure.input.rpc.match;
 import tools.jackson.databind.ObjectMapper;
 import jakarta.validation.Validator;
 import com.tournament.tournament_manager.domain.port.in.match.GetMatchUseCase;
+import com.tournament.tournament_manager.infrastructure.input.mapper.MatchRestMapper;
 import com.tournament.tournament_manager.infrastructure.input.rpc.AbstractJsonRpcHandler;
 import org.springframework.stereotype.Component;
 
@@ -15,10 +16,13 @@ import org.springframework.stereotype.Component;
 public class MatchGetByIdHandler extends AbstractJsonRpcHandler {
 
     private final GetMatchUseCase getMatchUseCase;
+    private final MatchRestMapper matchRestMapper;
 
-    public MatchGetByIdHandler(GetMatchUseCase getMatchUseCase, ObjectMapper objectMapper, Validator validator) {
+    public MatchGetByIdHandler(GetMatchUseCase getMatchUseCase, ObjectMapper objectMapper, Validator validator,
+                               MatchRestMapper matchRestMapper) {
         super(objectMapper, validator);
         this.getMatchUseCase = getMatchUseCase;
+        this.matchRestMapper = matchRestMapper;
     }
 
     @Override
@@ -28,6 +32,6 @@ public class MatchGetByIdHandler extends AbstractJsonRpcHandler {
 
     @Override
     public Object handle(Object params) {
-        return getMatchUseCase.getMatchById(getLong(params, "id"));
+        return matchRestMapper.toResponse(getMatchUseCase.getMatchById(getLong(params, "id")));
     }
 }

@@ -1,6 +1,6 @@
 package com.tournament.tournament_manager.domain.port.in.match;
 
-import com.tournament.tournament_manager.dto.response.match.MatchCommentaryResponse;
+import com.tournament.tournament_manager.domain.model.MatchCommentary;
 import com.tournament.tournament_manager.exception.domain.InvalidException;
 import com.tournament.tournament_manager.exception.domain.MatchNotFoundException;
 
@@ -10,12 +10,12 @@ import com.tournament.tournament_manager.exception.domain.MatchNotFoundException
 public interface GetMatchCommentaryUseCase {
 
     /**
-     * Génère un commentaire narratif d'un match terminé via un LLM.
+     * Retourne le commentaire narratif d'un match terminé.
      *
      * @param matchId identifiant du match
-     * @return le commentaire généré
+     * @return le commentaire
      * @throws MatchNotFoundException si le match n'existe pas
      * @throws InvalidException si le match n'est pas terminé
      */
-    MatchCommentaryResponse getMatchCommentary(Long matchId);
+    MatchCommentary getMatchCommentary(Long matchId);
 }

@@ -2,7 +2,7 @@ package com.tournament.tournament_manager.application.match;
 
 import com.tournament.tournament_manager.domain.model.Match;
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchPort;
-import com.tournament.tournament_manager.dto.response.match.MatchCommentaryResponse;
+import com.tournament.tournament_manager.domain.model.MatchCommentary;
 import com.tournament.tournament_manager.exception.domain.MatchNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,7 +29,7 @@ class GetMatchCommentaryServiceTest {
         match.setId(1L);
         match.setCommentary("Super match !");
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
-        MatchCommentaryResponse response = getMatchCommentaryService.getMatchCommentary(1L);
+        MatchCommentary response = getMatchCommentaryService.getMatchCommentary(1L);
         assertEquals(1L, response.matchId());
         assertEquals("Super match !", response.commentary());
     }
@@ -40,7 +40,7 @@ class GetMatchCommentaryServiceTest {
         match.setId(1L);
         match.setCommentary(null);
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
-        MatchCommentaryResponse response = getMatchCommentaryService.getMatchCommentary(1L);
+        MatchCommentary response = getMatchCommentaryService.getMatchCommentary(1L);
         assertEquals("Commentaire en cours de génération...", response.commentary());
     }
 

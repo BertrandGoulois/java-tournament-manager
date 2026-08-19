@@ -1,6 +1,6 @@
 package com.tournament.tournament_manager.domain.port.in.auth;
 
-import com.tournament.tournament_manager.dto.response.auth.AuthResponse;
+import com.tournament.tournament_manager.domain.model.AuthResult;
 import com.tournament.tournament_manager.exception.domain.InvalidException;
 
 /**
@@ -12,10 +12,10 @@ public interface RefreshTokenUseCase {
      * Génère un nouveau access token à partir d'un refresh token valide.
      *
      * @param refreshToken le refresh token
-     * @return un nouvel access token JWT
+     * @return un nouvel access token JWT et un nouveau refresh token
      * @throws InvalidException si le token est invalide, expiré ou révoqué
      */
-    AuthResponse refresh(String refreshToken);
+    AuthResult refresh(String refreshToken);
 
     /**
      * Révoque le refresh token (logout).

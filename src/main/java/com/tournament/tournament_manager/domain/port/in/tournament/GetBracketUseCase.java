@@ -1,6 +1,6 @@
 package com.tournament.tournament_manager.domain.port.in.tournament;
 
-import com.tournament.tournament_manager.dto.response.tournament.BracketResponse;
+import com.tournament.tournament_manager.domain.model.Bracket;
 import com.tournament.tournament_manager.exception.domain.TournamentNotFoundException;
 
 /**
@@ -15,5 +15,5 @@ public interface GetBracketUseCase {
      * @return le bracket du tournoi avec tous les matchs par round
      * @throws TournamentNotFoundException si le tournoi n'existe pas
      */
-    BracketResponse getBracket(Long tournamentId);
+    Bracket getBracket(Long tournamentId);
 }

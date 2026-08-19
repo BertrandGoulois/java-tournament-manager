@@ -25,8 +25,4 @@ public record CreateTournamentRequest(
 
         @Schema(example = "2", description = "Qualifiés par groupe. Requis uniquement pour GROUPS_THEN_KNOCKOUT.")
         Integer qualifiersPerGroup
-) {
-    public TournamentFormat format() {
-        return format != null ? format : TournamentFormat.SINGLE_ELIMINATION;
-    }
-}
+) {}

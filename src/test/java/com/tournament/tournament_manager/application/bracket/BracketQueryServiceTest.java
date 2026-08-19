@@ -7,7 +7,7 @@ import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchesByTournamentPort;
 import com.tournament.tournament_manager.domain.port.out.tournament.LoadTournamentPort;
-import com.tournament.tournament_manager.dto.response.tournament.BracketResponse;
+import com.tournament.tournament_manager.domain.model.Bracket;
 import com.tournament.tournament_manager.exception.domain.TournamentNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -61,7 +61,7 @@ class BracketQueryServiceTest {
         when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
         when(loadMatchesByTournamentPort.loadByTournamentId(1L)).thenReturn(List.of(match1, match2));
 
-        BracketResponse bracket = bracketQueryService.getBracket(1L);
+        Bracket bracket = bracketQueryService.getBracket(1L);
 
         assertEquals(1L, bracket.tournamentId());
         assertEquals("Spring Championship", bracket.tournamentName());
@@ -80,7 +80,7 @@ class BracketQueryServiceTest {
         when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
         when(loadMatchesByTournamentPort.loadByTournamentId(1L)).thenReturn(List.of());
 
-        BracketResponse bracket = bracketQueryService.getBracket(1L);
+        Bracket bracket = bracketQueryService.getBracket(1L);
 
         assertEquals(0, bracket.rounds().size());
     }
@@ -113,9 +113,9 @@ class BracketQueryServiceTest {
         when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
         when(loadMatchesByTournamentPort.loadByTournamentId(1L)).thenReturn(List.of(byeMatch));
 
-        BracketResponse bracket = bracketQueryService.getBracket(1L);
+        Bracket bracket = bracketQueryService.getBracket(1L);
 
-        assertNull(bracket.rounds().get(0).matches().get(0).player2Id());
-        assertEquals(1L, bracket.rounds().get(0).matches().get(0).winnerId());
+        assertNull(bracket.rounds().get(0).matches().get(0).getPlayer2());
+        assertEquals(1L, bracket.rounds().get(0).matches().get(0).getWinner().getId());
     }
 }

@@ -10,8 +10,10 @@ import com.tournament.tournament_manager.domain.port.in.match.GetMatchCommentary
 import com.tournament.tournament_manager.domain.port.in.match.GetMatchUseCase;
 import com.tournament.tournament_manager.domain.port.in.match.RecordMatchResultUseCase;
 import com.tournament.tournament_manager.dto.request.match.RecordMatchResultRequest;
-import com.tournament.tournament_manager.dto.response.match.MatchCommentaryResponse;
-import com.tournament.tournament_manager.dto.response.match.MatchResponse;
+import com.tournament.tournament_manager.domain.model.Match;
+import com.tournament.tournament_manager.domain.model.MatchCommentary;
+import com.tournament.tournament_manager.domain.model.Player;
+import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.exception.domain.MatchNotFoundException;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -20,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.cache.CacheManager;
+import com.tournament.tournament_manager.infrastructure.input.mapper.MatchRestMapper;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -37,7 +40,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(MatchController.class)
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, MatchRestMapper.class})
 class MatchControllerTest {
 
     @Autowired
@@ -70,8 +73,21 @@ class MatchControllerTest {
         }).when(jwtAuthenticationFilter).doFilter(any(), any(), any());
     }
 
-    private MatchResponse sampleMatch() {
-        return new MatchResponse(1L, 1, 0, MatchStatus.PENDING, null, 1L, 1L, 2L, null);
+    private Match sampleMatch() {
+        Player player1 = new Player();
+        player1.setId(1L);
+        Player player2 = new Player();
+        player2.setId(2L);
+        Tournament tournament = new Tournament();
+        tournament.setId(1L);
+        Match match = new Match();
+        match.setId(1L);
+        match.setRound(1);
+        match.setStatus(MatchStatus.PENDING);
+        match.setTournament(tournament);
+        match.setPlayer1(player1);
+        match.setPlayer2(player2);
+        return match;
     }
 
     @Test
@@ -93,7 +109,9 @@ class MatchControllerTest {
 
     @Test
     void recordMatchResult_shouldReturn200() throws Exception {
-        MatchResponse finished = new MatchResponse(1L, 1, 0, MatchStatus.FINISHED, null, 1L, 1L, 2L, 1L);
+        Match finished = sampleMatch();
+        finished.setStatus(MatchStatus.FINISHED);
+        finished.setWinner(finished.getPlayer1());
         when(recordMatchResultUseCase.recordMatchResult(eq(1L), any())).thenReturn(finished);
 
         mockMvc.perform(put("/api/matches/1/result")
@@ -118,7 +136,7 @@ class MatchControllerTest {
     @Test
     void getMatchCommentary_shouldReturn200() throws Exception {
         when(getMatchCommentaryUseCase.getMatchCommentary(1L))
-                .thenReturn(new MatchCommentaryResponse(1L, "Super match !"));
+                .thenReturn(new MatchCommentary(1L, "Super match !"));
 
         mockMvc.perform(get("/api/matches/1/commentary").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk())

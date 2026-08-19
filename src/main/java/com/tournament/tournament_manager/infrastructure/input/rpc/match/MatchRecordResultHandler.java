@@ -2,8 +2,9 @@ package com.tournament.tournament_manager.infrastructure.input.rpc.match;
 
 import tools.jackson.databind.ObjectMapper;
 import jakarta.validation.Validator;
+import com.tournament.tournament_manager.domain.model.RecordMatchResultCommand;
 import com.tournament.tournament_manager.domain.port.in.match.RecordMatchResultUseCase;
-import com.tournament.tournament_manager.dto.request.match.RecordMatchResultRequest;
+import com.tournament.tournament_manager.infrastructure.input.mapper.MatchRestMapper;
 import com.tournament.tournament_manager.infrastructure.input.rpc.AbstractJsonRpcHandler;
 import org.springframework.stereotype.Component;
 
@@ -16,10 +17,13 @@ import org.springframework.stereotype.Component;
 public class MatchRecordResultHandler extends AbstractJsonRpcHandler {
 
     private final RecordMatchResultUseCase recordMatchResultUseCase;
+    private final MatchRestMapper matchRestMapper;
 
-    public MatchRecordResultHandler(RecordMatchResultUseCase recordMatchResultUseCase, ObjectMapper objectMapper, Validator validator) {
+    public MatchRecordResultHandler(RecordMatchResultUseCase recordMatchResultUseCase, ObjectMapper objectMapper,
+                                    Validator validator, MatchRestMapper matchRestMapper) {
         super(objectMapper, validator);
         this.recordMatchResultUseCase = recordMatchResultUseCase;
+        this.matchRestMapper = matchRestMapper;
     }
 
     @Override
@@ -31,6 +35,7 @@ public class MatchRecordResultHandler extends AbstractJsonRpcHandler {
     public Object handle(Object params) {
         Long matchId = getLong(params, "matchId");
         Long winnerId = getLong(params, "winnerId");
-        return recordMatchResultUseCase.recordMatchResult(matchId, new RecordMatchResultRequest(winnerId));
+        var match = recordMatchResultUseCase.recordMatchResult(matchId, new RecordMatchResultCommand(winnerId));
+        return matchRestMapper.toResponse(match);
     }
 }

@@ -38,9 +38,14 @@ API REST de gestion de tournois sportifs (élimination directe, round-robin, ou 
 
 ## Architecture & Design
 
-Le projet suit une **architecture hexagonale** (ports & adapters) : le domaine métier (`domain/`) est isolé de toute dépendance technique (JPA/Hibernate, Spring - y compris `Page`/`Pageable` -, Lombok, Kafka, Jackson...). Les objets de domaine (`domain/model/`, ex. `Player`, `Match`, `Tournament`) sont de purs POJO, sans aucune annotation ; leur persistance est gérée séparément par des entités JPA dédiées (`infrastructure/output/persistence/entity/`) et des mappers explicites (`infrastructure/output/persistence/mapper/`) qui font la conversion aux deux frontières. Le flux de dépendances va toujours de l'extérieur vers le domaine, jamais l'inverse.
+Le projet suit une **architecture hexagonale** (ports & adapters) : le domaine métier (`domain/`) est isolé de toute dépendance technique (JPA/Hibernate, Spring - y compris `Page`/`Pageable` -, Lombok, Kafka, Jackson, mais aussi les DTO REST/JSON-RPC). Les objets de domaine (`domain/model/`, ex. `Player`, `Match`, `Tournament`) sont de purs POJO, sans aucune annotation ; leur persistance est gérée séparément par des entités JPA dédiées (`infrastructure/output/persistence/entity/`) et des mappers explicites (`infrastructure/output/persistence/mapper/`) qui font la conversion aux deux frontières. Le flux de dépendances va toujours de l'extérieur vers le domaine, jamais l'inverse.
 
-> Cette règle est vérifiée en continu par un test ArchUnit (`DomainIsolationTest`), qui échoue si quiconque réintroduit une dépendance technique dans `domain/` - une règle non vérifiée par la CI n'existe pas.
+Les **13 ports entrants** (`domain/port/in/`, ex. `GetPlayerUseCase`, `CreateTournamentUseCase`) s'expriment eux aussi entièrement dans le vocabulaire du domaine : ils prennent en entrée des objets de domaine purs ou de simples commandes (`CreatePlayerCommand`, `RecordMatchResultCommand`...), et retournent des objets de domaine purs (`Player`, `Tournament`, `Bracket`, `Standings`...) - jamais un DTO annoté Swagger (`@Schema`) ou Jakarta Validation (`@NotBlank`). Chaque adaptateur d'entrée convertit à sa propre frontière, via un mapper dédié :
+
+- **REST** (`infrastructure/input/rest/`) : `infrastructure/input/mapper/` (`PlayerRestMapper`, `TournamentRestMapper`...) convertit entre DTO REST (`dto.request`/`dto.response`, avec Swagger et validation) et domaine pur
+- **JSON-RPC** (`infrastructure/input/rpc/`) : chaque handler réutilise ces mêmes mappers REST pour construire ses commandes et ses réponses - un choix délibéré de réutilisation à la frontière (les deux canaux exposent la même donnée), pas une contrainte architecturale : avant cette séparation, JSON-RPC n'avait pas d'autre choix que de réutiliser les DTO REST puisque les ports eux-mêmes les imposaient déjà
+
+> Ces deux règles (aucune dépendance technique, aucun DTO REST/JSON-RPC) sont vérifiées en continu par un test ArchUnit (`DomainIsolationTest`), qui échoue si quiconque en réintroduit une dans `domain/` - une règle non vérifiée par la CI n'existe pas.
 
 ```
 src/main/java/com/tournament/tournament_manager/
@@ -70,6 +75,7 @@ src/main/java/com/tournament/tournament_manager/
 ├── infrastructure/
 │   ├── input/
 │   │   ├── rest/           -> controllers REST (TournamentController, MatchController, ...)
+│   │   ├── mapper/         -> conversion DTO REST <-> domaine pur (PlayerRestMapper, TournamentRestMapper, ...), réutilisés par rpc/
 │   │   ├── messaging/      -> consumers Kafka (BracketListener, EloListener, ...)
 │   │   ├── rpc/            -> handlers JSON-RPC par domaine (tournament/, player/, match/, registration/)
 │   │   └── scheduler/      -> jobs planifiés (PurgeService, OutboxPublisherService)
@@ -95,9 +101,9 @@ Exemple : `PUT /api/matches/1/result` - du client jusqu'à la réponse HTTP.
 1. **RateLimitingFilter** (`config/security/`) - vérifie le bucket Redis par IP (partagé avec `POST /api/rpc` en cas d'opération équivalente) → `429` si dépassé ; mode dégradé (laisse passer) si Redis est indisponible
 2. **JwtAuthenticationFilter** (`config/security/`) - valide le JWT → `401` si invalide
 3. **Spring Security** (`SecurityConfig`) - vérifie le rôle ADMIN → `403` si insuffisant
-4. **MatchController** (`infrastructure/input/rest/`) - adapter primaire, désérialise la requête en `RecordMatchResultRequest`
-5. **RecordMatchResultUseCase** (`domain/port/in/`) - interface du port entrant, définit le contrat
-6. **RecordMatchResultService** (`application/match/`) - implémente le port entrant, logique métier pure
+4. **MatchController** (`infrastructure/input/rest/`) - adapter primaire, désérialise la requête en `RecordMatchResultRequest`, puis convertit en `RecordMatchResultCommand` via `MatchRestMapper` (voir point 22 : le port ci-dessous ne connaît jamais ce DTO)
+5. **RecordMatchResultUseCase** (`domain/port/in/`) - interface du port entrant, définit le contrat dans le vocabulaire du domaine (`RecordMatchResultCommand` en entrée, `Match` en sortie)
+6. **RecordMatchResultService** (`application/match/`) - implémente le port entrant, logique métier pure, ne manipule que des objets de domaine
 7. **SaveMatchPort** (`domain/port/out/`) - interface du port sortant "sauvegarder un match"
 8. **MatchJpaAdapter** (`infrastructure/output/persistence/adapter/`) - implémente `SaveMatchPort`, traduit vers JPA
 9. **MatchRepository** (`infrastructure/output/persistence/repository/`) - Spring Data JPA
@@ -107,13 +113,13 @@ Exemple : `PUT /api/matches/1/result` - du client jusqu'à la réponse HTTP.
 13. **OutboxPublisherService** (`infrastructure/input/scheduler/`) - poller indépendant (toutes les 500ms, hors de toute transaction métier) qui publie réellement les événements en attente vers Kafka, avec la clé de partition `tournamentId`
 14. **Kafka** `match-finished` - les 4 listeners consomment en asynchrone (ELO, Bracket, WebSocket, Commentary)
 15. **GlobalExceptionHandler** (`exception/handler/`) - intercepte toute exception → `ErrorResponse` JSON uniforme
-16. **MatchController** - retourne `200 OK` + `MatchResponse` JSON au client
+16. **MatchController** - reconvertit le `Match` du domaine en `MatchResponse` via `MatchRestMapper`, retourne `200 OK` + JSON au client
 
 > Pourquoi l'écriture Kafka n'a pas lieu directement à l'étape 12 : si elle avait lieu pendant la transaction (avant le commit), un rollback après envoi laisserait les consumers traiter un match jamais réellement passé à `FINISHED`, et un consumer rapide pourrait lire le match avant le commit. Le pattern Outbox rend l'écriture DB et la publication Kafka atomiques l'une vis-à-vis de l'autre : soit les deux finissent par arriver, soit ni l'une ni l'autre.
 
 ### Architecture hexagonale
 
-- `domain/` ne dépend d'aucune librairie technique
+- `domain/` ne dépend d'aucune librairie technique ni d'aucun DTO REST/JSON-RPC (voir `DomainIsolationTest`)
 - `application/` implémente les use cases en s'appuyant sur les ports du domaine
 - `infrastructure/input/` contient les **adapters primaires** : ce qui déclenche le domaine (REST, Kafka consumers, scheduler)
 - `infrastructure/output/` contient les **adapters secondaires** : ce dont le domaine a besoin (base de données, Kafka producer, OpenAI)
@@ -567,4 +573,3 @@ Toutes les erreurs REST retournent un JSON uniforme :
 ---
 
 ## Evolutions possibles
-

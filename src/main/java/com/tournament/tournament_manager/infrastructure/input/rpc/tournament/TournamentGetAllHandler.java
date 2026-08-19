@@ -3,6 +3,7 @@ package com.tournament.tournament_manager.infrastructure.input.rpc.tournament;
 import tools.jackson.databind.ObjectMapper;
 import jakarta.validation.Validator;
 import com.tournament.tournament_manager.domain.port.in.tournament.GetTournamentUseCase;
+import com.tournament.tournament_manager.infrastructure.input.mapper.TournamentRestMapper;
 import com.tournament.tournament_manager.infrastructure.input.rpc.AbstractJsonRpcHandler;
 import org.springframework.stereotype.Component;
 
@@ -15,10 +16,13 @@ import org.springframework.stereotype.Component;
 public class TournamentGetAllHandler extends AbstractJsonRpcHandler {
 
     private final GetTournamentUseCase getTournamentUseCase;
+    private final TournamentRestMapper tournamentRestMapper;
 
-    public TournamentGetAllHandler(GetTournamentUseCase getTournamentUseCase, ObjectMapper objectMapper, Validator validator) {
+    public TournamentGetAllHandler(GetTournamentUseCase getTournamentUseCase, ObjectMapper objectMapper,
+                                   Validator validator, TournamentRestMapper tournamentRestMapper) {
         super(objectMapper, validator);
         this.getTournamentUseCase = getTournamentUseCase;
+        this.tournamentRestMapper = tournamentRestMapper;
     }
 
     @Override
@@ -31,6 +35,7 @@ public class TournamentGetAllHandler extends AbstractJsonRpcHandler {
         java.util.Map<?, ?> map = params != null ? objectMapper.convertValue(params, java.util.Map.class) : java.util.Map.of();
         int page = map.containsKey("page") ? ((Number) map.get("page")).intValue() : 0;
         int size = map.containsKey("size") ? ((Number) map.get("size")).intValue() : 10;
-        return getTournamentUseCase.getAllTournaments(com.tournament.tournament_manager.domain.model.PageRequest.of(page, size));
+        return getTournamentUseCase.getAllTournaments(com.tournament.tournament_manager.domain.model.PageRequest.of(page, size))
+                .map(tournamentRestMapper::toResponse);
     }
 }

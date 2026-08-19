@@ -6,12 +6,12 @@ import com.tournament.tournament_manager.infrastructure.output.persistence.mappe
 import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
-import com.tournament.tournament_manager.dto.request.match.RecordMatchResultRequest;
-import com.tournament.tournament_manager.dto.request.player.CreatePlayerRequest;
-import com.tournament.tournament_manager.dto.request.registration.CreateRegistrationRequest;
-import com.tournament.tournament_manager.dto.request.tournament.CreateTournamentRequest;
-import com.tournament.tournament_manager.dto.response.player.PlayerResponse;
-import com.tournament.tournament_manager.dto.response.tournament.TournamentResponse;
+import com.tournament.tournament_manager.domain.model.CreatePlayerCommand;
+import com.tournament.tournament_manager.domain.model.CreateTournamentCommand;
+import com.tournament.tournament_manager.domain.model.Player;
+import com.tournament.tournament_manager.domain.model.RecordMatchResultCommand;
+import com.tournament.tournament_manager.domain.model.RegisterPlayerCommand;
+import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.MatchRepository;
 import com.tournament.tournament_manager.application.match.RecordMatchResultService;
 import com.tournament.tournament_manager.application.player.CreatePlayerService;
@@ -70,45 +70,45 @@ class GroupsThenKnockoutIntegrationTest {
     @Test
     void groupsThenKnockoutTournament_shouldCompleteFullFlow() {
         // 8 joueurs
-        List<PlayerResponse> players = List.of(
-                createPlayerService.createPlayer(new CreatePlayerRequest("gtk_p1", "gtk_p1@mail.com")),
-                createPlayerService.createPlayer(new CreatePlayerRequest("gtk_p2", "gtk_p2@mail.com")),
-                createPlayerService.createPlayer(new CreatePlayerRequest("gtk_p3", "gtk_p3@mail.com")),
-                createPlayerService.createPlayer(new CreatePlayerRequest("gtk_p4", "gtk_p4@mail.com")),
-                createPlayerService.createPlayer(new CreatePlayerRequest("gtk_p5", "gtk_p5@mail.com")),
-                createPlayerService.createPlayer(new CreatePlayerRequest("gtk_p6", "gtk_p6@mail.com")),
-                createPlayerService.createPlayer(new CreatePlayerRequest("gtk_p7", "gtk_p7@mail.com")),
-                createPlayerService.createPlayer(new CreatePlayerRequest("gtk_p8", "gtk_p8@mail.com"))
+        List<Player> players = List.of(
+                createPlayerService.createPlayer(new CreatePlayerCommand("gtk_p1", "gtk_p1@mail.com")),
+                createPlayerService.createPlayer(new CreatePlayerCommand("gtk_p2", "gtk_p2@mail.com")),
+                createPlayerService.createPlayer(new CreatePlayerCommand("gtk_p3", "gtk_p3@mail.com")),
+                createPlayerService.createPlayer(new CreatePlayerCommand("gtk_p4", "gtk_p4@mail.com")),
+                createPlayerService.createPlayer(new CreatePlayerCommand("gtk_p5", "gtk_p5@mail.com")),
+                createPlayerService.createPlayer(new CreatePlayerCommand("gtk_p6", "gtk_p6@mail.com")),
+                createPlayerService.createPlayer(new CreatePlayerCommand("gtk_p7", "gtk_p7@mail.com")),
+                createPlayerService.createPlayer(new CreatePlayerCommand("gtk_p8", "gtk_p8@mail.com"))
         );
 
         // Tournoi : 2 groupes de 4, 2 qualifiés par groupe (4 qualifiés au total, puissance de 2)
-        TournamentResponse tournament = createTournamentService.createTournament(
-                new CreateTournamentRequest("GTK Integration Cup", 8, TournamentFormat.GROUPS_THEN_KNOCKOUT, 2, 2));
-        assertEquals(TournamentFormat.GROUPS_THEN_KNOCKOUT, tournament.format());
+        Tournament tournament = createTournamentService.createTournament(
+                new CreateTournamentCommand("GTK Integration Cup", 8, TournamentFormat.GROUPS_THEN_KNOCKOUT, 2, 2));
+        assertEquals(TournamentFormat.GROUPS_THEN_KNOCKOUT, tournament.getFormat());
 
-        for (PlayerResponse p : players) {
-            registerPlayerService.registerPlayer(new CreateRegistrationRequest(p.id(), tournament.id()));
+        for (Player p : players) {
+            registerPlayerService.registerPlayer(new RegisterPlayerCommand(p.getId(), tournament.getId()));
         }
 
         // Démarrage : 2 groupes de 4 -> C(4,2) = 6 matchs par groupe = 12 matchs de groupe
-        startTournamentService.startTournament(tournament.id());
+        startTournamentService.startTournament(tournament.getId());
 
-        List<MatchEntity> groupMatches = matchRepository.findByTournamentId(tournament.id());
+        List<MatchEntity> groupMatches = matchRepository.findByTournamentId(tournament.getId());
         assertEquals(12, groupMatches.size());
         assertTrue(groupMatches.stream().allMatch(m -> m.getGroupNumber() != null));
 
         // Tous les matchs de groupe sont gagnés par player1
         for (MatchEntity match : groupMatches) {
             recordMatchResultService.recordMatchResult(
-                    match.getId(), new RecordMatchResultRequest(match.getPlayer1().getId()));
+                    match.getId(), new RecordMatchResultCommand(match.getPlayer1().getId()));
         }
 
         // Déclenchement manuel équivalent au listener Kafka : génère le bracket
-        var allMatchesAfterGroups = matchRepository.findByTournamentId(tournament.id());
+        var allMatchesAfterGroups = matchRepository.findByTournamentId(tournament.getId());
         var loadedTournament = tournamentMapper.toDomain(allMatchesAfterGroups.get(0).getTournament());
         generateKnockoutBracketFromGroupsService.checkGroupsCompletionAndGenerateBracket(loadedTournament);
 
-        List<MatchEntity> allMatches = matchRepository.findByTournamentId(tournament.id());
+        List<MatchEntity> allMatches = matchRepository.findByTournamentId(tournament.getId());
         List<MatchEntity> bracketMatches = allMatches.stream()
                 .filter(m -> m.getGroupNumber() == null)
                 .toList();
@@ -117,7 +117,7 @@ class GroupsThenKnockoutIntegrationTest {
         assertEquals(2, bracketMatches.size());
         assertTrue(bracketMatches.stream().allMatch(m -> m.getStatus() == MatchStatus.PENDING));
 
-        TournamentResponse stillInProgress = getTournamentService.getTournamentById(tournament.id());
-        assertEquals(TournamentStatus.IN_PROGRESS, stillInProgress.status());
+        Tournament stillInProgress = getTournamentService.getTournamentById(tournament.getId());
+        assertEquals(TournamentStatus.IN_PROGRESS, stillInProgress.getStatus());
     }
 }

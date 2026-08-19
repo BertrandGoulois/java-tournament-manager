@@ -2,13 +2,13 @@ package com.tournament.tournament_manager.application.tournament;
 
 import com.tournament.tournament_manager.domain.model.Match;
 import com.tournament.tournament_manager.domain.model.Player;
+import com.tournament.tournament_manager.domain.model.StandingEntry;
+import com.tournament.tournament_manager.domain.model.Standings;
 import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 import com.tournament.tournament_manager.domain.port.in.tournament.GetStandingsUseCase;
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchesByTournamentPort;
 import com.tournament.tournament_manager.domain.port.out.tournament.LoadTournamentPort;
-import com.tournament.tournament_manager.dto.response.tournament.StandingEntryResponse;
-import com.tournament.tournament_manager.dto.response.tournament.StandingsResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,7 +25,8 @@ import java.util.stream.Collectors;
  * sans table dédiée : 3 points par victoire, 0 par défaite (pas de match nul
  * dans le modèle actuel, chaque match a toujours un vainqueur). Les joueurs
  * sont triés par points décroissants, puis par nombre de victoires en cas
- * d'égalité.
+ * d'égalité. Retourne un {@link Standings} pur — voir la Javadoc de
+ * {@code GetPlayerService}.
  */
 @Service
 @Transactional(readOnly = true)
@@ -43,11 +44,11 @@ public class GetStandingsService implements GetStandingsUseCase {
     }
 
     @Override
-    public StandingsResponse getStandings(Long tournamentId) {
+    public Standings getStandings(Long tournamentId) {
         Tournament tournament = loadTournamentPort.loadTournament(tournamentId);
         List<Match> matches = loadMatchesByTournamentPort.loadByTournamentId(tournamentId);
 
-        Map<Long, PlayerStats> statsByPlayer = new LinkedHashMap<>();
+        Map<Long, StandingsAccumulator> statsByPlayer = new LinkedHashMap<>();
 
         for (Match match : matches) {
             registerParticipant(statsByPlayer, match.getPlayer1());
@@ -66,28 +67,27 @@ public class GetStandingsService implements GetStandingsUseCase {
             }
         }
 
-        List<StandingEntryResponse> standings = statsByPlayer.values().stream()
+        List<StandingEntry> standings = statsByPlayer.values().stream()
                 .map(this::toEntry)
                 .sorted(Comparator
-                        .comparingInt(StandingEntryResponse::points).reversed()
-                        .thenComparing(Comparator.comparingInt(StandingEntryResponse::wins).reversed()))
+                        .comparingInt(StandingEntry::points).reversed()
+                        .thenComparing(Comparator.comparingInt(StandingEntry::wins).reversed()))
                 .collect(Collectors.toList());
 
-        return new StandingsResponse(tournament.getId(), tournament.getName(), standings);
+        return new Standings(tournament.getId(), tournament.getName(), standings);
     }
 
-    private void registerParticipant(Map<Long, PlayerStats> statsByPlayer, Player player) {
+    private void registerParticipant(Map<Long, StandingsAccumulator> statsByPlayer, Player player) {
         if (player == null) {
             return; // bye
         }
-        statsByPlayer.computeIfAbsent(player.getId(), id -> new PlayerStats(player));
+        statsByPlayer.computeIfAbsent(player.getId(), id -> new StandingsAccumulator(player));
     }
 
-    private StandingEntryResponse toEntry(PlayerStats stats) {
+    private StandingEntry toEntry(StandingsAccumulator stats) {
         int matchesPlayed = stats.wins + stats.losses;
-        return new StandingEntryResponse(
-                stats.player.getId(),
-                stats.player.getUsername(),
+        return new StandingEntry(
+                stats.player,
                 matchesPlayed,
                 stats.wins,
                 stats.losses,
@@ -96,15 +96,17 @@ public class GetStandingsService implements GetStandingsUseCase {
     }
 
     /**
-     * Accumulateur interne de victoires/défaites pour un joueur,
-     * utilisé uniquement pendant le calcul du classement.
+     * Accumulateur interne de victoires/défaites pour un joueur, utilisé uniquement
+     * pendant le calcul du classement (à ne pas confondre avec {@code domain.model.PlayerStats},
+     * la vue agrégée exposée par {@code GetPlayerStatsUseCase} — deux concepts différents
+     * qui partageaient auparavant un nom similaire par coïncidence).
      */
-    private static class PlayerStats {
+    private static class StandingsAccumulator {
         private final Player player;
         private int wins;
         private int losses;
 
-        private PlayerStats(Player player) {
+        private StandingsAccumulator(Player player) {
             this.player = player;
         }
     }

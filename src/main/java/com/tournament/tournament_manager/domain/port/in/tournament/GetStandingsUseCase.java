@@ -1,6 +1,6 @@
 package com.tournament.tournament_manager.domain.port.in.tournament;
 
-import com.tournament.tournament_manager.dto.response.tournament.StandingsResponse;
+import com.tournament.tournament_manager.domain.model.Standings;
 
 /**
  * Cas d'utilisation : consultation du classement d'un tournoi round-robin.
@@ -13,5 +13,5 @@ public interface GetStandingsUseCase {
      * @param tournamentId identifiant du tournoi
      * @return le classement du tournoi
      */
-    StandingsResponse getStandings(Long tournamentId);
+    Standings getStandings(Long tournamentId);
 }

@@ -3,8 +3,7 @@ package com.tournament.tournament_manager.application.player;
 import com.tournament.tournament_manager.domain.model.Player;
 import com.tournament.tournament_manager.domain.port.out.player.ExistsPlayerPort;
 import com.tournament.tournament_manager.domain.port.out.player.SavePlayerPort;
-import com.tournament.tournament_manager.dto.request.player.CreatePlayerRequest;
-import com.tournament.tournament_manager.dto.response.player.PlayerResponse;
+import com.tournament.tournament_manager.domain.model.CreatePlayerCommand;
 import com.tournament.tournament_manager.exception.domain.PlayerAlreadyExistsException;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -37,8 +36,8 @@ class CreatePlayerServiceTest {
     }
 
     @Test
-    void createPlayer_shouldReturnPlayerResponse_whenValid() {
-        CreatePlayerRequest request = new CreatePlayerRequest("toto", "toto@mail.com");
+    void createPlayer_shouldReturnPlayer_whenValid() {
+        CreatePlayerCommand request = new CreatePlayerCommand("toto", "toto@mail.com");
         Player saved = new Player();
         saved.setUsername("toto");
         saved.setEmail("toto@mail.com");
@@ -47,20 +46,20 @@ class CreatePlayerServiceTest {
         when(existsPlayerPort.existsByEmail("toto@mail.com")).thenReturn(false);
         when(savePlayerPort.savePlayer(any())).thenReturn(saved);
 
-        PlayerResponse response = createPlayerService.createPlayer(request);
-        assertEquals("toto", response.username());
+        Player result = createPlayerService.createPlayer(request);
+        assertEquals("toto", result.getUsername());
     }
 
     @Test
     void createPlayer_shouldThrow_whenUsernameAlreadyExists() {
-        CreatePlayerRequest request = new CreatePlayerRequest("toto", "toto@mail.com");
+        CreatePlayerCommand request = new CreatePlayerCommand("toto", "toto@mail.com");
         when(existsPlayerPort.existsByUsername("toto")).thenReturn(true);
         assertThrows(PlayerAlreadyExistsException.class, () -> createPlayerService.createPlayer(request));
     }
 
     @Test
     void createPlayer_shouldThrow_whenEmailAlreadyExists() {
-        CreatePlayerRequest request = new CreatePlayerRequest("toto", "toto@mail.com");
+        CreatePlayerCommand request = new CreatePlayerCommand("toto", "toto@mail.com");
         when(existsPlayerPort.existsByUsername("toto")).thenReturn(false);
         when(existsPlayerPort.existsByEmail("toto@mail.com")).thenReturn(true);
         assertThrows(PlayerAlreadyExistsException.class, () -> createPlayerService.createPlayer(request));
@@ -77,11 +76,11 @@ class CreatePlayerServiceTest {
         when(existsPlayerPort.existsByEmail("player1@mail.com")).thenReturn(false);
         when(savePlayerPort.savePlayer(any())).thenReturn(saved);
 
-        PlayerResponse response = createPlayerService.createPlayer(
-                new CreatePlayerRequest("player1", "player1@mail.com"));
+        Player result = createPlayerService.createPlayer(
+                new CreatePlayerCommand("player1", "player1@mail.com"));
 
-        assertEquals("player1", response.username());
-        assertEquals("player1@mail.com", response.email());
+        assertEquals("player1", result.getUsername());
+        assertEquals("player1@mail.com", result.getEmail());
     }
 
     @Test
@@ -96,7 +95,7 @@ class CreatePlayerServiceTest {
         ArgumentCaptor<Player> captor = ArgumentCaptor.forClass(Player.class);
         when(savePlayerPort.savePlayer(captor.capture())).thenReturn(saved);
 
-        createPlayerService.createPlayer(new CreatePlayerRequest("player1", "player1@mail.com"));
+        createPlayerService.createPlayer(new CreatePlayerCommand("player1", "player1@mail.com"));
 
         assertEquals("player1", captor.getValue().getUsername());
         assertEquals("player1@mail.com", captor.getValue().getEmail());

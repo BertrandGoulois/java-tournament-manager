@@ -7,7 +7,7 @@ import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchPort;
 import com.tournament.tournament_manager.domain.port.out.match.PublishMatchEventPort;
 import com.tournament.tournament_manager.domain.port.out.match.SaveMatchPort;
-import com.tournament.tournament_manager.dto.request.match.RecordMatchResultRequest;
+import com.tournament.tournament_manager.domain.model.RecordMatchResultCommand;
 import com.tournament.tournament_manager.exception.domain.InvalidException;
 import com.tournament.tournament_manager.exception.domain.MatchNotFoundException;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -43,7 +43,7 @@ class RecordMatchResultServiceTest {
     void recordMatchResult_shouldThrow_whenMatchNotFound() {
         when(loadMatchPort.loadMatch(1L)).thenThrow(new MatchNotFoundException(1L));
         assertThrows(MatchNotFoundException.class,
-                () -> recordMatchResultService.recordMatchResult(1L, new RecordMatchResultRequest(1L)));
+                () -> recordMatchResultService.recordMatchResult(1L, new RecordMatchResultCommand(1L)));
     }
 
     @Test
@@ -52,7 +52,7 @@ class RecordMatchResultServiceTest {
         match.setStatus(MatchStatus.FINISHED);
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         assertThrows(InvalidException.class,
-                () -> recordMatchResultService.recordMatchResult(1L, new RecordMatchResultRequest(1L)));
+                () -> recordMatchResultService.recordMatchResult(1L, new RecordMatchResultCommand(1L)));
     }
 
     @Test
@@ -67,7 +67,7 @@ class RecordMatchResultServiceTest {
         match.setPlayer2(player2);
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         assertThrows(InvalidException.class,
-                () -> recordMatchResultService.recordMatchResult(1L, new RecordMatchResultRequest(99L)));
+                () -> recordMatchResultService.recordMatchResult(1L, new RecordMatchResultCommand(99L)));
     }
 
     @Test
@@ -83,7 +83,7 @@ class RecordMatchResultServiceTest {
         match.setPlayer2(player2);
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         when(saveMatchPort.saveMatch(any())).thenReturn(match);
-        recordMatchResultService.recordMatchResult(1L, new RecordMatchResultRequest(1L));
+        recordMatchResultService.recordMatchResult(1L, new RecordMatchResultCommand(1L));
         verify(publishMatchEventPort, times(1)).publishMatchFinished(any(), any());
     }
 
@@ -107,7 +107,7 @@ class RecordMatchResultServiceTest {
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         when(saveMatchPort.saveMatch(any())).thenReturn(match);
 
-        recordMatchResultService.recordMatchResult(1L, new RecordMatchResultRequest(1L));
+        recordMatchResultService.recordMatchResult(1L, new RecordMatchResultCommand(1L));
 
         org.mockito.ArgumentCaptor<com.tournament.tournament_manager.domain.event.MatchFinishedEvent> captor =
                 org.mockito.ArgumentCaptor.forClass(com.tournament.tournament_manager.domain.event.MatchFinishedEvent.class);
@@ -130,7 +130,7 @@ class RecordMatchResultServiceTest {
         match.setPlayer2(player2);
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         when(saveMatchPort.saveMatch(any())).thenReturn(match);
-        recordMatchResultService.recordMatchResult(1L, new RecordMatchResultRequest(2L));
+        recordMatchResultService.recordMatchResult(1L, new RecordMatchResultCommand(2L));
         assertEquals(player2, match.getWinner());
     }
 
@@ -144,7 +144,7 @@ class RecordMatchResultServiceTest {
         match.setPlayer2(null); // bye
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         assertThrows(InvalidException.class,
-                () -> recordMatchResultService.recordMatchResult(1L, new RecordMatchResultRequest(99L)));
+                () -> recordMatchResultService.recordMatchResult(1L, new RecordMatchResultCommand(99L)));
     }
 
     @Test
@@ -161,7 +161,7 @@ class RecordMatchResultServiceTest {
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         when(saveMatchPort.saveMatch(any())).thenReturn(match);
 
-        recordMatchResultService.recordMatchResult(1L, new RecordMatchResultRequest(1L));
+        recordMatchResultService.recordMatchResult(1L, new RecordMatchResultCommand(1L));
 
         assertEquals(MatchStatus.FINISHED, match.getStatus());
     }
@@ -182,7 +182,7 @@ class RecordMatchResultServiceTest {
         when(saveMatchPort.saveMatch(any())).thenReturn(match);
 
         java.time.Instant before = java.time.Instant.now();
-        recordMatchResultService.recordMatchResult(1L, new RecordMatchResultRequest(1L));
+        recordMatchResultService.recordMatchResult(1L, new RecordMatchResultCommand(1L));
         java.time.Instant after = java.time.Instant.now();
 
         assertNotNull(match.getPlayedAt());
@@ -204,7 +204,7 @@ class RecordMatchResultServiceTest {
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         when(saveMatchPort.saveMatch(any())).thenReturn(match);
 
-        recordMatchResultService.recordMatchResult(1L, new RecordMatchResultRequest(1L));
+        recordMatchResultService.recordMatchResult(1L, new RecordMatchResultCommand(1L));
 
         assertEquals(player1, match.getWinner());
     }
@@ -226,13 +226,13 @@ class RecordMatchResultServiceTest {
         when(loadMatchPort.loadMatch(5L)).thenReturn(match);
         when(saveMatchPort.saveMatch(any())).thenReturn(match);
 
-        var response = recordMatchResultService.recordMatchResult(5L, new RecordMatchResultRequest(1L));
+        var result = recordMatchResultService.recordMatchResult(5L, new RecordMatchResultCommand(1L));
 
-        assertEquals(5L, response.id());
-        assertEquals(10L, response.tournamentId());
-        assertEquals(1L, response.player1Id());
-        assertEquals(2L, response.player2Id());
-        assertEquals(MatchStatus.FINISHED, response.status());
+        assertEquals(5L, result.getId());
+        assertEquals(10L, result.getTournament().getId());
+        assertEquals(1L, result.getPlayer1().getId());
+        assertEquals(2L, result.getPlayer2().getId());
+        assertEquals(MatchStatus.FINISHED, result.getStatus());
     }
 
     @Test
@@ -251,10 +251,10 @@ class RecordMatchResultServiceTest {
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         when(saveMatchPort.saveMatch(any())).thenReturn(match);
 
-        var response = recordMatchResultService.recordMatchResult(1L, new RecordMatchResultRequest(1L));
+        var result = recordMatchResultService.recordMatchResult(1L, new RecordMatchResultCommand(1L));
 
-        assertEquals(null, response.player2Id());
-        assertEquals(1L, response.winnerId());
+        assertEquals(null, result.getPlayer2());
+        assertEquals(1L, result.getWinner().getId());
     }
 
     @Test
@@ -272,6 +272,6 @@ class RecordMatchResultServiceTest {
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         when(saveMatchPort.saveMatch(any())).thenReturn(match);
 
-        assertDoesNotThrow(() -> recordMatchResultService.recordMatchResult(1L, new RecordMatchResultRequest(1L)));
+        assertDoesNotThrow(() -> recordMatchResultService.recordMatchResult(1L, new RecordMatchResultCommand(1L)));
     }
 }

@@ -3,6 +3,7 @@ package com.tournament.tournament_manager.infrastructure.input.rpc.tournament;
 import tools.jackson.databind.ObjectMapper;
 import jakarta.validation.Validator;
 import com.tournament.tournament_manager.domain.port.in.tournament.GetBracketUseCase;
+import com.tournament.tournament_manager.infrastructure.input.mapper.TournamentRestMapper;
 import com.tournament.tournament_manager.infrastructure.input.rpc.AbstractJsonRpcHandler;
 import org.springframework.stereotype.Component;
 
@@ -15,10 +16,13 @@ import org.springframework.stereotype.Component;
 public class TournamentGetBracketHandler extends AbstractJsonRpcHandler {
 
     private final GetBracketUseCase getBracketUseCase;
+    private final TournamentRestMapper tournamentRestMapper;
 
-    public TournamentGetBracketHandler(GetBracketUseCase getBracketUseCase, ObjectMapper objectMapper, Validator validator) {
+    public TournamentGetBracketHandler(GetBracketUseCase getBracketUseCase, ObjectMapper objectMapper,
+                                       Validator validator, TournamentRestMapper tournamentRestMapper) {
         super(objectMapper, validator);
         this.getBracketUseCase = getBracketUseCase;
+        this.tournamentRestMapper = tournamentRestMapper;
     }
 
     @Override
@@ -28,6 +32,6 @@ public class TournamentGetBracketHandler extends AbstractJsonRpcHandler {
 
     @Override
     public Object handle(Object params) {
-        return getBracketUseCase.getBracket(getLong(params, "id"));
+        return tournamentRestMapper.toResponse(getBracketUseCase.getBracket(getLong(params, "id")));
     }
 }

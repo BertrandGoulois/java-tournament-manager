@@ -8,7 +8,9 @@ import com.tournament.tournament_manager.config.security.UserDetailsServiceImpl;
 import com.tournament.tournament_manager.domain.port.in.registration.GetRegistrationsUseCase;
 import com.tournament.tournament_manager.domain.port.in.registration.RegisterPlayerUseCase;
 import com.tournament.tournament_manager.dto.request.registration.CreateRegistrationRequest;
-import com.tournament.tournament_manager.dto.response.registration.RegistrationResponse;
+import com.tournament.tournament_manager.domain.model.Player;
+import com.tournament.tournament_manager.domain.model.Registration;
+import com.tournament.tournament_manager.domain.model.Tournament;
 import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.cache.CacheManager;
+import com.tournament.tournament_manager.infrastructure.input.mapper.RegistrationRestMapper;
 import org.springframework.context.annotation.Import;
 import com.tournament.tournament_manager.domain.model.PageResult;
 import org.springframework.http.MediaType;
@@ -36,7 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(RegistrationController.class)
-@Import(SecurityConfig.class)
+@Import({SecurityConfig.class, RegistrationRestMapper.class})
 class RegistrationControllerTest {
 
     @Autowired
@@ -68,8 +71,16 @@ class RegistrationControllerTest {
         }).when(jwtAuthenticationFilter).doFilter(any(), any(), any());
     }
 
-    private RegistrationResponse sampleRegistration() {
-        return new RegistrationResponse(1L, 1L, 1L, null);
+    private Registration sampleRegistration() {
+        Player player = new Player();
+        player.setId(1L);
+        Tournament tournament = new Tournament();
+        tournament.setId(1L);
+        Registration registration = new Registration();
+        registration.setId(1L);
+        registration.setPlayer(player);
+        registration.setTournament(tournament);
+        return registration;
     }
 
     @Test

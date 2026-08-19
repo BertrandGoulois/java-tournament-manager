@@ -5,7 +5,6 @@ import com.tournament.tournament_manager.domain.model.Player;
 import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchPort;
-import com.tournament.tournament_manager.dto.response.match.MatchResponse;
 import com.tournament.tournament_manager.exception.domain.MatchNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,8 +39,8 @@ class GetMatchServiceTest {
         match.setPlayer2(player2);
         match.setTournament(tournament);
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
-        MatchResponse response = getMatchService.getMatchById(1L);
-        assertEquals(1L, response.id());
+        Match result = getMatchService.getMatchById(1L);
+        assertEquals(1L, result.getId());
     }
 
     @Test
@@ -64,9 +63,9 @@ class GetMatchServiceTest {
         match.setWinner(null);
         match.setTournament(tournament);
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
-        MatchResponse response = getMatchService.getMatchById(1L);
-        assertNull(response.player2Id());
-        assertNull(response.winnerId());
+        Match result = getMatchService.getMatchById(1L);
+        assertNull(result.getPlayer2());
+        assertNull(result.getWinner());
     }
 
     @Test
@@ -88,9 +87,9 @@ class GetMatchServiceTest {
         match.setTournament(tournament);
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
 
-        MatchResponse response = getMatchService.getMatchById(1L);
+        Match result = getMatchService.getMatchById(1L);
 
-        assertEquals(2L, response.player2Id());
-        assertEquals(1L, response.winnerId());
+        assertEquals(2L, result.getPlayer2().getId());
+        assertEquals(1L, result.getWinner().getId());
     }
 }

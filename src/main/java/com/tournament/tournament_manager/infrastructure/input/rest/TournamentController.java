@@ -6,6 +6,7 @@ import com.tournament.tournament_manager.dto.response.tournament.BracketResponse
 import com.tournament.tournament_manager.dto.response.tournament.StandingsResponse;
 import com.tournament.tournament_manager.dto.response.tournament.TournamentResponse;
 import com.tournament.tournament_manager.exception.handler.ErrorResponse;
+import com.tournament.tournament_manager.infrastructure.input.mapper.TournamentRestMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -15,12 +16,16 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
  * Point d'entrée HTTP pour la gestion des tournois.
+ *
+ * <p>Convertit entre les DTO REST et le domaine pur via {@link TournamentRestMapper} —
+ * voir la Javadoc de {@code PlayerController}.
  */
 @RestController
 @RequestMapping("/api/tournaments")
@@ -33,19 +38,22 @@ public class TournamentController {
     private final GetBracketUseCase getBracketUseCase;
     private final DeleteTournamentUseCase deleteTournamentUseCase;
     private final GetStandingsUseCase getStandingsUseCase;
+    private final TournamentRestMapper tournamentRestMapper;
 
     public TournamentController(CreateTournamentUseCase createTournamentUseCase,
                                 GetTournamentUseCase getTournamentUseCase,
                                 StartTournamentUseCase startTournamentUseCase,
                                 GetBracketUseCase getBracketUseCase,
                                 DeleteTournamentUseCase deleteTournamentUseCase,
-                                GetStandingsUseCase getStandingsUseCase) {
+                                GetStandingsUseCase getStandingsUseCase,
+                                TournamentRestMapper tournamentRestMapper) {
         this.createTournamentUseCase = createTournamentUseCase;
         this.getTournamentUseCase = getTournamentUseCase;
         this.startTournamentUseCase = startTournamentUseCase;
         this.getBracketUseCase = getBracketUseCase;
         this.deleteTournamentUseCase = deleteTournamentUseCase;
         this.getStandingsUseCase = getStandingsUseCase;
+        this.tournamentRestMapper = tournamentRestMapper;
     }
 
     @Operation(summary = "Créer un tournoi",
@@ -61,7 +69,8 @@ public class TournamentController {
     @PostMapping
     public ResponseEntity<TournamentResponse> createTournament(
             @Valid @RequestBody CreateTournamentRequest req) {
-        return ResponseEntity.status(201).body(createTournamentUseCase.createTournament(req));
+        var tournament = createTournamentUseCase.createTournament(tournamentRestMapper.toCommand(req));
+        return ResponseEntity.status(201).body(tournamentRestMapper.toResponse(tournament));
     }
 
     @Operation(summary = "Lister les tournois", description = "Retourne la liste paginée des tournois.")
@@ -70,8 +79,8 @@ public class TournamentController {
     public ResponseEntity<Page<TournamentResponse>> getAllTournaments(Pageable pageable) {
         var result = getTournamentUseCase.getAllTournaments(
                 new com.tournament.tournament_manager.domain.model.PageRequest(pageable.getPageNumber(), pageable.getPageSize()));
-        return ResponseEntity.ok(new org.springframework.data.domain.PageImpl<>(
-                result.content(), pageable, result.totalElements()));
+        var content = result.content().stream().map(tournamentRestMapper::toResponse).toList();
+        return ResponseEntity.ok(new PageImpl<>(content, pageable, result.totalElements()));
     }
 
     @Operation(summary = "Obtenir un tournoi par ID")
@@ -83,7 +92,7 @@ public class TournamentController {
     @GetMapping("/{id}")
     public ResponseEntity<TournamentResponse> getTournamentById(
             @Parameter(description = "ID du tournoi") @PathVariable Long id) {
-        return ResponseEntity.ok(getTournamentUseCase.getTournamentById(id));
+        return ResponseEntity.ok(tournamentRestMapper.toResponse(getTournamentUseCase.getTournamentById(id)));
     }
 
     @Operation(summary = "Démarrer un tournoi",
@@ -112,7 +121,7 @@ public class TournamentController {
     @GetMapping("/{id}/bracket")
     public ResponseEntity<BracketResponse> getBracket(
             @Parameter(description = "ID du tournoi") @PathVariable Long id) {
-        return ResponseEntity.ok(getBracketUseCase.getBracket(id));
+        return ResponseEntity.ok(tournamentRestMapper.toResponse(getBracketUseCase.getBracket(id)));
     }
 
     @Operation(summary = "Obtenir le classement d'un tournoi",
@@ -125,7 +134,7 @@ public class TournamentController {
     @GetMapping("/{id}/standings")
     public ResponseEntity<StandingsResponse> getStandings(
             @Parameter(description = "ID du tournoi") @PathVariable Long id) {
-        return ResponseEntity.ok(getStandingsUseCase.getStandings(id));
+        return ResponseEntity.ok(tournamentRestMapper.toResponse(getStandingsUseCase.getStandings(id)));
     }
 
     @Operation(summary = "Supprimer un tournoi (soft delete)",

@@ -1,7 +1,7 @@
 package com.tournament.tournament_manager.domain.port.in.player;
 
-import com.tournament.tournament_manager.dto.request.player.CreatePlayerRequest;
-import com.tournament.tournament_manager.dto.response.player.PlayerResponse;
+import com.tournament.tournament_manager.domain.model.CreatePlayerCommand;
+import com.tournament.tournament_manager.domain.model.Player;
 import com.tournament.tournament_manager.exception.domain.PlayerAlreadyExistsException;
 
 /**
@@ -11,9 +11,9 @@ public interface CreatePlayerUseCase {
     /**
      * Crée un nouveau joueur avec un classement ELO par défaut.
      *
-     * @param request contient le username et l'email du joueur
-     * @return la représentation du joueur créé
+     * @param command contient le username et l'email du joueur
+     * @return le joueur créé
      * @throws PlayerAlreadyExistsException si le username ou l'email est déjà utilisé
      */
-    PlayerResponse createPlayer(CreatePlayerRequest request);
+    Player createPlayer(CreatePlayerCommand command);
 }

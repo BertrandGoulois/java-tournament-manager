@@ -2,7 +2,7 @@ package com.tournament.tournament_manager.domain.port.in.tournament;
 
 import com.tournament.tournament_manager.domain.model.PageRequest;
 import com.tournament.tournament_manager.domain.model.PageResult;
-import com.tournament.tournament_manager.dto.response.tournament.TournamentResponse;
+import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.exception.domain.TournamentNotFoundException;
 
 /**
@@ -14,15 +14,15 @@ public interface GetTournamentUseCase {
      * Retourne un tournoi par son identifiant.
      *
      * @param id identifiant du tournoi
-     * @return la représentation du tournoi
+     * @return le tournoi
      * @throws TournamentNotFoundException si le tournoi n'existe pas
      */
-    TournamentResponse getTournamentById(Long id);
+    Tournament getTournamentById(Long id);
 
     /**
      * Retourne une page de tous les tournois.
      *
      * @return page de tournois, vide si aucun tournoi enregistré
      */
-    PageResult<TournamentResponse> getAllTournaments(PageRequest pageRequest);
+    PageResult<Tournament> getAllTournaments(PageRequest pageRequest);
 }

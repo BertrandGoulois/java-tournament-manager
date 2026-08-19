@@ -3,6 +3,7 @@ package com.tournament.tournament_manager.infrastructure.input.rpc.tournament;
 import tools.jackson.databind.ObjectMapper;
 import com.tournament.tournament_manager.domain.port.in.tournament.CreateTournamentUseCase;
 import com.tournament.tournament_manager.dto.request.tournament.CreateTournamentRequest;
+import com.tournament.tournament_manager.infrastructure.input.mapper.TournamentRestMapper;
 import com.tournament.tournament_manager.infrastructure.input.rpc.AbstractJsonRpcHandler;
 import jakarta.validation.Validator;
 import org.springframework.stereotype.Component;
@@ -18,11 +19,13 @@ import org.springframework.stereotype.Component;
 public class TournamentCreateHandler extends AbstractJsonRpcHandler {
 
     private final CreateTournamentUseCase createTournamentUseCase;
+    private final TournamentRestMapper tournamentRestMapper;
 
     public TournamentCreateHandler(CreateTournamentUseCase createTournamentUseCase, ObjectMapper objectMapper,
-                                   Validator validator) {
+                                   Validator validator, TournamentRestMapper tournamentRestMapper) {
         super(objectMapper, validator);
         this.createTournamentUseCase = createTournamentUseCase;
+        this.tournamentRestMapper = tournamentRestMapper;
     }
 
     @Override
@@ -33,7 +36,7 @@ public class TournamentCreateHandler extends AbstractJsonRpcHandler {
     @Override
     public Object handle(Object params) {
         CreateTournamentRequest request = convertParams(params, CreateTournamentRequest.class);
-        return createTournamentUseCase.createTournament(request);
+        var tournament = createTournamentUseCase.createTournament(tournamentRestMapper.toCommand(request));
+        return tournamentRestMapper.toResponse(tournament);
     }
-
 }

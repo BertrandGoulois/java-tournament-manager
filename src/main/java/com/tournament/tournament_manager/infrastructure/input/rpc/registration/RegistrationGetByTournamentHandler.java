@@ -5,6 +5,7 @@ import jakarta.validation.Validator;
 import com.tournament.tournament_manager.domain.model.PageRequest;
 import com.tournament.tournament_manager.domain.port.in.registration.GetRegistrationsUseCase;
 import com.tournament.tournament_manager.dto.request.rpc.RegistrationGetByTournamentParams;
+import com.tournament.tournament_manager.infrastructure.input.mapper.RegistrationRestMapper;
 import com.tournament.tournament_manager.infrastructure.input.rpc.AbstractJsonRpcHandler;
 import org.springframework.stereotype.Component;
 
@@ -17,10 +18,13 @@ import org.springframework.stereotype.Component;
 public class RegistrationGetByTournamentHandler extends AbstractJsonRpcHandler {
 
     private final GetRegistrationsUseCase getRegistrationsUseCase;
+    private final RegistrationRestMapper registrationRestMapper;
 
-    public RegistrationGetByTournamentHandler(GetRegistrationsUseCase getRegistrationsUseCase, ObjectMapper objectMapper, Validator validator) {
+    public RegistrationGetByTournamentHandler(GetRegistrationsUseCase getRegistrationsUseCase, ObjectMapper objectMapper,
+                                              Validator validator, RegistrationRestMapper registrationRestMapper) {
         super(objectMapper, validator);
         this.getRegistrationsUseCase = getRegistrationsUseCase;
+        this.registrationRestMapper = registrationRestMapper;
     }
 
     @Override
@@ -35,9 +39,7 @@ public class RegistrationGetByTournamentHandler extends AbstractJsonRpcHandler {
 
         PageRequest pageRequest = PageRequest.of(request.page(), request.size());
 
-        return getRegistrationsUseCase.getTournamentRegistrations(
-                request.tournamentId(),
-                pageRequest
-        );
+        return getRegistrationsUseCase.getTournamentRegistrations(request.tournamentId(), pageRequest)
+                .map(registrationRestMapper::toResponse);
     }
 }

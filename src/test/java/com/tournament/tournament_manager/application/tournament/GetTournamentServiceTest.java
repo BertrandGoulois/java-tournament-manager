@@ -4,7 +4,6 @@ import com.tournament.tournament_manager.domain.model.PageResult;
 import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.domain.port.out.tournament.LoadAllTournamentsPort;
 import com.tournament.tournament_manager.domain.port.out.tournament.LoadTournamentPort;
-import com.tournament.tournament_manager.dto.response.tournament.TournamentResponse;
 import com.tournament.tournament_manager.exception.domain.TournamentNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,8 +44,8 @@ class GetTournamentServiceTest {
 
         when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
 
-        var response = getTournamentService.getTournamentById(1L);
-        assertEquals("Test", response.name());
+        var result = getTournamentService.getTournamentById(1L);
+        assertEquals("Test", result.getName());
     }
 
     @Test
@@ -58,10 +57,10 @@ class GetTournamentServiceTest {
         PageResult<Tournament> page = PageResult.of(List.of(tournament), 0, 20, 1);
         when(loadAllTournamentsPort.loadAllTournaments(any())).thenReturn(page);
 
-        PageResult<TournamentResponse> responses = getTournamentService.getAllTournaments(
+        PageResult<Tournament> responses = getTournamentService.getAllTournaments(
                 com.tournament.tournament_manager.domain.model.PageRequest.of(0, 20));
 
         assertEquals(1, responses.totalElements());
-        assertEquals("Test", responses.content().get(0).name());
+        assertEquals("Test", responses.content().get(0).getName());
     }
 }

@@ -6,7 +6,7 @@ import com.tournament.tournament_manager.domain.port.out.auth.DeleteRefreshToken
 import com.tournament.tournament_manager.domain.port.out.auth.LoadRefreshTokenPort;
 import com.tournament.tournament_manager.domain.port.out.auth.SaveRefreshTokenPort;
 import com.tournament.tournament_manager.domain.port.out.auth.UserExistsPort;
-import com.tournament.tournament_manager.dto.response.auth.AuthResponse;
+import com.tournament.tournament_manager.domain.model.AuthResult;
 import com.tournament.tournament_manager.exception.domain.InvalidException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -94,13 +94,13 @@ class RefreshTokenServiceTest {
         when(jwtService.generateToken("admin")).thenReturn("new-jwt");
         when(saveRefreshTokenPort.saveRefreshToken(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        AuthResponse response = refreshTokenService.refresh(rawToken);
+        AuthResult result = refreshTokenService.refresh(rawToken);
 
-        assertEquals("new-jwt", response.token());
+        assertEquals("new-jwt", result.accessToken());
         // Le refresh token retourné doit être NOUVEAU, jamais le même que celui présenté
         // (rotation) : un vol du token présenté ne sert plus à rien une fois utilisé.
-        assertNotEquals(rawToken, response.refreshToken());
-        assertNotNull(response.refreshToken());
+        assertNotEquals(rawToken, result.refreshToken());
+        assertNotNull(result.refreshToken());
         // Le token présenté doit avoir été marqué révoqué (une seule utilisation possible).
         assertTrue(stored.isRevoked());
     }

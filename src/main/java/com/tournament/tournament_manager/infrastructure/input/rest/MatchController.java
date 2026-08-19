@@ -7,6 +7,7 @@ import com.tournament.tournament_manager.dto.request.match.RecordMatchResultRequ
 import com.tournament.tournament_manager.dto.response.match.MatchCommentaryResponse;
 import com.tournament.tournament_manager.dto.response.match.MatchResponse;
 import com.tournament.tournament_manager.exception.handler.ErrorResponse;
+import com.tournament.tournament_manager.infrastructure.input.mapper.MatchRestMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -20,6 +21,9 @@ import org.springframework.web.bind.annotation.*;
 
 /**
  * Point d'entrée HTTP pour la gestion des matchs.
+ *
+ * <p>Convertit entre les DTO REST et le domaine pur via {@link MatchRestMapper} — voir la
+ * Javadoc de {@code PlayerController}.
  */
 @RestController
 @RequestMapping("/api/matches")
@@ -29,13 +33,16 @@ public class MatchController {
     private final RecordMatchResultUseCase recordMatchResultUseCase;
     private final GetMatchUseCase getMatchUseCase;
     private final GetMatchCommentaryUseCase getMatchCommentaryUseCase;
+    private final MatchRestMapper matchRestMapper;
 
     public MatchController(RecordMatchResultUseCase recordMatchResultUseCase,
                            GetMatchUseCase getMatchUseCase,
-                           GetMatchCommentaryUseCase getMatchCommentaryUseCase) {
+                           GetMatchCommentaryUseCase getMatchCommentaryUseCase,
+                           MatchRestMapper matchRestMapper) {
         this.recordMatchResultUseCase = recordMatchResultUseCase;
         this.getMatchUseCase = getMatchUseCase;
         this.getMatchCommentaryUseCase = getMatchCommentaryUseCase;
+        this.matchRestMapper = matchRestMapper;
     }
 
     @Operation(summary = "Enregistrer le résultat d'un match",
@@ -52,7 +59,8 @@ public class MatchController {
     public ResponseEntity<MatchResponse> recordMatchResult(
             @Parameter(description = "ID du match") @PathVariable Long id,
             @Valid @RequestBody RecordMatchResultRequest request) {
-        return ResponseEntity.ok(recordMatchResultUseCase.recordMatchResult(id, request));
+        var match = recordMatchResultUseCase.recordMatchResult(id, matchRestMapper.toCommand(request));
+        return ResponseEntity.ok(matchRestMapper.toResponse(match));
     }
 
     @Operation(summary = "Obtenir un match par ID")
@@ -64,7 +72,7 @@ public class MatchController {
     @GetMapping("/{id}")
     public ResponseEntity<MatchResponse> getMatchById(
             @Parameter(description = "ID du match") @PathVariable Long id) {
-        return ResponseEntity.ok(getMatchUseCase.getMatchById(id));
+        return ResponseEntity.ok(matchRestMapper.toResponse(getMatchUseCase.getMatchById(id)));
     }
 
     @Operation(summary = "Obtenir le commentaire d'un match",
@@ -78,6 +86,6 @@ public class MatchController {
     @GetMapping("/{id}/commentary")
     public ResponseEntity<MatchCommentaryResponse> getMatchCommentary(
             @Parameter(description = "ID du match") @PathVariable Long id) {
-        return ResponseEntity.ok(getMatchCommentaryUseCase.getMatchCommentary(id));
+        return ResponseEntity.ok(matchRestMapper.toResponse(getMatchCommentaryUseCase.getMatchCommentary(id)));
     }
 }

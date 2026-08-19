@@ -3,6 +3,7 @@ package com.tournament.tournament_manager.infrastructure.input.rpc.player;
 import tools.jackson.databind.ObjectMapper;
 import jakarta.validation.Validator;
 import com.tournament.tournament_manager.domain.port.in.player.GetPlayerStatsUseCase;
+import com.tournament.tournament_manager.infrastructure.input.mapper.PlayerRestMapper;
 import com.tournament.tournament_manager.infrastructure.input.rpc.AbstractJsonRpcHandler;
 import org.springframework.stereotype.Component;
 
@@ -15,10 +16,13 @@ import org.springframework.stereotype.Component;
 public class PlayerGetStatsHandler extends AbstractJsonRpcHandler {
 
     private final GetPlayerStatsUseCase getPlayerStatsUseCase;
+    private final PlayerRestMapper playerRestMapper;
 
-    public PlayerGetStatsHandler(GetPlayerStatsUseCase getPlayerStatsUseCase, ObjectMapper objectMapper, Validator validator) {
+    public PlayerGetStatsHandler(GetPlayerStatsUseCase getPlayerStatsUseCase, ObjectMapper objectMapper,
+                                 Validator validator, PlayerRestMapper playerRestMapper) {
         super(objectMapper, validator);
         this.getPlayerStatsUseCase = getPlayerStatsUseCase;
+        this.playerRestMapper = playerRestMapper;
     }
 
     @Override
@@ -28,6 +32,6 @@ public class PlayerGetStatsHandler extends AbstractJsonRpcHandler {
 
     @Override
     public Object handle(Object params) {
-        return getPlayerStatsUseCase.getPlayerStats(getLong(params, "id"));
+        return playerRestMapper.toStatsResponse(getPlayerStatsUseCase.getPlayerStats(getLong(params, "id")));
     }
 }

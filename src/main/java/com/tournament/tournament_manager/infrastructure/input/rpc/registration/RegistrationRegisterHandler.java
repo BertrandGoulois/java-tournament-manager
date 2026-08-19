@@ -3,6 +3,7 @@ package com.tournament.tournament_manager.infrastructure.input.rpc.registration;
 import tools.jackson.databind.ObjectMapper;
 import com.tournament.tournament_manager.domain.port.in.registration.RegisterPlayerUseCase;
 import com.tournament.tournament_manager.dto.request.registration.CreateRegistrationRequest;
+import com.tournament.tournament_manager.infrastructure.input.mapper.RegistrationRestMapper;
 import com.tournament.tournament_manager.infrastructure.input.rpc.AbstractJsonRpcHandler;
 import jakarta.validation.Validator;
 import org.springframework.stereotype.Component;
@@ -14,11 +15,13 @@ import org.springframework.stereotype.Component;
 public class RegistrationRegisterHandler extends AbstractJsonRpcHandler {
 
     private final RegisterPlayerUseCase registerPlayerUseCase;
+    private final RegistrationRestMapper registrationRestMapper;
 
     public RegistrationRegisterHandler(RegisterPlayerUseCase registerPlayerUseCase, ObjectMapper objectMapper,
-                                       Validator validator) {
+                                       Validator validator, RegistrationRestMapper registrationRestMapper) {
         super(objectMapper, validator);
         this.registerPlayerUseCase = registerPlayerUseCase;
+        this.registrationRestMapper = registrationRestMapper;
     }
 
     @Override
@@ -29,6 +32,7 @@ public class RegistrationRegisterHandler extends AbstractJsonRpcHandler {
     @Override
     public Object handle(Object params) {
         CreateRegistrationRequest request = convertParams(params, CreateRegistrationRequest.class);
-        return registerPlayerUseCase.registerPlayer(request);
+        var registration = registerPlayerUseCase.registerPlayer(registrationRestMapper.toCommand(request));
+        return registrationRestMapper.toResponse(registration);
     }
 }
