@@ -91,14 +91,14 @@ public class StartTournamentService implements StartTournamentUseCase {
         }
 
         log.info("Démarrage du tournoi [id={}, nom='{}', format={}, joueurs={}]",
-                tournamentId, tournament.getName(), tournament.getFormat(), players.size());
+                tournamentId, tournament.getName().value(), tournament.getFormat(), players.size());
 
         strategy.generateInitialMatches(tournament, players);
 
-        tournament.setStatus(TournamentStatus.IN_PROGRESS);
+        tournament.start();
         saveTournamentPort.saveTournament(tournament);
 
         tournamentStartedCounter.increment();
-        log.info("Tournoi démarré avec succès [id={}, nom='{}']", tournamentId, tournament.getName());
+        log.info("Tournoi démarré avec succès [id={}, nom='{}']", tournamentId, tournament.getName().value());
     }
 }

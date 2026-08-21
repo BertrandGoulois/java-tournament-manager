@@ -3,10 +3,8 @@ package com.tournament.tournament_manager.application.shared;
 import com.tournament.tournament_manager.domain.model.Match;
 import com.tournament.tournament_manager.domain.model.Player;
 import com.tournament.tournament_manager.domain.model.Tournament;
-import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 import com.tournament.tournament_manager.domain.port.out.match.SaveMatchPort;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -25,19 +23,7 @@ public class BracketUtils {
 
     public static void createMatch(Tournament tournament, Player player1, Player player2,
                                    int round, int position, SaveMatchPort saveMatchPort) {
-        Match match = new Match();
-        match.setTournament(tournament);
-        match.setRound(round);
-        match.setPosition(position);
-        match.setPlayer1(player1);
-        match.setPlayer2(player2);
-        if (player2 == null) {
-            match.setStatus(MatchStatus.FINISHED);
-            match.setWinner(player1);
-            match.setPlayedAt(Instant.now());
-        } else {
-            match.setStatus(MatchStatus.PENDING);
-        }
+        Match match = Match.schedule(tournament, round, position, null, player1, player2);
         saveMatchPort.saveMatch(match);
     }
 

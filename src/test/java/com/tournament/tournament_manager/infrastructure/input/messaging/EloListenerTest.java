@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
+import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 
 @ExtendWith(MockitoExtension.class)
 class EloListenerTest {
@@ -33,9 +34,7 @@ class EloListenerTest {
     void onMatchFinished_shouldCallUpdateElo() {
         Player player1 = new Player();
         Player player2 = new Player();
-        Match match = new Match();
-        match.setPlayer1(player1);
-        match.setPlayer2(player2);
+        Match match = Match.reconstitute(null, 0, 0, null, MatchStatus.PENDING, null, null, null, player1, player2, null);
 
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         when(existsEloHistoryPort.existsByMatchId(1L)).thenReturn(false);
@@ -48,9 +47,7 @@ class EloListenerTest {
     @Test
     void onMatchFinished_bye_shouldSkipEloUpdate() {
         Player player1 = new Player();
-        Match match = new Match();
-        match.setPlayer1(player1);
-        match.setPlayer2(null);
+        Match match = Match.reconstitute(null, 0, 0, null, MatchStatus.PENDING, null, null, null, player1, null, null);
 
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
 
@@ -63,9 +60,7 @@ class EloListenerTest {
     void onMatchFinished_alreadyProcessed_shouldSkipEloUpdate() {
         Player player1 = new Player();
         Player player2 = new Player();
-        Match match = new Match();
-        match.setPlayer1(player1);
-        match.setPlayer2(player2);
+        Match match = Match.reconstitute(null, 0, 0, null, MatchStatus.PENDING, null, null, null, player1, player2, null);
 
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         when(existsEloHistoryPort.existsByMatchId(1L)).thenReturn(true);

@@ -13,6 +13,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
+import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 
 @ExtendWith(MockitoExtension.class)
 class GetMatchCommentaryServiceTest {
@@ -25,9 +26,7 @@ class GetMatchCommentaryServiceTest {
 
     @Test
     void getMatchCommentary_shouldReturnCommentary_whenExists() {
-        Match match = new Match();
-        match.setId(1L);
-        match.setCommentary("Super match !");
+        Match match = Match.reconstitute(1L, 0, 0, null, MatchStatus.PENDING, null, "Super match !", null, null, null, null);
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         MatchCommentary response = getMatchCommentaryService.getMatchCommentary(1L);
         assertEquals(1L, response.matchId());
@@ -36,9 +35,7 @@ class GetMatchCommentaryServiceTest {
 
     @Test
     void getMatchCommentary_shouldReturnWaitingMessage_whenCommentaryNotYetGenerated() {
-        Match match = new Match();
-        match.setId(1L);
-        match.setCommentary(null);
+        Match match = Match.reconstitute(1L, 0, 0, null, MatchStatus.PENDING, null, null, null, null, null, null);
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         MatchCommentary response = getMatchCommentaryService.getMatchCommentary(1L);
         assertEquals("Commentaire en cours de génération...", response.commentary());

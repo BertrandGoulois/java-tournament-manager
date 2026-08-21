@@ -21,6 +21,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
+import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
 
 @ExtendWith(MockitoExtension.class)
 class RoundRobinStartStrategyTest {
@@ -44,7 +46,7 @@ class RoundRobinStartStrategyTest {
         Player p4 = new Player();
         List<Player> players = List.of(p1, p2, p3, p4);
 
-        Tournament tournament = new Tournament();
+        Tournament tournament = Tournament.reconstitute(null, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
         strategy.generateInitialMatches(tournament, players);
 
         // 4 joueurs : C(4,2) = 6 matchs attendus
@@ -66,7 +68,7 @@ class RoundRobinStartStrategyTest {
         Player p3 = new Player();
         List<Player> players = List.of(p1, p2, p3);
 
-        Tournament tournament = new Tournament();
+        Tournament tournament = Tournament.reconstitute(null, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
         strategy.generateInitialMatches(tournament, players);
 
         // 3 joueurs : C(3,2) = 3 matchs attendus, le bye n'est jamais persisté
@@ -79,7 +81,7 @@ class RoundRobinStartStrategyTest {
         Player p2 = new Player();
         List<Player> players = List.of(p1, p2);
 
-        Tournament tournament = new Tournament();
+        Tournament tournament = Tournament.reconstitute(null, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
         strategy.generateInitialMatches(tournament, players);
 
         ArgumentCaptor<Match> captor = ArgumentCaptor.forClass(Match.class);

@@ -41,7 +41,7 @@ public class CheckTournamentCompletionService implements CheckTournamentCompleti
                 .allMatch(m -> m.getStatus() == MatchStatus.FINISHED);
 
         if (allFinished) {
-            tournament.setStatus(TournamentStatus.FINISHED);
+            tournament.finish();
             saveTournamentPort.saveTournament(tournament);
         }
     }

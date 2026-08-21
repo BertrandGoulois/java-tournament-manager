@@ -20,6 +20,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
+import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 
 @ExtendWith(MockitoExtension.class)
 class GetPlayerStatsServiceTest {
@@ -41,8 +42,7 @@ class GetPlayerStatsServiceTest {
         player.setUsername("toto");
         player.setEmail("toto@mail.com");
 
-        Match match = new Match();
-        match.setId(1L);
+        Match match = Match.reconstitute(1L, 0, 0, null, MatchStatus.PENDING, null, null, null, null, null, null);
 
         EloHistory history = new EloHistory();
         history.setEloChange(24);
@@ -115,8 +115,7 @@ class GetPlayerStatsServiceTest {
         player.setUsername("player1");
         player.setEloRating(new EloRating(1000));
 
-        Match match = new Match();
-        match.setId(5L);
+        Match match = Match.reconstitute(5L, 0, 0, null, MatchStatus.PENDING, null, null, null, null, null, null);
 
         EloHistory history =
                 new EloHistory();

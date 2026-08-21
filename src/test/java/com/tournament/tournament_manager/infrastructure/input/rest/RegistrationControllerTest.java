@@ -37,6 +37,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
+import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 
 @WebMvcTest(RegistrationController.class)
 @Import({SecurityConfig.class, RegistrationRestMapper.class})
@@ -74,8 +77,7 @@ class RegistrationControllerTest {
     private Registration sampleRegistration() {
         Player player = new Player();
         player.setId(1L);
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
         Registration registration = new Registration();
         registration.setId(1L);
         registration.setPlayer(player);

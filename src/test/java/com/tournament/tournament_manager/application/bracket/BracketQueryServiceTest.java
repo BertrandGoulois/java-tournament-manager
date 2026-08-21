@@ -19,6 +19,8 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
+import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
+import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
 
 @ExtendWith(MockitoExtension.class)
 class BracketQueryServiceTest {
@@ -33,30 +35,16 @@ class BracketQueryServiceTest {
 
     @Test
     void getBracket_shouldReturnBracketWithRounds() {
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
-        tournament.setName("Spring Championship");
-        tournament.setStatus(TournamentStatus.IN_PROGRESS);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Spring Championship"), TournamentStatus.IN_PROGRESS, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
 
         Player player1 = new Player();
         player1.setId(1L);
         Player player2 = new Player();
         player2.setId(2L);
 
-        Match match1 = new Match();
-        match1.setId(1L);
-        match1.setRound(4);
-        match1.setStatus(MatchStatus.FINISHED);
-        match1.setPlayer1(player1);
-        match1.setPlayer2(player2);
-        match1.setWinner(player1);
+        Match match1 = Match.reconstitute(1L, 4, 0, null, MatchStatus.FINISHED, null, null, null, player1, player2, player1);
 
-        Match match2 = new Match();
-        match2.setId(2L);
-        match2.setRound(2);
-        match2.setStatus(MatchStatus.PENDING);
-        match2.setPlayer1(player1);
-        match2.setPlayer2(player2);
+        Match match2 = Match.reconstitute(2L, 2, 0, null, MatchStatus.PENDING, null, null, null, player1, player2, null);
 
         when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
         when(loadMatchesByTournamentPort.loadByTournamentId(1L)).thenReturn(List.of(match1, match2));
@@ -72,10 +60,7 @@ class BracketQueryServiceTest {
 
     @Test
     void getBracket_shouldReturnEmptyRounds_whenNoMatches() {
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
-        tournament.setName("Spring Championship");
-        tournament.setStatus(TournamentStatus.OPEN);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Spring Championship"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
 
         when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
         when(loadMatchesByTournamentPort.loadByTournamentId(1L)).thenReturn(List.of());
@@ -94,21 +79,12 @@ class BracketQueryServiceTest {
 
     @Test
     void getBracket_shouldHandleByeMatch() {
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
-        tournament.setName("Spring Championship");
-        tournament.setStatus(TournamentStatus.IN_PROGRESS);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Spring Championship"), TournamentStatus.IN_PROGRESS, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
 
         Player player1 = new Player();
         player1.setId(1L);
 
-        Match byeMatch = new Match();
-        byeMatch.setId(1L);
-        byeMatch.setRound(4);
-        byeMatch.setStatus(MatchStatus.FINISHED);
-        byeMatch.setPlayer1(player1);
-        byeMatch.setPlayer2(null);
-        byeMatch.setWinner(player1);
+        Match byeMatch = Match.reconstitute(1L, 4, 0, null, MatchStatus.FINISHED, null, null, null, player1, null, player1);
 
         when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
         when(loadMatchesByTournamentPort.loadByTournamentId(1L)).thenReturn(List.of(byeMatch));

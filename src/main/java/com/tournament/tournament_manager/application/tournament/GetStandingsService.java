@@ -74,7 +74,7 @@ public class GetStandingsService implements GetStandingsUseCase {
                         .thenComparing(Comparator.comparingInt(StandingEntry::wins).reversed()))
                 .collect(Collectors.toList());
 
-        return new Standings(tournament.getId(), tournament.getName(), standings);
+        return new Standings(tournament.getId(), tournament.getName().value(), standings);
     }
 
     private void registerParticipant(Map<Long, StandingsAccumulator> statsByPlayer, Player player) {

@@ -24,6 +24,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
+import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
+import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 
 @ExtendWith(MockitoExtension.class)
 class AdvanceBracketServiceTest {
@@ -49,10 +51,8 @@ class AdvanceBracketServiceTest {
 
     @Test
     void advanceToNextRound_shouldDoNothing_whenNotAllMatchesFinished() {
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
-        Match pendingMatch = new Match();
-        pendingMatch.setStatus(MatchStatus.PENDING);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
+        Match pendingMatch = Match.reconstitute(null, 0, 0, null, MatchStatus.PENDING, null, null, null, null, null, null);
         when(loadMatchByTournamentPort.loadByTournamentIdAndRound(1L, 4))
                 .thenReturn(List.of(pendingMatch));
         advanceBracketService.advanceToNextRound(tournament, 4);
@@ -64,13 +64,9 @@ class AdvanceBracketServiceTest {
 
     @Test
     void advanceToNextRound_shouldFinishTournament_whenNextRoundLessThan2() {
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
-        tournament.setStatus(TournamentStatus.IN_PROGRESS);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Test Tournament"), TournamentStatus.IN_PROGRESS, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
         Player winner = new Player();
-        Match finishedMatch = new Match();
-        finishedMatch.setStatus(MatchStatus.FINISHED);
-        finishedMatch.setWinner(winner);
+        Match finishedMatch = Match.reconstitute(null, 0, 0, null, MatchStatus.FINISHED, null, null, null, null, null, winner);
         when(loadMatchByTournamentPort.loadByTournamentIdAndRound(1L, 2))
                 .thenReturn(List.of(finishedMatch));
         advanceBracketService.advanceToNextRound(tournament, 2);
@@ -80,16 +76,11 @@ class AdvanceBracketServiceTest {
 
     @Test
     void advanceToNextRound_shouldCreateNextRoundMatches_whenAllMatchesFinished() {
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
         Player winner1 = new Player();
         Player winner2 = new Player();
-        Match match1 = new Match();
-        match1.setStatus(MatchStatus.FINISHED);
-        match1.setWinner(winner1);
-        Match match2 = new Match();
-        match2.setStatus(MatchStatus.FINISHED);
-        match2.setWinner(winner2);
+        Match match1 = Match.reconstitute(null, 0, 0, null, MatchStatus.FINISHED, null, null, null, null, null, winner1);
+        Match match2 = Match.reconstitute(null, 0, 0, null, MatchStatus.FINISHED, null, null, null, null, null, winner2);
         when(loadMatchByTournamentPort.loadByTournamentIdAndRound(1L, 4))
                 .thenReturn(List.of(match1, match2));
         advanceBracketService.advanceToNextRound(tournament, 4);
@@ -98,20 +89,13 @@ class AdvanceBracketServiceTest {
 
     @Test
     void advanceToNextRound_shouldCreateByeMatch_whenOddNumberOfWinners() {
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
         Player winner1 = new Player();
         Player winner2 = new Player();
         Player winner3 = new Player();
-        Match match1 = new Match();
-        match1.setStatus(MatchStatus.FINISHED);
-        match1.setWinner(winner1);
-        Match match2 = new Match();
-        match2.setStatus(MatchStatus.FINISHED);
-        match2.setWinner(winner2);
-        Match match3 = new Match();
-        match3.setStatus(MatchStatus.FINISHED);
-        match3.setWinner(winner3);
+        Match match1 = Match.reconstitute(null, 0, 0, null, MatchStatus.FINISHED, null, null, null, null, null, winner1);
+        Match match2 = Match.reconstitute(null, 0, 0, null, MatchStatus.FINISHED, null, null, null, null, null, winner2);
+        Match match3 = Match.reconstitute(null, 0, 0, null, MatchStatus.FINISHED, null, null, null, null, null, winner3);
         when(loadMatchByTournamentPort.loadByTournamentIdAndRound(1L, 8))
                 .thenReturn(List.of(match1, match2, match3));
         advanceBracketService.advanceToNextRound(tournament, 8);
@@ -122,24 +106,17 @@ class AdvanceBracketServiceTest {
 
     @Test
     void advanceToNextRound_shouldCreateByeMatch_withThreeWinnersAtRound4() {
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
 
         Player player1 = new Player();
         Player player2 = new Player();
         Player player3 = new Player();
 
-        Match m1 = new Match();
-        m1.setStatus(MatchStatus.FINISHED);
-        m1.setWinner(player1);
+        Match m1 = Match.reconstitute(null, 0, 0, null, MatchStatus.FINISHED, null, null, null, null, null, player1);
 
-        Match m2 = new Match();
-        m2.setStatus(MatchStatus.FINISHED);
-        m2.setWinner(player2);
+        Match m2 = Match.reconstitute(null, 0, 0, null, MatchStatus.FINISHED, null, null, null, null, null, player2);
 
-        Match m3 = new Match();
-        m3.setStatus(MatchStatus.FINISHED);
-        m3.setWinner(player3);
+        Match m3 = Match.reconstitute(null, 0, 0, null, MatchStatus.FINISHED, null, null, null, null, null, player3);
 
         when(loadMatchByTournamentPort.loadByTournamentIdAndRound(1L, 4))
                 .thenReturn(List.of(m1, m2, m3));
@@ -153,8 +130,7 @@ class AdvanceBracketServiceTest {
 
     @Test
     void advanceToNextRound_shouldPairWinnersByPosition_notRandomly() {
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
 
         Player w0 = new Player();
         w0.setId(10L);
@@ -165,22 +141,10 @@ class AdvanceBracketServiceTest {
         Player w3 = new Player();
         w3.setId(13L);
 
-        Match m0 = new Match();
-        m0.setPosition(0);
-        m0.setStatus(MatchStatus.FINISHED);
-        m0.setWinner(w0);
-        Match m1 = new Match();
-        m1.setPosition(1);
-        m1.setStatus(MatchStatus.FINISHED);
-        m1.setWinner(w1);
-        Match m2 = new Match();
-        m2.setPosition(2);
-        m2.setStatus(MatchStatus.FINISHED);
-        m2.setWinner(w2);
-        Match m3 = new Match();
-        m3.setPosition(3);
-        m3.setStatus(MatchStatus.FINISHED);
-        m3.setWinner(w3);
+        Match m0 = Match.reconstitute(null, 0, 0, null, MatchStatus.FINISHED, null, null, null, null, null, w0);
+        Match m1 = Match.reconstitute(null, 0, 1, null, MatchStatus.FINISHED, null, null, null, null, null, w1);
+        Match m2 = Match.reconstitute(null, 0, 2, null, MatchStatus.FINISHED, null, null, null, null, null, w2);
+        Match m3 = Match.reconstitute(null, 0, 3, null, MatchStatus.FINISHED, null, null, null, null, null, w3);
 
         // Volontairement dans le désordre : la méthode doit trier par position elle-même.
         when(loadMatchByTournamentPort.loadByTournamentIdAndRound(1L, 8))
@@ -206,16 +170,11 @@ class AdvanceBracketServiceTest {
     void advanceToNextRound_shouldDoNothing_whenRoundAlreadyClaimed() {
         // Simule une redelivery Kafka du dernier match d'un round déjà traité : le round
         // suivant a déjà été réclamé (par le premier passage, ou par un appel concurrent).
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
         Player winner1 = new Player();
         Player winner2 = new Player();
-        Match match1 = new Match();
-        match1.setStatus(MatchStatus.FINISHED);
-        match1.setWinner(winner1);
-        Match match2 = new Match();
-        match2.setStatus(MatchStatus.FINISHED);
-        match2.setWinner(winner2);
+        Match match1 = Match.reconstitute(null, 0, 0, null, MatchStatus.FINISHED, null, null, null, null, null, winner1);
+        Match match2 = Match.reconstitute(null, 0, 0, null, MatchStatus.FINISHED, null, null, null, null, null, winner2);
         when(loadMatchByTournamentPort.loadByTournamentIdAndRound(1L, 4))
                 .thenReturn(List.of(match1, match2));
         when(claimRoundAdvancementPort.tryClaim(1L, 2)).thenReturn(false);

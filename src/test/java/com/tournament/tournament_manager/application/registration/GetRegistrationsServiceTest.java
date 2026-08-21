@@ -19,6 +19,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
+import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 
 @ExtendWith(MockitoExtension.class)
 class GetRegistrationsServiceTest {
@@ -33,8 +36,7 @@ class GetRegistrationsServiceTest {
     void getTournamentRegistrations_shouldReturnList() {
         Player player = new Player();
         player.setId(1L);
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
         Registration registration = new Registration();
         registration.setId(1L);
         registration.setPlayer(player);

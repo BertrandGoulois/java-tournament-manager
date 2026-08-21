@@ -25,6 +25,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
+import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
 
 @ExtendWith(MockitoExtension.class)
 class StartTournamentServiceTest {
@@ -56,16 +57,14 @@ class StartTournamentServiceTest {
 
     @Test
     void startTournament_shouldThrowException_whenTournamentNotOpen() {
-        Tournament tournament = new Tournament();
-        tournament.setStatus(TournamentStatus.IN_PROGRESS);
+        Tournament tournament = Tournament.reconstitute(null, new TournamentName("Test Tournament"), TournamentStatus.IN_PROGRESS, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
         when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
         assertThrows(InvalidException.class, () -> startTournamentService.startTournament(1L));
     }
 
     @Test
     void startTournament_shouldThrowException_whenLessThanTwoPlayers() {
-        Tournament tournament = new Tournament();
-        tournament.setStatus(TournamentStatus.OPEN);
+        Tournament tournament = Tournament.reconstitute(null, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
         when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
         Registration registration = new Registration();
         registration.setPlayer(new Player());
@@ -81,10 +80,7 @@ class StartTournamentServiceTest {
 
     @Test
     void startTournament_shouldDelegateToMatchingStrategy() {
-        Tournament tournament = new Tournament();
-        tournament.setStatus(TournamentStatus.OPEN);
-        tournament.setMaxPlayers(4);
-        tournament.setFormat(TournamentFormat.SINGLE_ELIMINATION);
+        Tournament tournament = Tournament.reconstitute(null, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 4, null, false, null);
 
         when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
         when(loadRegistrationPort.loadByTournamentId(1L)).thenReturn(List.of(
@@ -98,10 +94,7 @@ class StartTournamentServiceTest {
 
     @Test
     void startTournament_shouldSetTournamentInProgress_whenStarted() {
-        Tournament tournament = new Tournament();
-        tournament.setStatus(TournamentStatus.OPEN);
-        tournament.setMaxPlayers(4);
-        tournament.setFormat(TournamentFormat.SINGLE_ELIMINATION);
+        Tournament tournament = Tournament.reconstitute(null, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 4, null, false, null);
         when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
         when(loadRegistrationPort.loadByTournamentId(1L)).thenReturn(List.of(
                 registrationWithPlayer(), registrationWithPlayer()
@@ -113,10 +106,7 @@ class StartTournamentServiceTest {
 
     @Test
     void startTournament_shouldThrow_whenNoStrategyRegisteredForFormat() {
-        Tournament tournament = new Tournament();
-        tournament.setStatus(TournamentStatus.OPEN);
-        tournament.setMaxPlayers(4);
-        tournament.setFormat(TournamentFormat.ROUND_ROBIN); // pas de strategy ROUND_ROBIN enregistrée dans ce test
+        Tournament tournament = Tournament.reconstitute(null, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.ROUND_ROBIN, null, null, 4, null, false, null); // pas de strategy ROUND_ROBIN enregistrée dans ce test
         when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
         when(loadRegistrationPort.loadByTournamentId(1L)).thenReturn(List.of(
                 registrationWithPlayer(), registrationWithPlayer()
@@ -126,11 +116,7 @@ class StartTournamentServiceTest {
 
     @Test
     void startTournament_shouldThrowException_whenGroupsThenKnockoutPlayerCountNotDivisibleByGroups() {
-        Tournament tournament = new Tournament();
-        tournament.setStatus(TournamentStatus.OPEN);
-        tournament.setMaxPlayers(10);
-        tournament.setNumberOfGroups(2);
-        tournament.setFormat(TournamentFormat.GROUPS_THEN_KNOCKOUT);
+        Tournament tournament = Tournament.reconstitute(null, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.GROUPS_THEN_KNOCKOUT, 2, null, 10, null, false, null);
 
         when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
         when(loadRegistrationPort.loadByTournamentId(1L)).thenReturn(List.of(

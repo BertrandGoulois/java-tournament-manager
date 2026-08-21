@@ -12,6 +12,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
+import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
+import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 
 @ExtendWith(MockitoExtension.class)
 class DeleteTournamentServiceTest {
@@ -26,8 +29,7 @@ class DeleteTournamentServiceTest {
 
     @Test
     void deleteTournament_shouldSetDeletedTrue() {
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
 
         when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
 

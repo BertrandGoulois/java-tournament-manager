@@ -15,6 +15,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
+import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
+import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 
 @ExtendWith(MockitoExtension.class)
 class GroupsThenKnockoutProgressionStrategyTest {
@@ -34,9 +37,8 @@ class GroupsThenKnockoutProgressionStrategyTest {
 
     @Test
     void onMatchFinished_shouldCheckGroupsCompletion_whenGroupMatch() {
-        Tournament tournament = new Tournament();
-        Match match = new Match();
-        match.setGroupNumber(1);
+        Tournament tournament = Tournament.reconstitute(null, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
+        Match match = Match.reconstitute(null, 0, 0, 1, MatchStatus.PENDING, null, null, null, null, null, null);
 
         strategy.onMatchFinished(match, tournament);
 
@@ -47,10 +49,8 @@ class GroupsThenKnockoutProgressionStrategyTest {
 
     @Test
     void onMatchFinished_shouldAdvanceBracket_whenKnockoutMatch() {
-        Tournament tournament = new Tournament();
-        Match match = new Match();
-        match.setGroupNumber(null);
-        match.setRound(2);
+        Tournament tournament = Tournament.reconstitute(null, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
+        Match match = Match.reconstitute(null, 2, 0, null, MatchStatus.PENDING, null, null, null, null, null, null);
 
         strategy.onMatchFinished(match, tournament);
 

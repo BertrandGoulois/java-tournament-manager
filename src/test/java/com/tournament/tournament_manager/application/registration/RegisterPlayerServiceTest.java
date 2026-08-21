@@ -24,6 +24,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
+import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 
 @ExtendWith(MockitoExtension.class)
 class RegisterPlayerServiceTest {
@@ -60,8 +62,7 @@ class RegisterPlayerServiceTest {
     @Test
     void registerPlayer_shouldThrow_whenTournamentNotOpen() {
         Player player = new Player();
-        Tournament tournament = new Tournament();
-        tournament.setStatus(TournamentStatus.IN_PROGRESS);
+        Tournament tournament = Tournament.reconstitute(null, new TournamentName("Test Tournament"), TournamentStatus.IN_PROGRESS, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
         when(loadPlayerPort.loadPlayer(1L)).thenReturn(player);
         when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
         assertThrows(InvalidException.class,
@@ -71,9 +72,7 @@ class RegisterPlayerServiceTest {
     @Test
     void registerPlayer_shouldThrow_whenPlayerAlreadyRegistered() {
         Player player = new Player();
-        Tournament tournament = new Tournament();
-        tournament.setStatus(TournamentStatus.OPEN);
-        tournament.setMaxPlayers(4);
+        Tournament tournament = Tournament.reconstitute(null, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 4, null, false, null);
         when(loadPlayerPort.loadPlayer(1L)).thenReturn(player);
         when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
         when(existsRegistrationPort.existsByPlayerIdAndTournamentId(1L, 1L)).thenReturn(true);
@@ -84,9 +83,7 @@ class RegisterPlayerServiceTest {
     @Test
     void registerPlayer_shouldThrow_whenTournamentFull() {
         Player player = new Player();
-        Tournament tournament = new Tournament();
-        tournament.setStatus(TournamentStatus.OPEN);
-        tournament.setMaxPlayers(4);
+        Tournament tournament = Tournament.reconstitute(null, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 4, null, false, null);
         when(loadPlayerPort.loadPlayer(1L)).thenReturn(player);
         when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
         when(existsRegistrationPort.existsByPlayerIdAndTournamentId(1L, 1L)).thenReturn(false);
@@ -99,10 +96,7 @@ class RegisterPlayerServiceTest {
     void registerPlayer_shouldReturnRegistration_whenValid() {
         Player player = new Player();
         player.setId(1L);
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
-        tournament.setStatus(TournamentStatus.OPEN);
-        tournament.setMaxPlayers(4);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 4, null, false, null);
         Registration registration = new Registration();
         registration.setId(1L);
         registration.setPlayer(player);
@@ -121,10 +115,7 @@ class RegisterPlayerServiceTest {
     void registerPlayer_shouldReturnCorrectPlayerId() {
         Player player = new Player();
         player.setId(1L);
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
-        tournament.setStatus(TournamentStatus.OPEN);
-        tournament.setMaxPlayers(8);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 8, null, false, null);
         Registration registration = new Registration();
         registration.setId(1L);
         registration.setPlayer(player);
@@ -147,9 +138,7 @@ class RegisterPlayerServiceTest {
     void registerPlayer_shouldThrow_whenTournamentStatusIsInProgress() {
         Player player = new Player();
         player.setId(1L);
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
-        tournament.setStatus(TournamentStatus.IN_PROGRESS);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Test Tournament"), TournamentStatus.IN_PROGRESS, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
 
         when(loadPlayerPort.loadPlayer(1L)).thenReturn(player);
         when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
@@ -162,9 +151,7 @@ class RegisterPlayerServiceTest {
     void registerPlayer_shouldThrow_whenTournamentStatusIsFinished() {
         Player player = new Player();
         player.setId(1L);
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
-        tournament.setStatus(TournamentStatus.FINISHED);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Test Tournament"), TournamentStatus.FINISHED, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
 
         when(loadPlayerPort.loadPlayer(1L)).thenReturn(player);
         when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
@@ -177,10 +164,7 @@ class RegisterPlayerServiceTest {
     void registerPlayer_shouldSaveRegistrationWithCorrectPlayerAndTournament() {
         Player player = new Player();
         player.setId(1L);
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
-        tournament.setStatus(TournamentStatus.OPEN);
-        tournament.setMaxPlayers(8);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 8, null, false, null);
 
         Registration saved = new Registration();
         saved.setId(1L);

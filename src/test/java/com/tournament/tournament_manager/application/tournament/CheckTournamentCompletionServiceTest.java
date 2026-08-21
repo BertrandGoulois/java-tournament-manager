@@ -16,6 +16,8 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
+import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
+import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 
 @ExtendWith(MockitoExtension.class)
 class CheckTournamentCompletionServiceTest {
@@ -30,14 +32,10 @@ class CheckTournamentCompletionServiceTest {
 
     @Test
     void checkCompletion_shouldMarkTournamentFinished_whenAllMatchesFinished() {
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
-        tournament.setStatus(TournamentStatus.IN_PROGRESS);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Test Tournament"), TournamentStatus.IN_PROGRESS, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
 
-        Match m1 = new Match();
-        m1.setStatus(MatchStatus.FINISHED);
-        Match m2 = new Match();
-        m2.setStatus(MatchStatus.FINISHED);
+        Match m1 = Match.reconstitute(null, 0, 0, null, MatchStatus.FINISHED, null, null, null, null, null, null);
+        Match m2 = Match.reconstitute(null, 0, 0, null, MatchStatus.FINISHED, null, null, null, null, null, null);
 
         when(loadMatchesByTournamentPort.loadByTournamentId(1L)).thenReturn(List.of(m1, m2));
 
@@ -49,14 +47,10 @@ class CheckTournamentCompletionServiceTest {
 
     @Test
     void checkCompletion_shouldNotMarkFinished_whenSomeMatchesPending() {
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
-        tournament.setStatus(TournamentStatus.IN_PROGRESS);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Test Tournament"), TournamentStatus.IN_PROGRESS, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
 
-        Match m1 = new Match();
-        m1.setStatus(MatchStatus.FINISHED);
-        Match m2 = new Match();
-        m2.setStatus(MatchStatus.PENDING);
+        Match m1 = Match.reconstitute(null, 0, 0, null, MatchStatus.FINISHED, null, null, null, null, null, null);
+        Match m2 = Match.reconstitute(null, 0, 0, null, MatchStatus.PENDING, null, null, null, null, null, null);
 
         when(loadMatchesByTournamentPort.loadByTournamentId(1L)).thenReturn(List.of(m1, m2));
 
@@ -68,9 +62,7 @@ class CheckTournamentCompletionServiceTest {
 
     @Test
     void checkCompletion_shouldNotMarkFinished_whenNoMatches() {
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
-        tournament.setStatus(TournamentStatus.IN_PROGRESS);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Test Tournament"), TournamentStatus.IN_PROGRESS, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
 
         when(loadMatchesByTournamentPort.loadByTournamentId(1L)).thenReturn(List.of());
 

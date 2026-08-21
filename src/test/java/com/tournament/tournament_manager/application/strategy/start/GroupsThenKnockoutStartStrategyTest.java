@@ -21,6 +21,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
+import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
 
 @ExtendWith(MockitoExtension.class)
 class GroupsThenKnockoutStartStrategyTest {
@@ -38,8 +40,7 @@ class GroupsThenKnockoutStartStrategyTest {
 
     @Test
     void generateInitialMatches_shouldCreateTwoGroups_withFourPlayersAndTwoGroups() {
-        Tournament tournament = new Tournament();
-        tournament.setNumberOfGroups(2);
+        Tournament tournament = Tournament.reconstitute(null, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, 2, null, 0, null, false, null);
 
         List<Player> players = new ArrayList<>(List.of(
                 new Player(), new Player(), new Player(), new Player()
@@ -60,8 +61,7 @@ class GroupsThenKnockoutStartStrategyTest {
 
     @Test
     void generateInitialMatches_shouldCreateAllMatchesWithinSameGroup() {
-        Tournament tournament = new Tournament();
-        tournament.setNumberOfGroups(2);
+        Tournament tournament = Tournament.reconstitute(null, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, 2, null, 0, null, false, null);
 
         List<Player> players = new ArrayList<>(List.of(
                 new Player(), new Player(), new Player(), new Player(),
@@ -84,8 +84,7 @@ class GroupsThenKnockoutStartStrategyTest {
 
     @Test
     void generateInitialMatches_shouldAssignAllPlayersToAGroup() {
-        Tournament tournament = new Tournament();
-        tournament.setNumberOfGroups(3);
+        Tournament tournament = Tournament.reconstitute(null, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, 3, null, 0, null, false, null);
 
         List<Player> players = new ArrayList<>();
         for (int i = 0; i < 9; i++) {

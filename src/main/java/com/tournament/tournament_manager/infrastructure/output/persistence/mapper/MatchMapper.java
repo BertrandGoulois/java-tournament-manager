@@ -34,19 +34,19 @@ public class MatchMapper {
         if (entity == null) {
             return null;
         }
-        Match match = new Match();
-        match.setId(entity.getId());
-        match.setRound(entity.getRound());
-        match.setPosition(entity.getPosition());
-        match.setGroupNumber(entity.getGroupNumber());
-        match.setStatus(entity.getStatus());
-        match.setPlayedAt(entity.getPlayedAt());
-        match.setCommentary(entity.getCommentary());
-        match.setTournament(tournamentMapper.toDomain(entity.getTournament()));
-        match.setPlayer1(playerMapper.toDomain(entity.getPlayer1()));
-        match.setPlayer2(playerMapper.toDomain(entity.getPlayer2()));
-        match.setWinner(playerMapper.toDomain(entity.getWinner()));
-        return match;
+        return Match.reconstitute(
+                entity.getId(),
+                entity.getRound(),
+                entity.getPosition(),
+                entity.getGroupNumber(),
+                entity.getStatus(),
+                entity.getPlayedAt(),
+                entity.getCommentary(),
+                tournamentMapper.toDomain(entity.getTournament()),
+                playerMapper.toDomain(entity.getPlayer1()),
+                playerMapper.toDomain(entity.getPlayer2()),
+                playerMapper.toDomain(entity.getWinner())
+        );
     }
 
     /**

@@ -21,6 +21,9 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
+import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
 
 @ExtendWith(MockitoExtension.class)
 class TournamentJpaAdapterTest {
@@ -60,8 +63,7 @@ class TournamentJpaAdapterTest {
 
     @Test
     void saveTournament_shouldCreateNewEntity_whenNoId() {
-        Tournament tournament = new Tournament();
-        tournament.setName("new tournament");
+        Tournament tournament = Tournament.reconstitute(null, new TournamentName("new tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
         when(tournamentRepository.save(any())).thenAnswer(inv -> {
             TournamentEntity e = inv.getArgument(0);
             e.setId(42L);
@@ -76,9 +78,7 @@ class TournamentJpaAdapterTest {
 
     @Test
     void saveTournament_shouldUpdateExistingEntity_whenIdPresent() {
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
-        tournament.setName("updated");
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("updated"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
 
         TournamentEntity existing = entityWithId(1L);
         when(tournamentRepository.findById(1L)).thenReturn(Optional.of(existing));
@@ -86,7 +86,7 @@ class TournamentJpaAdapterTest {
 
         Tournament result = tournamentJpaAdapter.saveTournament(tournament);
 
-        assertEquals("updated", result.getName());
+        assertEquals("updated", result.getName().value());
         assertEquals("updated", existing.getName());
     }
 

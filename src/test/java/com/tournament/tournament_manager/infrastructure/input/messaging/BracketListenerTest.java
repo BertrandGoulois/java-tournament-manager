@@ -22,6 +22,9 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
+import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
+import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 
 @ExtendWith(MockitoExtension.class)
 class BracketListenerTest {
@@ -49,11 +52,8 @@ class BracketListenerTest {
 
     @Test
     void onMatchFinished_shouldCallAdvanceToNextRound_whenSingleElimination() {
-        Tournament tournament = new Tournament();
-        tournament.setFormat(TournamentFormat.SINGLE_ELIMINATION);
-        Match match = new Match();
-        match.setTournament(tournament);
-        match.setRound(4);
+        Tournament tournament = Tournament.reconstitute(null, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
+        Match match = Match.reconstitute(null, 4, 0, null, MatchStatus.PENDING, null, null, tournament, null, null, null);
 
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
 
@@ -65,11 +65,8 @@ class BracketListenerTest {
 
     @Test
     void onMatchFinished_shouldCallCheckCompletion_whenRoundRobin() {
-        Tournament tournament = new Tournament();
-        tournament.setFormat(TournamentFormat.ROUND_ROBIN);
-        Match match = new Match();
-        match.setTournament(tournament);
-        match.setRound(1);
+        Tournament tournament = Tournament.reconstitute(null, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.ROUND_ROBIN, null, null, 0, null, false, null);
+        Match match = Match.reconstitute(null, 1, 0, null, MatchStatus.PENDING, null, null, tournament, null, null, null);
 
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
 
@@ -89,11 +86,8 @@ class BracketListenerTest {
 
     @Test
     void onMatchFinished_shouldCheckGroupsCompletion_whenGroupMatchInGroupsThenKnockout() {
-        Tournament tournament = new Tournament();
-        tournament.setFormat(TournamentFormat.GROUPS_THEN_KNOCKOUT);
-        Match match = new Match();
-        match.setTournament(tournament);
-        match.setGroupNumber(1);
+        Tournament tournament = Tournament.reconstitute(null, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.GROUPS_THEN_KNOCKOUT, null, null, 0, null, false, null);
+        Match match = Match.reconstitute(null, 0, 0, 1, MatchStatus.PENDING, null, null, tournament, null, null, null);
 
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
 
@@ -105,12 +99,8 @@ class BracketListenerTest {
 
     @Test
     void onMatchFinished_shouldAdvanceBracket_whenKnockoutMatchInGroupsThenKnockout() {
-        Tournament tournament = new Tournament();
-        tournament.setFormat(TournamentFormat.GROUPS_THEN_KNOCKOUT);
-        Match match = new Match();
-        match.setTournament(tournament);
-        match.setGroupNumber(null);
-        match.setRound(2);
+        Tournament tournament = Tournament.reconstitute(null, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.GROUPS_THEN_KNOCKOUT, null, null, 0, null, false, null);
+        Match match = Match.reconstitute(null, 2, 0, null, MatchStatus.PENDING, null, null, tournament, null, null, null);
 
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
 

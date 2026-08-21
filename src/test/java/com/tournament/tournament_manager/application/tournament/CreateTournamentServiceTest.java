@@ -20,6 +20,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
 
 @ExtendWith(MockitoExtension.class)
 class CreateTournamentServiceTest {
@@ -54,15 +56,13 @@ class CreateTournamentServiceTest {
 
     @Test
     void createTournament_shouldReturnResponse_whenValid() {
-        Tournament saved = new Tournament();
-        saved.setName("Test");
-        saved.setMaxPlayers(4);
+        Tournament saved = Tournament.reconstitute(null, new TournamentName("Test"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 4, null, false, null);
 
         when(existsTournamentPort.existsByName("Test")).thenReturn(false);
         when(saveTournamentPort.saveTournament(any())).thenReturn(saved);
 
         var result = createTournamentService.createTournament(new CreateTournamentCommand("Test", 4, TournamentFormat.SINGLE_ELIMINATION, null, null));
-        assertEquals("Test", result.getName());
+        assertEquals("Test", result.getName().value());
     }
 
     @Test
@@ -107,12 +107,7 @@ class CreateTournamentServiceTest {
 
     @Test
     void createTournament_shouldSucceed_whenGroupsConfigurationValid() {
-        Tournament saved = new Tournament();
-        saved.setName("Test");
-        saved.setMaxPlayers(8);
-        saved.setFormat(TournamentFormat.GROUPS_THEN_KNOCKOUT);
-        saved.setNumberOfGroups(2);
-        saved.setQualifiersPerGroup(2);
+        Tournament saved = Tournament.reconstitute(null, new TournamentName("Test"), TournamentStatus.OPEN, TournamentFormat.GROUPS_THEN_KNOCKOUT, 2, 2, 8, null, false, null);
 
         when(existsTournamentPort.existsByName("Test")).thenReturn(false);
         when(saveTournamentPort.saveTournament(any())).thenReturn(saved);
@@ -130,18 +125,14 @@ class CreateTournamentServiceTest {
         when(existsTournamentPort.existsByName("Spring Cup")).thenReturn(false);
 
         ArgumentCaptor<Tournament> captor = ArgumentCaptor.forClass(Tournament.class);
-        Tournament saved = new Tournament();
-        saved.setId(1L);
-        saved.setName("Spring Cup");
-        saved.setMaxPlayers(8);
-        saved.setFormat(TournamentFormat.SINGLE_ELIMINATION);
+        Tournament saved = Tournament.reconstitute(1L, new TournamentName("Spring Cup"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 8, null, false, null);
         when(saveTournamentPort.saveTournament(captor.capture())).thenReturn(saved);
 
         createTournamentService.createTournament(
                 new CreateTournamentCommand("Spring Cup", 8, TournamentFormat.SINGLE_ELIMINATION, null, null));
 
         Tournament captured = captor.getValue();
-        assertEquals("Spring Cup", captured.getName());
+        assertEquals("Spring Cup", captured.getName().value());
         assertEquals(8, captured.getMaxPlayers());
         assertEquals(TournamentFormat.SINGLE_ELIMINATION, captured.getFormat());
     }
@@ -151,20 +142,14 @@ class CreateTournamentServiceTest {
         when(existsTournamentPort.existsByName("Groups Cup")).thenReturn(false);
 
         ArgumentCaptor<Tournament> captor = ArgumentCaptor.forClass(Tournament.class);
-        Tournament saved = new Tournament();
-        saved.setId(1L);
-        saved.setName("Groups Cup");
-        saved.setMaxPlayers(8);
-        saved.setFormat(TournamentFormat.GROUPS_THEN_KNOCKOUT);
-        saved.setNumberOfGroups(2);
-        saved.setQualifiersPerGroup(2);
+        Tournament saved = Tournament.reconstitute(1L, new TournamentName("Groups Cup"), TournamentStatus.OPEN, TournamentFormat.GROUPS_THEN_KNOCKOUT, 2, 2, 8, null, false, null);
         when(saveTournamentPort.saveTournament(captor.capture())).thenReturn(saved);
 
         createTournamentService.createTournament(
                 new CreateTournamentCommand("Groups Cup", 8, TournamentFormat.GROUPS_THEN_KNOCKOUT, 2, 2));
 
         Tournament captured = captor.getValue();
-        assertEquals("Groups Cup", captured.getName());
+        assertEquals("Groups Cup", captured.getName().value());
         assertEquals(8, captured.getMaxPlayers());
         assertEquals(TournamentFormat.GROUPS_THEN_KNOCKOUT, captured.getFormat());
         assertEquals(2, captured.getNumberOfGroups());

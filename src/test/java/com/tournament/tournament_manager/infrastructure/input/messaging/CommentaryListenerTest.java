@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
+import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 
 @ExtendWith(MockitoExtension.class)
 class CommentaryListenerTest {
@@ -41,12 +42,7 @@ class CommentaryListenerTest {
         player2.setUsername("player2");
         player2.setEloRating(new EloRating(1000));
 
-        Match match = new Match();
-        match.setId(1L);
-        match.setPlayer1(player1);
-        match.setPlayer2(player2);
-        match.setWinner(player1);
-        match.setRound(4);
+        Match match = Match.reconstitute(1L, 4, 0, null, MatchStatus.PENDING, null, null, null, player1, player2, player1);
 
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         when(generateCommentaryPort.generateCommentary(any())).thenReturn("Super match !");
@@ -71,12 +67,7 @@ class CommentaryListenerTest {
         player2.setUsername("player2");
         player2.setEloRating(new EloRating(984)); // déjà mis à jour par EloListener (-16)
 
-        Match match = new Match();
-        match.setId(1L);
-        match.setPlayer1(player1);
-        match.setPlayer2(player2);
-        match.setWinner(player1);
-        match.setRound(4);
+        Match match = Match.reconstitute(1L, 4, 0, null, MatchStatus.PENDING, null, null, null, player1, player2, player1);
 
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         when(generateCommentaryPort.generateCommentary(any())).thenReturn("Super match !");
@@ -104,12 +95,7 @@ class CommentaryListenerTest {
         player2.setUsername("joueur2");
         player2.setEloRating(new EloRating(1000));
 
-        Match match = new Match();
-        match.setId(1L);
-        match.setPlayer1(player1);
-        match.setPlayer2(player2);
-        match.setWinner(player1);
-        match.setRound(4);
+        Match match = Match.reconstitute(1L, 4, 0, null, MatchStatus.PENDING, null, null, null, player1, player2, player1);
 
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         when(generateCommentaryPort.generateCommentary(any())).thenReturn("Super match !");
@@ -136,10 +122,7 @@ class CommentaryListenerTest {
         player1.setUsername("player1");
         player1.setEloRating(new EloRating(1000));
 
-        Match match = new Match();
-        match.setId(1L);
-        match.setPlayer1(player1);
-        match.setPlayer2(null);
+        Match match = Match.reconstitute(1L, 0, 0, null, MatchStatus.PENDING, null, null, null, player1, null, null);
 
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
 
@@ -158,13 +141,7 @@ class CommentaryListenerTest {
         Player player2 = new Player();
         player2.setUsername("player2");
 
-        Match match = new Match();
-        match.setId(1L);
-        match.setPlayer1(player1);
-        match.setPlayer2(player2);
-        match.setWinner(player1);
-        match.setRound(4);
-        match.setCommentary("Commentaire déjà généré au premier passage.");
+        Match match = Match.reconstitute(1L, 4, 0, null, MatchStatus.PENDING, null, "Commentaire déjà généré au premier passage.", null, player1, player2, player1);
 
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
 
@@ -186,12 +163,7 @@ class CommentaryListenerTest {
         player2.setUsername("player2");
         player2.setEloRating(new EloRating(1000));
 
-        Match match = new Match();
-        match.setId(1L);
-        match.setPlayer1(player1);
-        match.setPlayer2(player2);
-        match.setWinner(player1);
-        match.setRound(4);
+        Match match = Match.reconstitute(1L, 4, 0, null, MatchStatus.PENDING, null, null, null, player1, player2, player1);
 
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         when(generateCommentaryPort.generateCommentary(any()))

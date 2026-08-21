@@ -47,6 +47,13 @@ Les **13 ports entrants** (`domain/port/in/`, ex. `GetPlayerUseCase`, `CreateTou
 
 > Ces deux règles (aucune dépendance technique, aucun DTO REST/JSON-RPC) sont vérifiées en continu par un test ArchUnit (`DomainIsolationTest`), qui échoue si quiconque en réintroduit une dans `domain/` - une règle non vérifiée par la CI n'existe pas.
 
+`Tournament` et `Match` n'ont **aucun setter public** : leurs transitions d'état passent exclusivement par des méthodes intentionnelles qui valident la règle plutôt que de l'accepter aveuglément.
+
+- `Tournament` expose une machine à états explicite : `start()` (`OPEN` → `IN_PROGRESS`) et `finish()` (`IN_PROGRESS` → `FINISHED`) refusent toute transition hors ordre - `setStatus(FINISHED)` était auparavant appelable depuis n'importe où, sans qu'aucune règle ne l'empêche d'être appelé sur un tournoi qui n'avait même pas commencé.
+- `Match.recordResult(winnerId)` regroupe et protège directement dans le domaine les deux règles qui vivaient auparavant dispersées dans `RecordMatchResultService` : un match déjà terminé ne peut pas être réenregistré, et le vainqueur désigné doit être l'un des deux participants.
+- Construction : `Tournament.create(...)`/`Match.schedule(...)` pour un nouvel objet (règles métier appliquées dès la construction), `Tournament.reconstitute(...)`/`Match.reconstitute(...)` réservés à leurs mappers JPA respectifs pour recharger un état déjà persisté (validé lors de sa création initiale, pas revalidé au rechargement).
+- `TournamentName` (value object, même principe que `EloRating`) garantit qu'un tournoi ne peut jamais avoir un nom vide, à la construction plutôt qu'a posteriori.
+
 ```
 src/main/java/com/tournament/tournament_manager/
 ├── domain/
@@ -103,7 +110,7 @@ Exemple : `PUT /api/matches/1/result` - du client jusqu'à la réponse HTTP.
 3. **Spring Security** (`SecurityConfig`) - vérifie le rôle ADMIN → `403` si insuffisant
 4. **MatchController** (`infrastructure/input/rest/`) - adapter primaire, désérialise la requête en `RecordMatchResultRequest`, puis convertit en `RecordMatchResultCommand` via `MatchRestMapper` (voir point 22 : le port ci-dessous ne connaît jamais ce DTO)
 5. **RecordMatchResultUseCase** (`domain/port/in/`) - interface du port entrant, définit le contrat dans le vocabulaire du domaine (`RecordMatchResultCommand` en entrée, `Match` en sortie)
-6. **RecordMatchResultService** (`application/match/`) - implémente le port entrant, logique métier pure, ne manipule que des objets de domaine
+6. **RecordMatchResultService** (`application/match/`) - implémente le port entrant, délègue la validation métier à `match.recordResult(winnerId)` (voir plus haut) plutôt que de la porter elle-même
 7. **SaveMatchPort** (`domain/port/out/`) - interface du port sortant "sauvegarder un match"
 8. **MatchJpaAdapter** (`infrastructure/output/persistence/adapter/`) - implémente `SaveMatchPort`, traduit vers JPA
 9. **MatchRepository** (`infrastructure/output/persistence/repository/`) - Spring Data JPA
@@ -571,5 +578,3 @@ Toutes les erreurs REST retournent un JSON uniforme :
 - Healthcheck custom Kafka via `/actuator/health` (`KafkaHealthIndicator`) - PostgreSQL, Redis et Kafka monitorés avec détails
 
 ---
-
-## Evolutions possibles

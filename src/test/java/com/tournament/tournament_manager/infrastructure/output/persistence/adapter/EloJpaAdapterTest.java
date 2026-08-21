@@ -26,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
+import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 
 @ExtendWith(MockitoExtension.class)
 class EloJpaAdapterTest {
@@ -78,8 +79,7 @@ class EloJpaAdapterTest {
     void saveEloHistory_shouldResolveReferencesAndSave() {
         Player player = new Player();
         player.setId(1L);
-        Match match = new Match();
-        match.setId(2L);
+        Match match = Match.reconstitute(2L, 0, 0, null, MatchStatus.PENDING, null, null, null, null, null, null);
 
         EloHistory history = new EloHistory();
         history.setPlayer(player);

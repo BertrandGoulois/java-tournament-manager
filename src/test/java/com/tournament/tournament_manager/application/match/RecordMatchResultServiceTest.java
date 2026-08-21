@@ -4,6 +4,9 @@ import com.tournament.tournament_manager.domain.model.Match;
 import com.tournament.tournament_manager.domain.model.Player;
 import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
+import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
+import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchPort;
 import com.tournament.tournament_manager.domain.port.out.match.PublishMatchEventPort;
 import com.tournament.tournament_manager.domain.port.out.match.SaveMatchPort;
@@ -48,8 +51,7 @@ class RecordMatchResultServiceTest {
 
     @Test
     void recordMatchResult_shouldThrow_whenMatchAlreadyFinished() {
-        Match match = new Match();
-        match.setStatus(MatchStatus.FINISHED);
+        Match match = Match.reconstitute(null, 0, 0, null, MatchStatus.FINISHED, null, null, null, null, null, null);
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         assertThrows(InvalidException.class,
                 () -> recordMatchResultService.recordMatchResult(1L, new RecordMatchResultCommand(1L)));
@@ -61,10 +63,7 @@ class RecordMatchResultServiceTest {
         player1.setId(1L);
         Player player2 = new Player();
         player2.setId(2L);
-        Match match = new Match();
-        match.setStatus(MatchStatus.PENDING);
-        match.setPlayer1(player1);
-        match.setPlayer2(player2);
+        Match match = Match.reconstitute(null, 0, 0, null, MatchStatus.PENDING, null, null, null, player1, player2, null);
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         assertThrows(InvalidException.class,
                 () -> recordMatchResultService.recordMatchResult(1L, new RecordMatchResultCommand(99L)));
@@ -76,11 +75,7 @@ class RecordMatchResultServiceTest {
         player1.setId(1L);
         Player player2 = new Player();
         player2.setId(2L);
-        Match match = new Match();
-        match.setTournament(new Tournament());
-        match.setStatus(MatchStatus.PENDING);
-        match.setPlayer1(player1);
-        match.setPlayer2(player2);
+        Match match = Match.reconstitute(null, 0, 0, null, MatchStatus.PENDING, null, null, Tournament.reconstitute(null, new TournamentName("Test"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null), player1, player2, null);
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         when(saveMatchPort.saveMatch(any())).thenReturn(match);
         recordMatchResultService.recordMatchResult(1L, new RecordMatchResultCommand(1L));
@@ -99,11 +94,7 @@ class RecordMatchResultServiceTest {
         Player player2 = new Player();
         player2.setId(2L);
         player2.setEloRating(new com.tournament.tournament_manager.domain.model.valueobjects.EloRating(1000));
-        Match match = new Match();
-        match.setTournament(new Tournament());
-        match.setStatus(MatchStatus.PENDING);
-        match.setPlayer1(player1);
-        match.setPlayer2(player2);
+        Match match = Match.reconstitute(null, 0, 0, null, MatchStatus.PENDING, null, null, Tournament.reconstitute(null, new TournamentName("Test"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null), player1, player2, null);
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         when(saveMatchPort.saveMatch(any())).thenReturn(match);
 
@@ -123,11 +114,7 @@ class RecordMatchResultServiceTest {
         player1.setId(1L);
         Player player2 = new Player();
         player2.setId(2L);
-        Match match = new Match();
-        match.setTournament(new Tournament());
-        match.setStatus(MatchStatus.PENDING);
-        match.setPlayer1(player1);
-        match.setPlayer2(player2);
+        Match match = Match.reconstitute(null, 0, 0, null, MatchStatus.PENDING, null, null, Tournament.reconstitute(null, new TournamentName("Test"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null), player1, player2, null);
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         when(saveMatchPort.saveMatch(any())).thenReturn(match);
         recordMatchResultService.recordMatchResult(1L, new RecordMatchResultCommand(2L));
@@ -138,10 +125,7 @@ class RecordMatchResultServiceTest {
     void recordMatchResult_shouldThrow_whenWinnerIsNullPlayer2Bye() {
         Player player1 = new Player();
         player1.setId(1L);
-        Match match = new Match();
-        match.setStatus(MatchStatus.PENDING);
-        match.setPlayer1(player1);
-        match.setPlayer2(null); // bye
+        Match match = Match.reconstitute(null, 0, 0, null, MatchStatus.PENDING, null, null, null, player1, null, null); // bye : player2 déjà null
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         assertThrows(InvalidException.class,
                 () -> recordMatchResultService.recordMatchResult(1L, new RecordMatchResultCommand(99L)));
@@ -153,11 +137,7 @@ class RecordMatchResultServiceTest {
         player1.setId(1L);
         Player player2 = new Player();
         player2.setId(2L);
-        Match match = new Match();
-        match.setTournament(new Tournament());
-        match.setStatus(MatchStatus.PENDING);
-        match.setPlayer1(player1);
-        match.setPlayer2(player2);
+        Match match = Match.reconstitute(null, 0, 0, null, MatchStatus.PENDING, null, null, Tournament.reconstitute(null, new TournamentName("Test"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null), player1, player2, null);
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         when(saveMatchPort.saveMatch(any())).thenReturn(match);
 
@@ -172,11 +152,7 @@ class RecordMatchResultServiceTest {
         player1.setId(1L);
         Player player2 = new Player();
         player2.setId(2L);
-        Match match = new Match();
-        match.setTournament(new Tournament());
-        match.setStatus(MatchStatus.PENDING);
-        match.setPlayer1(player1);
-        match.setPlayer2(player2);
+        Match match = Match.reconstitute(null, 0, 0, null, MatchStatus.PENDING, null, null, Tournament.reconstitute(null, new TournamentName("Test"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null), player1, player2, null);
         assertNull(match.getPlayedAt());
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         when(saveMatchPort.saveMatch(any())).thenReturn(match);
@@ -196,11 +172,7 @@ class RecordMatchResultServiceTest {
         player1.setId(1L);
         Player player2 = new Player();
         player2.setId(2L);
-        Match match = new Match();
-        match.setTournament(new Tournament());
-        match.setStatus(MatchStatus.PENDING);
-        match.setPlayer1(player1);
-        match.setPlayer2(player2);
+        Match match = Match.reconstitute(null, 0, 0, null, MatchStatus.PENDING, null, null, Tournament.reconstitute(null, new TournamentName("Test"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null), player1, player2, null);
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         when(saveMatchPort.saveMatch(any())).thenReturn(match);
 
@@ -215,14 +187,8 @@ class RecordMatchResultServiceTest {
         player1.setId(1L);
         Player player2 = new Player();
         player2.setId(2L);
-        Tournament tournament = new Tournament();
-        tournament.setId(10L);
-        Match match = new Match();
-        match.setId(5L);
-        match.setTournament(tournament);
-        match.setStatus(MatchStatus.PENDING);
-        match.setPlayer1(player1);
-        match.setPlayer2(player2);
+        Tournament tournament = Tournament.reconstitute(10L, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
+        Match match = Match.reconstitute(5L, 0, 0, null, MatchStatus.PENDING, null, null, tournament, player1, player2, null);
         when(loadMatchPort.loadMatch(5L)).thenReturn(match);
         when(saveMatchPort.saveMatch(any())).thenReturn(match);
 
@@ -239,15 +205,8 @@ class RecordMatchResultServiceTest {
     void recordMatchResult_shouldReturnNullPlayer2Id_whenPlayer2IsNull() {
         Player player1 = new Player();
         player1.setId(1L);
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
-        Match match = new Match();
-        match.setId(1L);
-        match.setTournament(tournament);
-        match.setStatus(MatchStatus.PENDING);
-        match.setPlayer1(player1);
-        match.setPlayer2(null);
-        match.setWinner(player1);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
+        Match match = Match.reconstitute(1L, 0, 0, null, MatchStatus.PENDING, null, null, tournament, player1, null, player1);
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         when(saveMatchPort.saveMatch(any())).thenReturn(match);
 
@@ -261,14 +220,8 @@ class RecordMatchResultServiceTest {
     void recordMatchResult_shouldNotThrow_whenPlayer2NullAndWinnerIsPlayer1() {
         Player player1 = new Player();
         player1.setId(1L);
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
-        Match match = new Match();
-        match.setId(1L);
-        match.setTournament(tournament);
-        match.setStatus(MatchStatus.PENDING);
-        match.setPlayer1(player1);
-        match.setPlayer2(null);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
+        Match match = Match.reconstitute(1L, 0, 0, null, MatchStatus.PENDING, null, null, tournament, player1, null, null);
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         when(saveMatchPort.saveMatch(any())).thenReturn(match);
 

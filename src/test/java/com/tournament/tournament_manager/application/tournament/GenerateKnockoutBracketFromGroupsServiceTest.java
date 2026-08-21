@@ -21,6 +21,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
+import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 
 @ExtendWith(MockitoExtension.class)
 class GenerateKnockoutBracketFromGroupsServiceTest {
@@ -35,9 +38,7 @@ class GenerateKnockoutBracketFromGroupsServiceTest {
 
     @Test
     void shouldNotGenerateBracket_whenSomeGroupMatchesStillPending() {
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
-        tournament.setQualifiersPerGroup(1);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, 1, 0, null, false, null);
 
         Player p1 = new Player();
         p1.setId(1L);
@@ -56,9 +57,7 @@ class GenerateKnockoutBracketFromGroupsServiceTest {
 
     @Test
     void shouldGenerateBracket_whenAllGroupMatchesFinished() {
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
-        tournament.setQualifiersPerGroup(1);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, 1, 0, null, false, null);
 
         // Groupe 1 : alice bat bob -> alice qualifiée
         Player alice = new Player();
@@ -95,9 +94,7 @@ class GenerateKnockoutBracketFromGroupsServiceTest {
 
     @Test
     void shouldNotRegenerateBracket_whenAlreadyGenerated() {
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
-        tournament.setQualifiersPerGroup(1);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, 1, 0, null, false, null);
 
         Player alice = new Player();
         alice.setId(1L);
@@ -105,10 +102,7 @@ class GenerateKnockoutBracketFromGroupsServiceTest {
         bob.setId(2L);
         Match group1Match = groupMatch(alice, bob, alice, 1, MatchStatus.FINISHED);
 
-        Match bracketMatch = new Match();
-        bracketMatch.setGroupNumber(null);
-        bracketMatch.setPlayer1(alice);
-        bracketMatch.setStatus(MatchStatus.PENDING);
+        Match bracketMatch = Match.reconstitute(null, 0, 0, null, MatchStatus.PENDING, null, null, null, alice, null, null);
 
         when(loadMatchesByTournamentPort.loadByTournamentId(1L))
                 .thenReturn(List.of(group1Match, bracketMatch));
@@ -120,9 +114,7 @@ class GenerateKnockoutBracketFromGroupsServiceTest {
 
     @Test
     void shouldSelectTopNQualifiersPerGroup_whenQualifiersPerGroupGreaterThanOne() {
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
-        tournament.setQualifiersPerGroup(2);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, 2, 0, null, false, null);
 
         Player alice = new Player();
         alice.setId(1L);
@@ -156,9 +148,7 @@ class GenerateKnockoutBracketFromGroupsServiceTest {
 
     @Test
     void shouldOnlyCountGroupMatches_ignoringBracketMatches() {
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
-        tournament.setQualifiersPerGroup(1);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, 1, 0, null, false, null);
 
         Player alice = new Player();
         alice.setId(1L);
@@ -169,10 +159,7 @@ class GenerateKnockoutBracketFromGroupsServiceTest {
         Match groupMatch = groupMatch(alice, bob, alice, 1, MatchStatus.FINISHED);
 
         // Match de bracket (groupNumber == null) - ne doit pas bloquer la génération
-        Match bracketMatch = new Match();
-        bracketMatch.setGroupNumber(null);
-        bracketMatch.setPlayer1(alice);
-        bracketMatch.setStatus(MatchStatus.PENDING);
+        Match bracketMatch = Match.reconstitute(null, 0, 0, null, MatchStatus.PENDING, null, null, null, alice, null, null);
 
         when(loadMatchesByTournamentPort.loadByTournamentId(1L))
                 .thenReturn(List.of(groupMatch));
@@ -184,12 +171,7 @@ class GenerateKnockoutBracketFromGroupsServiceTest {
     }
 
     private Match groupMatch(Player player1, Player player2, Player winner, int groupNumber, MatchStatus status) {
-        Match match = new Match();
-        match.setPlayer1(player1);
-        match.setPlayer2(player2);
-        match.setWinner(winner);
-        match.setGroupNumber(groupNumber);
-        match.setStatus(status);
+        Match match = Match.reconstitute(null, 0, 0, groupNumber, status, null, null, null, player1, player2, winner);
         return match;
     }
 }

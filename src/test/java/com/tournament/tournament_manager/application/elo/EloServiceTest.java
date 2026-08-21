@@ -17,6 +17,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
+import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 
 @ExtendWith(MockitoExtension.class)
 class EloServiceTest {
@@ -41,10 +42,7 @@ class EloServiceTest {
         Player loser = new Player();
         loser.setEloRating(new EloRating(1000));
 
-        Match match = new Match();
-        match.setPlayer1(winner);
-        match.setPlayer2(loser);
-        match.setWinner(winner);
+        Match match = Match.reconstitute(null, 0, 0, null, MatchStatus.PENDING, null, null, null, winner, loser, winner);
 
         eloService.updateElo(match);
 
@@ -65,10 +63,7 @@ class EloServiceTest {
         Player loser = new Player();
         loser.setEloRating(new EloRating(1400));
 
-        Match match = new Match();
-        match.setPlayer1(winner);
-        match.setPlayer2(loser);
-        match.setWinner(winner);
+        Match match = Match.reconstitute(null, 0, 0, null, MatchStatus.PENDING, null, null, null, winner, loser, winner);
 
         eloService.updateElo(match);
 
@@ -89,10 +84,7 @@ class EloServiceTest {
         Player loser = new Player();
         loser.setEloRating(new EloRating(1000));
 
-        Match match = new Match();
-        match.setPlayer1(winner);
-        match.setPlayer2(loser);
-        match.setWinner(winner);
+        Match match = Match.reconstitute(null, 0, 0, null, MatchStatus.PENDING, null, null, null, winner, loser, winner);
 
         eloService.updateElo(match);
 
@@ -107,10 +99,7 @@ class EloServiceTest {
         Player player2 = new Player();
         player2.setEloRating(new EloRating(1000));
 
-        Match match = new Match();
-        match.setPlayer1(player1);
-        match.setPlayer2(player2);
-        match.setWinner(player2);
+        Match match = Match.reconstitute(null, 0, 0, null, MatchStatus.PENDING, null, null, null, player1, player2, player2);
 
         eloService.updateElo(match);
 
@@ -125,10 +114,7 @@ class EloServiceTest {
         Player loser = new Player();
         loser.setEloRating(new EloRating(1000));
 
-        Match match = new Match();
-        match.setPlayer1(winner);
-        match.setPlayer2(loser);
-        match.setWinner(winner);
+        Match match = Match.reconstitute(null, 0, 0, null, MatchStatus.PENDING, null, null, null, winner, loser, winner);
 
         eloService.updateElo(match);
 
@@ -142,10 +128,7 @@ class EloServiceTest {
         Player loser = new Player();
         loser.setEloRating(new EloRating(1000));
 
-        Match match = new Match();
-        match.setPlayer1(winner);
-        match.setPlayer2(loser);
-        match.setWinner(winner);
+        Match match = Match.reconstitute(null, 0, 0, null, MatchStatus.PENDING, null, null, null, winner, loser, winner);
 
         eloService.updateElo(match);
 
@@ -159,10 +142,7 @@ class EloServiceTest {
         Player loser = new Player();
         loser.setEloRating(new EloRating(1000));
 
-        Match match = new Match();
-        match.setPlayer1(winner);
-        match.setPlayer2(loser);
-        match.setWinner(winner);
+        Match match = Match.reconstitute(null, 0, 0, null, MatchStatus.PENDING, null, null, null, winner, loser, winner);
 
         ArgumentCaptor<EloHistory> captor =
                 ArgumentCaptor.forClass(EloHistory.class);
@@ -188,10 +168,7 @@ class EloServiceTest {
         Player loser = new Player();
         loser.setEloRating(new EloRating(1000));
 
-        Match match = new Match();
-        match.setPlayer1(winner);
-        match.setPlayer2(loser);
-        match.setWinner(winner);
+        Match match = Match.reconstitute(null, 0, 0, null, MatchStatus.PENDING, null, null, null, winner, loser, winner);
 
         ArgumentCaptor<EloHistory> captor =
                 ArgumentCaptor.forClass(EloHistory.class);
@@ -217,11 +194,7 @@ class EloServiceTest {
         Player loser = new Player();
         loser.setEloRating(new EloRating(1000));
 
-        Match match = new Match();
-        match.setId(1L);
-        match.setPlayer1(winner);
-        match.setPlayer2(loser);
-        match.setWinner(winner);
+        Match match = Match.reconstitute(1L, 0, 0, null, MatchStatus.PENDING, null, null, null, winner, loser, winner);
 
         doThrow(new org.springframework.dao.DataIntegrityViolationException("duplicate key"))
                 .when(saveEloHistoryPort).saveEloHistory(any());

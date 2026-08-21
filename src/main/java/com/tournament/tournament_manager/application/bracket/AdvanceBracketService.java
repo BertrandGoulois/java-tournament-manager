@@ -71,7 +71,7 @@ public class AdvanceBracketService implements AdvanceBracketUseCase {
         }
 
         if (nextRound < 2) {
-            tournament.setStatus(TournamentStatus.FINISHED);
+            tournament.finish();
             saveTournamentPort.saveTournament(tournament);
             return;
         }

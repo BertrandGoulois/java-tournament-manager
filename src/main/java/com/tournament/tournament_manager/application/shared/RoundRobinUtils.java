@@ -3,7 +3,6 @@ package com.tournament.tournament_manager.application.shared;
 import com.tournament.tournament_manager.domain.model.Match;
 import com.tournament.tournament_manager.domain.model.Player;
 import com.tournament.tournament_manager.domain.model.Tournament;
-import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 import com.tournament.tournament_manager.domain.port.out.match.SaveMatchPort;
 
 import java.util.ArrayList;
@@ -70,13 +69,8 @@ public class RoundRobinUtils {
 
     private static void createMatch(Tournament tournament, Player player1, Player player2,
                                     int round, Integer groupNumber, SaveMatchPort saveMatchPort) {
-        Match match = new Match();
-        match.setTournament(tournament);
-        match.setRound(round);
-        match.setGroupNumber(groupNumber);
-        match.setPlayer1(player1);
-        match.setPlayer2(player2);
-        match.setStatus(MatchStatus.PENDING);
+        // position n'a pas de sens en round-robin (pas de structure d'arbre à reconstruire) - 0 partout.
+        Match match = Match.schedule(tournament, round, 0, groupNumber, player1, player2);
         saveMatchPort.saveMatch(match);
     }
 }

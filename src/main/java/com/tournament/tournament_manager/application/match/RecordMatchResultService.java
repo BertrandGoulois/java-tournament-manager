@@ -3,19 +3,15 @@ package com.tournament.tournament_manager.application.match;
 import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
 import com.tournament.tournament_manager.domain.model.Match;
 import com.tournament.tournament_manager.domain.model.RecordMatchResultCommand;
-import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 import com.tournament.tournament_manager.domain.port.in.match.RecordMatchResultUseCase;
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchPort;
 import com.tournament.tournament_manager.domain.port.out.match.PublishMatchEventPort;
 import com.tournament.tournament_manager.domain.port.out.match.SaveMatchPort;
-import com.tournament.tournament_manager.exception.domain.InvalidException;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Instant;
 
 /**
  * Cas d'utilisation : enregistrement du résultat d'un match. Retourne un objet de domaine
@@ -47,25 +43,9 @@ public class RecordMatchResultService implements RecordMatchResultUseCase {
     public Match recordMatchResult(Long matchId, RecordMatchResultCommand command) {
         Match match = loadMatchPort.loadMatch(matchId);
 
-        if (match.getStatus() == MatchStatus.FINISHED) {
-            log.warn("Tentative d'enregistrement d'un résultat sur un match déjà terminé [matchId={}]", matchId);
-            throw new InvalidException("Match already finished");
-        }
-
-        if (!command.winnerId().equals(match.getPlayer1().getId()) &&
-                (match.getPlayer2() == null || !command.winnerId().equals(match.getPlayer2().getId()))) {
-            log.warn("Vainqueur invalide [matchId={}, winnerId={}, player1={}, player2={}]",
-                    matchId, command.winnerId(),
-                    match.getPlayer1().getId(),
-                    match.getPlayer2() != null ? match.getPlayer2().getId() : null);
-            throw new InvalidException("Winner is not a player of this match");
-        }
-
-        match.setWinner(match.getPlayer1().getId().equals(command.winnerId())
-                ? match.getPlayer1()
-                : match.getPlayer2());
-        match.setStatus(MatchStatus.FINISHED);
-        match.setPlayedAt(Instant.now());
+        // Les deux règles (match pas déjà terminé, vainqueur parmi les deux participants)
+        // sont désormais protégées par Match.recordResult lui-même - voir sa Javadoc.
+        match.recordResult(command.winnerId());
 
         Match saved = saveMatchPort.saveMatch(match);
         int player2EloBefore = saved.getPlayer2() != null ? saved.getPlayer2().getEloRating().value() : 0;

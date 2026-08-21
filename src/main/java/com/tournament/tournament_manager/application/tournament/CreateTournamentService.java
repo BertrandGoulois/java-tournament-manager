@@ -3,6 +3,7 @@ package com.tournament.tournament_manager.application.tournament;
 import com.tournament.tournament_manager.domain.model.CreateTournamentCommand;
 import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
+import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
 import com.tournament.tournament_manager.domain.port.in.tournament.CreateTournamentUseCase;
 import com.tournament.tournament_manager.domain.port.out.tournament.ExistsTournamentPort;
 import com.tournament.tournament_manager.domain.port.out.tournament.SaveTournamentPort;
@@ -60,12 +61,9 @@ public class CreateTournamentService implements CreateTournamentUseCase {
             qualifiersPerGroup = validateAndResolveQualifiersPerGroup(command, numberOfGroups);
         }
 
-        Tournament tournament = new Tournament();
-        tournament.setName(command.name());
-        tournament.setMaxPlayers(command.maxPlayers());
-        tournament.setFormat(format);
-        tournament.setNumberOfGroups(numberOfGroups);
-        tournament.setQualifiersPerGroup(qualifiersPerGroup);
+        Tournament tournament = Tournament.create(
+                new TournamentName(command.name()), command.maxPlayers(), format,
+                numberOfGroups, qualifiersPerGroup);
         Tournament saved = saveTournamentPort.saveTournament(tournament);
 
         tournamentCreatedCounter.increment();

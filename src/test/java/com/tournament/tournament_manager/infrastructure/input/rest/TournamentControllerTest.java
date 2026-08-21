@@ -38,6 +38,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
 
 @WebMvcTest(TournamentController.class)
 @Import({SecurityConfig.class, TournamentRestMapper.class})
@@ -81,12 +82,7 @@ class TournamentControllerTest {
     }
 
     private Tournament sampleTournament() {
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
-        tournament.setName("Spring Championship");
-        tournament.setStatus(TournamentStatus.OPEN);
-        tournament.setFormat(TournamentFormat.SINGLE_ELIMINATION);
-        tournament.setMaxPlayers(8);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Spring Championship"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 8, null, false, null);
         return tournament;
     }
 

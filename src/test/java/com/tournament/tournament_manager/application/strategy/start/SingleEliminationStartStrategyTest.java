@@ -20,6 +20,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
+import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
 
 @ExtendWith(MockitoExtension.class)
 class SingleEliminationStartStrategyTest {
@@ -37,7 +39,7 @@ class SingleEliminationStartStrategyTest {
 
     @Test
     void generateInitialMatches_shouldCreateOneMatch_whenTwoPlayers() {
-        Tournament tournament = new Tournament();
+        Tournament tournament = Tournament.reconstitute(null, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
         List<Player> players = new ArrayList<>(List.of(new Player(), new Player()));
 
         strategy.generateInitialMatches(tournament, players);
@@ -47,7 +49,7 @@ class SingleEliminationStartStrategyTest {
 
     @Test
     void generateInitialMatches_shouldCreateTwoMatches_whenFourPlayers() {
-        Tournament tournament = new Tournament();
+        Tournament tournament = Tournament.reconstitute(null, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
         List<Player> players = new ArrayList<>(List.of(new Player(), new Player(), new Player(), new Player()));
 
         strategy.generateInitialMatches(tournament, players);
@@ -57,7 +59,7 @@ class SingleEliminationStartStrategyTest {
 
     @Test
     void generateInitialMatches_shouldCreateByeMatch_whenOddNumberOfPlayers() {
-        Tournament tournament = new Tournament();
+        Tournament tournament = Tournament.reconstitute(null, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
         List<Player> players = new ArrayList<>(List.of(new Player(), new Player(), new Player()));
 
         strategy.generateInitialMatches(tournament, players);
@@ -69,7 +71,7 @@ class SingleEliminationStartStrategyTest {
 
     @Test
     void generateInitialMatches_shouldCreateExactlyOneBye_whenFivePlayers() {
-        Tournament tournament = new Tournament();
+        Tournament tournament = Tournament.reconstitute(null, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
         List<Player> players = new ArrayList<>(List.of(
                 new Player(), new Player(), new Player(), new Player(), new Player()));
 
@@ -88,7 +90,7 @@ class SingleEliminationStartStrategyTest {
 
     @Test
     void generateInitialMatches_shouldNeverPairTopTwoEloPlayers_atFirstRound() {
-        Tournament tournament = new Tournament();
+        Tournament tournament = Tournament.reconstitute(null, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
         List<Player> players = new ArrayList<>();
         // 8 joueurs, ELO décroissant : p0 = meilleur, p1 = deuxième meilleur.
         for (int i = 0; i < 8; i++) {
@@ -116,7 +118,7 @@ class SingleEliminationStartStrategyTest {
     void generateInitialMatches_bestEloPlayer_shouldGetABye_whenByesAreNeeded() {
         // 5 joueurs -> bracketSize=8 -> 3 byes. Convention standard : les meilleurs seeds
         // reçoivent les byes en priorité.
-        Tournament tournament = new Tournament();
+        Tournament tournament = Tournament.reconstitute(null, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
         List<Player> players = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
             Player p = new Player();

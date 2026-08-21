@@ -38,6 +38,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
+import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 
 @WebMvcTest(MatchController.class)
 @Import({SecurityConfig.class, MatchRestMapper.class})
@@ -78,15 +81,8 @@ class MatchControllerTest {
         player1.setId(1L);
         Player player2 = new Player();
         player2.setId(2L);
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
-        Match match = new Match();
-        match.setId(1L);
-        match.setRound(1);
-        match.setStatus(MatchStatus.PENDING);
-        match.setTournament(tournament);
-        match.setPlayer1(player1);
-        match.setPlayer2(player2);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
+        Match match = Match.reconstitute(1L, 1, 0, null, MatchStatus.PENDING, null, null, tournament, player1, player2, null);
         return match;
     }
 
@@ -110,8 +106,7 @@ class MatchControllerTest {
     @Test
     void recordMatchResult_shouldReturn200() throws Exception {
         Match finished = sampleMatch();
-        finished.setStatus(MatchStatus.FINISHED);
-        finished.setWinner(finished.getPlayer1());
+        finished.recordResult(finished.getPlayer1().getId());
         when(recordMatchResultUseCase.recordMatchResult(eq(1L), any())).thenReturn(finished);
 
         mockMvc.perform(put("/api/matches/1/result")

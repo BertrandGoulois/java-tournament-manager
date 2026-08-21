@@ -14,6 +14,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
+import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
+import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 
 @ExtendWith(MockitoExtension.class)
 class GetMatchServiceTest {
@@ -30,14 +33,8 @@ class GetMatchServiceTest {
         player1.setId(1L);
         Player player2 = new Player();
         player2.setId(2L);
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
-        Match match = new Match();
-        match.setId(1L);
-        match.setStatus(MatchStatus.PENDING);
-        match.setPlayer1(player1);
-        match.setPlayer2(player2);
-        match.setTournament(tournament);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
+        Match match = Match.reconstitute(1L, 0, 0, null, MatchStatus.PENDING, null, null, tournament, player1, player2, null);
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         Match result = getMatchService.getMatchById(1L);
         assertEquals(1L, result.getId());
@@ -53,15 +50,8 @@ class GetMatchServiceTest {
     void getMatchById_shouldReturnMatch_withNullPlayer2AndWinner() {
         Player player1 = new Player();
         player1.setId(1L);
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
-        Match match = new Match();
-        match.setId(1L);
-        match.setStatus(MatchStatus.FINISHED);
-        match.setPlayer1(player1);
-        match.setPlayer2(null);
-        match.setWinner(null);
-        match.setTournament(tournament);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
+        Match match = Match.reconstitute(1L, 0, 0, null, MatchStatus.FINISHED, null, null, tournament, player1, null, null);
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
         Match result = getMatchService.getMatchById(1L);
         assertNull(result.getPlayer2());
@@ -76,15 +66,8 @@ class GetMatchServiceTest {
         player2.setId(2L);
         Player winner = new Player();
         winner.setId(1L);
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
-        Match match = new Match();
-        match.setId(1L);
-        match.setStatus(MatchStatus.FINISHED);
-        match.setPlayer1(player1);
-        match.setPlayer2(player2);
-        match.setWinner(winner);
-        match.setTournament(tournament);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
+        Match match = Match.reconstitute(1L, 0, 0, null, MatchStatus.FINISHED, null, null, tournament, player1, player2, winner);
         when(loadMatchPort.loadMatch(1L)).thenReturn(match);
 
         Match result = getMatchService.getMatchById(1L);

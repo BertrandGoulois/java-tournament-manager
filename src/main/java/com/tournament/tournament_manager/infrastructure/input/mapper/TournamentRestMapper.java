@@ -29,7 +29,7 @@ public class TournamentRestMapper {
     public TournamentResponse toResponse(Tournament tournament) {
         return new TournamentResponse(
                 tournament.getId(),
-                tournament.getName(),
+                tournament.getName().value(),
                 tournament.getStatus(),
                 tournament.getFormat(),
                 tournament.getMaxPlayers(),

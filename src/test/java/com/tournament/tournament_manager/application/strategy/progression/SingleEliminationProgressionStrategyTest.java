@@ -13,6 +13,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
+import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 
 @ExtendWith(MockitoExtension.class)
 class SingleEliminationProgressionStrategyTest {
@@ -30,10 +33,8 @@ class SingleEliminationProgressionStrategyTest {
 
     @Test
     void onMatchFinished_shouldCallAdvanceToNextRound() {
-        Tournament tournament = new Tournament();
-        Match match = new Match();
-        match.setTournament(tournament);
-        match.setRound(4);
+        Tournament tournament = Tournament.reconstitute(null, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
+        Match match = Match.reconstitute(null, 4, 0, null, MatchStatus.PENDING, null, null, tournament, null, null, null);
 
         strategy.onMatchFinished(match, tournament);
 

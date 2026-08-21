@@ -62,7 +62,7 @@ public class BracketQueryService implements GetBracketUseCase {
 
         return new Bracket(
                 tournament.getId(),
-                tournament.getName(),
+                tournament.getName().value(),
                 tournament.getStatus(),
                 rounds
         );

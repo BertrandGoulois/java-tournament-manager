@@ -23,6 +23,9 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
+import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 
 @ExtendWith(MockitoExtension.class)
 class RegistrationJpaAdapterTest {
@@ -58,8 +61,7 @@ class RegistrationJpaAdapterTest {
 
     @Test
     void saveRegistration_shouldResolveReferencesAndReturnSaved() {
-        Tournament tournament = new Tournament();
-        tournament.setId(10L);
+        Tournament tournament = Tournament.reconstitute(10L, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
         Player player = new Player();
         player.setId(1L);
 
@@ -67,7 +69,9 @@ class RegistrationJpaAdapterTest {
         registration.setTournament(tournament);
         registration.setPlayer(player);
 
-        when(tournamentRepository.getReferenceById(10L)).thenReturn(new TournamentEntity());
+        TournamentEntity tournamentEntityRef = new TournamentEntity();
+        tournamentEntityRef.setName("Test Tournament");
+        when(tournamentRepository.getReferenceById(10L)).thenReturn(tournamentEntityRef);
         when(playerRepository.getReferenceById(1L)).thenReturn(new PlayerEntity());
         when(registrationRepository.save(any())).thenAnswer(inv -> {
             RegistrationEntity e = inv.getArgument(0);

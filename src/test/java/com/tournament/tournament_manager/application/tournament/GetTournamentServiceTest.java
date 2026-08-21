@@ -17,6 +17,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
+import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
 
 @ExtendWith(MockitoExtension.class)
 class GetTournamentServiceTest {
@@ -37,22 +40,17 @@ class GetTournamentServiceTest {
 
     @Test
     void getTournamentById_shouldReturnTournament_whenFound() {
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
-        tournament.setName("Test");
-        tournament.setMaxPlayers(4);
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Test"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 4, null, false, null);
 
         when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
 
         var result = getTournamentService.getTournamentById(1L);
-        assertEquals("Test", result.getName());
+        assertEquals("Test", result.getName().value());
     }
 
     @Test
     void getAllTournaments_shouldReturnList() {
-        Tournament tournament = new Tournament();
-        tournament.setName("Test");
-        tournament.setMaxPlayers(4);
+        Tournament tournament = Tournament.reconstitute(null, new TournamentName("Test"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 4, null, false, null);
 
         PageResult<Tournament> page = PageResult.of(List.of(tournament), 0, 20, 1);
         when(loadAllTournamentsPort.loadAllTournaments(any())).thenReturn(page);
@@ -61,6 +59,6 @@ class GetTournamentServiceTest {
                 com.tournament.tournament_manager.domain.model.PageRequest.of(0, 20));
 
         assertEquals(1, responses.totalElements());
-        assertEquals("Test", responses.content().get(0).getName());
+        assertEquals("Test", responses.content().get(0).getName().value());
     }
 }

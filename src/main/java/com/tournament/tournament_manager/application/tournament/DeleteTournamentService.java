@@ -8,8 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
-
 /**
  * Cas d'utilisation : suppression (soft delete) d'un tournoi.
  */
@@ -30,9 +28,8 @@ public class DeleteTournamentService implements DeleteTournamentUseCase {
     @Override
     public void deleteTournament(Long id) {
         Tournament tournament = loadTournamentPort.loadTournament(id);
-        tournament.setDeleted(true);
-        tournament.setDeletedAt(Instant.now());
+        tournament.softDelete();
         softDeleteTournamentPort.softDeleteTournament(tournament);
-        log.info("Tournoi supprimé (soft delete) [id={}, nom='{}']", id, tournament.getName());
+        log.info("Tournoi supprimé (soft delete) [id={}, nom='{}']", id, tournament.getName().value());
     }
 }

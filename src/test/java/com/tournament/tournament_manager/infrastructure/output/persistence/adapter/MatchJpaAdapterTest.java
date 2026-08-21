@@ -25,6 +25,10 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
+import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
+import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 
 @ExtendWith(MockitoExtension.class)
 class MatchJpaAdapterTest {
@@ -70,19 +74,17 @@ class MatchJpaAdapterTest {
 
     @Test
     void saveMatch_shouldResolveReferencesAndReturnSavedMatch_whenNoId() {
-        Tournament tournament = new Tournament();
-        tournament.setId(10L);
+        Tournament tournament = Tournament.reconstitute(10L, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
         Player player1 = new Player();
         player1.setId(1L);
         Player player2 = new Player();
         player2.setId(2L);
 
-        Match match = new Match();
-        match.setTournament(tournament);
-        match.setPlayer1(player1);
-        match.setPlayer2(player2);
+        Match match = Match.reconstitute(null, 0, 0, null, MatchStatus.PENDING, null, null, tournament, player1, player2, null);
 
-        when(tournamentRepository.getReferenceById(10L)).thenReturn(new TournamentEntity());
+        TournamentEntity tournamentEntityRef = new TournamentEntity();
+        tournamentEntityRef.setName("Test Tournament");
+        when(tournamentRepository.getReferenceById(10L)).thenReturn(tournamentEntityRef);
         when(playerRepository.getReferenceById(1L)).thenReturn(new PlayerEntity());
         when(playerRepository.getReferenceById(2L)).thenReturn(new PlayerEntity());
         when(matchRepository.save(any())).thenAnswer(inv -> {
@@ -99,17 +101,15 @@ class MatchJpaAdapterTest {
 
     @Test
     void saveMatch_shouldHandleNullPlayer2_forBye() {
-        Tournament tournament = new Tournament();
-        tournament.setId(10L);
+        Tournament tournament = Tournament.reconstitute(10L, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
         Player player1 = new Player();
         player1.setId(1L);
 
-        Match match = new Match();
-        match.setTournament(tournament);
-        match.setPlayer1(player1);
-        match.setPlayer2(null);
+        Match match = Match.reconstitute(null, 0, 0, null, MatchStatus.PENDING, null, null, tournament, player1, null, null);
 
-        when(tournamentRepository.getReferenceById(10L)).thenReturn(new TournamentEntity());
+        TournamentEntity tournamentEntityRef = new TournamentEntity();
+        tournamentEntityRef.setName("Test Tournament");
+        when(tournamentRepository.getReferenceById(10L)).thenReturn(tournamentEntityRef);
         when(playerRepository.getReferenceById(1L)).thenReturn(new PlayerEntity());
         when(matchRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 

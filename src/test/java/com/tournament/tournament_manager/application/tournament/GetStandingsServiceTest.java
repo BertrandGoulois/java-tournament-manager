@@ -19,6 +19,9 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.when;
+import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
+import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
 
 @ExtendWith(MockitoExtension.class)
 class GetStandingsServiceTest {
@@ -33,9 +36,7 @@ class GetStandingsServiceTest {
 
     @Test
     void getStandings_shouldRankPlayersByPoints() {
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
-        tournament.setName("Round Robin Cup");
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Round Robin Cup"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
 
         Player p1 = new Player();
         p1.setId(1L);
@@ -77,9 +78,7 @@ class GetStandingsServiceTest {
 
     @Test
     void getStandings_shouldIgnorePendingMatches() {
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
-        tournament.setName("Round Robin Cup");
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Round Robin Cup"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
 
         Player p1 = new Player();
         p1.setId(1L);
@@ -88,10 +87,7 @@ class GetStandingsServiceTest {
         p2.setId(2L);
         p2.setUsername("bob");
 
-        Match pending = new Match();
-        pending.setPlayer1(p1);
-        pending.setPlayer2(p2);
-        pending.setStatus(MatchStatus.PENDING);
+        Match pending = Match.reconstitute(null, 0, 0, null, MatchStatus.PENDING, null, null, null, p1, p2, null);
 
         when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
         when(loadMatchesByTournamentPort.loadByTournamentId(1L)).thenReturn(List.of(pending));
@@ -104,19 +100,13 @@ class GetStandingsServiceTest {
 
     @Test
     void getStandings_shouldIgnoreByeMatches() {
-        Tournament tournament = new Tournament();
-        tournament.setId(1L);
-        tournament.setName("Round Robin Cup");
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Round Robin Cup"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
 
         Player p1 = new Player();
         p1.setId(1L);
         p1.setUsername("alice");
 
-        Match bye = new Match();
-        bye.setPlayer1(p1);
-        bye.setPlayer2(null);
-        bye.setStatus(MatchStatus.FINISHED);
-        bye.setWinner(p1);
+        Match bye = Match.reconstitute(null, 0, 0, null, MatchStatus.FINISHED, null, null, null, p1, null, p1);
 
         when(loadTournamentPort.loadTournament(1L)).thenReturn(tournament);
         when(loadMatchesByTournamentPort.loadByTournamentId(1L)).thenReturn(List.of(bye));
@@ -128,11 +118,7 @@ class GetStandingsServiceTest {
     }
 
     private Match finishedMatch(Player player1, Player player2, Player winner) {
-        Match match = new Match();
-        match.setPlayer1(player1);
-        match.setPlayer2(player2);
-        match.setStatus(MatchStatus.FINISHED);
-        match.setWinner(winner);
+        Match match = Match.reconstitute(null, 0, 0, null, MatchStatus.FINISHED, null, null, null, player1, player2, winner);
         return match;
     }
 }
