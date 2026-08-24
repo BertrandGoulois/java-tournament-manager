@@ -32,6 +32,7 @@ API REST de gestion de tournois sportifs (élimination directe, round-robin, ou 
 - **Lombok**
 - **Resilience4j** (circuit breaker sur l'appel OpenAI)
 - **Bucket4j** + **Redis** (rate limiting distribué, buckets partagés entre instances via Lettuce - couvre `POST /api/players` et son équivalent JSON-RPC `player.create` avec le même bucket ; mode dégradé fail-open si Redis est indisponible)
+- **ShedLock** (verrou distribué sur le job de purge, table `shedlock` en base - voir "Purge périodique")
 - **Nginx** (reverse proxy, point d'entrée unique sur le port 80, `X-Forwarded-For` fiable)
 
 ---
@@ -85,7 +86,7 @@ src/main/java/com/tournament/tournament_manager/
 │   │   ├── mapper/         -> conversion DTO REST <-> domaine pur (PlayerRestMapper, TournamentRestMapper, ...), réutilisés par rpc/
 │   │   ├── messaging/      -> consumers Kafka (BracketListener, EloListener, ...)
 │   │   ├── rpc/            -> handlers JSON-RPC par domaine (tournament/, player/, match/, registration/)
-│   │   └── scheduler/      -> jobs planifiés (PurgeService, OutboxPublisherService)
+│   │   └── scheduler/      -> jobs planifiés (PurgeScheduler, OutboxPublisherService)
 │   └── output/
 │       ├── persistence/
 │       │   ├── adapter/    -> adapters JPA (PlayerJpaAdapter, MatchJpaAdapter, ...)
@@ -183,17 +184,21 @@ En cas d'échec répété (3 tentatives espacées d'1 seconde), le message est r
 - les envoie réellement à Kafka, avec `tournamentId` comme clé de partition (ordre garanti par tournoi une fois le topic multi-partitions)
 - marque `publishedAt` en cas de succès ; en cas d'échec (Kafka indisponible), la ligne reste en base et sera retentée au cycle suivant - jamais silencieusement perdue
 
-Les événements publiés sont purgés périodiquement par `PurgeService` (voir ci-dessous) ; les non-publiés ne le sont jamais, quel que soit leur âge.
+Les événements publiés sont purgés périodiquement par `PurgeScheduler` (voir ci-dessous) ; les non-publiés ne le sont jamais, quel que soit leur âge.
 
 **Test WebSocket** : page de démonstration disponible sur `http://localhost/ws-test.html` (nécessite un token JWT, récupérable via `POST /api/auth/login`, saisi dans le champ dédié avant de se connecter).
 
 ### Purge périodique
 
-Un job `@Scheduled` (`PurgeService`) tourne tous les jours à 2h du matin et purge trois choses :
+Un job `@Scheduled` (`PurgeScheduler`, `infrastructure/input/scheduler/`) tourne tous les jours à 2h du matin et purge trois choses :
 
 - les joueurs et tournois soft-deleted depuis plus de `purge.retention-days` jours (défaut 30, configurable)
 - les refresh tokens expirés (indépendamment de `purge.retention-days` - un token expiré n'a plus aucun usage)
 - les événements outbox déjà publiés depuis plus de `purge.retention-days` jours (les non-publiés ne sont jamais purgés : un événement bloqué signale un problème à corriger, pas à faire disparaître silencieusement)
+
+`PurgeScheduler` n'est qu'un déclencheur : il ne contient aucune logique métier, uniquement l'appel à `PurgeUseCase` (`application/maintenance/PurgeService`), qui ne dépend que de ports sortants dédiés (`PurgePlayersPort`, `PurgeTournamentsPort`, `PurgeRefreshTokensPort`, `PurgeOutboxEventsPort`) - comme tout le reste de l'application, jamais directement des repositories JPA.
+
+**Verrou distribué (ShedLock).** En déploiement multi-instances, sans protection, ce job s'exécuterait N fois en parallèle à 2h du matin (une fois par instance). `@SchedulerLock` (table `shedlock`, voir `SchedulerLockConfig`) garantit qu'une seule instance l'exécute à la fois.
 
 ---
 
