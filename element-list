@@ -2,6 +2,7 @@ com.tournament.tournament_manager
 com.tournament.tournament_manager.application.auth
 com.tournament.tournament_manager.application.bracket
 com.tournament.tournament_manager.application.elo
+com.tournament.tournament_manager.application.maintenance
 com.tournament.tournament_manager.application.match
 com.tournament.tournament_manager.application.player
 com.tournament.tournament_manager.application.registration
@@ -21,12 +22,14 @@ com.tournament.tournament_manager.domain.model.enums
 com.tournament.tournament_manager.domain.model.valueobjects
 com.tournament.tournament_manager.domain.port.in.auth
 com.tournament.tournament_manager.domain.port.in.elo
+com.tournament.tournament_manager.domain.port.in.maintenance
 com.tournament.tournament_manager.domain.port.in.match
 com.tournament.tournament_manager.domain.port.in.player
 com.tournament.tournament_manager.domain.port.in.registration
 com.tournament.tournament_manager.domain.port.in.tournament
 com.tournament.tournament_manager.domain.port.out.auth
 com.tournament.tournament_manager.domain.port.out.elo
+com.tournament.tournament_manager.domain.port.out.maintenance
 com.tournament.tournament_manager.domain.port.out.match
 com.tournament.tournament_manager.domain.port.out.player
 com.tournament.tournament_manager.domain.port.out.registration
