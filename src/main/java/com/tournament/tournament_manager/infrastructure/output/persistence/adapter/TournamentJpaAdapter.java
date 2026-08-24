@@ -3,6 +3,7 @@ package com.tournament.tournament_manager.infrastructure.output.persistence.adap
 import com.tournament.tournament_manager.domain.model.PageRequest;
 import com.tournament.tournament_manager.domain.model.PageResult;
 import com.tournament.tournament_manager.domain.model.Tournament;
+import com.tournament.tournament_manager.domain.port.out.maintenance.PurgeTournamentsPort;
 import com.tournament.tournament_manager.domain.port.out.tournament.*;
 import com.tournament.tournament_manager.exception.domain.TournamentNotFoundException;
 import com.tournament.tournament_manager.infrastructure.output.persistence.entity.TournamentEntity;
@@ -11,6 +12,8 @@ import com.tournament.tournament_manager.infrastructure.output.persistence.repos
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
+
 /**
  * Adapter JPA implémentant les ports de chargement et sauvegarde des tournois.
  * Voir {@code PlayerJpaAdapter} pour le principe du mapper et le traitement du
@@ -18,7 +21,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class TournamentJpaAdapter implements LoadTournamentPort, SaveTournamentPort,
-        ExistsTournamentPort, LoadAllTournamentsPort, SoftDeleteTournamentPort {
+        ExistsTournamentPort, LoadAllTournamentsPort, SoftDeleteTournamentPort, PurgeTournamentsPort {
 
     private final TournamentRepository tournamentRepository;
     private final TournamentMapper tournamentMapper;
@@ -64,5 +67,10 @@ public class TournamentJpaAdapter implements LoadTournamentPort, SaveTournamentP
     @Override
     public void softDeleteTournament(Tournament tournament) {
         saveTournament(tournament);
+    }
+
+    @Override
+    public int purgeDeletedBefore(Instant retentionLimit) {
+        return tournamentRepository.purgeDeletedBefore(retentionLimit);
     }
 }

@@ -4,6 +4,7 @@ import com.tournament.tournament_manager.domain.model.EloHistory;
 import com.tournament.tournament_manager.domain.model.PageRequest;
 import com.tournament.tournament_manager.domain.model.PageResult;
 import com.tournament.tournament_manager.domain.model.Player;
+import com.tournament.tournament_manager.domain.port.out.maintenance.PurgePlayersPort;
 import com.tournament.tournament_manager.domain.port.out.player.*;
 import com.tournament.tournament_manager.exception.domain.PlayerNotFoundException;
 import com.tournament.tournament_manager.infrastructure.output.persistence.entity.PlayerEntity;
@@ -15,6 +16,7 @@ import com.tournament.tournament_manager.infrastructure.output.persistence.repos
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.List;
 
 /**
@@ -27,7 +29,8 @@ import java.util.List;
  */
 @Component
 public class PlayerJpaAdapter implements LoadPlayerPort, SavePlayerPort,
-        ExistsPlayerPort, LoadAllPlayersPort, CountMatchesByPlayerPort, LoadEloHistoryPort, SoftDeletePlayerPort {
+        ExistsPlayerPort, LoadAllPlayersPort, CountMatchesByPlayerPort, LoadEloHistoryPort,
+        SoftDeletePlayerPort, PurgePlayersPort {
 
     private final PlayerRepository playerRepository;
     private final MatchRepository matchRepository;
@@ -108,5 +111,15 @@ public class PlayerJpaAdapter implements LoadPlayerPort, SavePlayerPort,
     @Override
     public void softDeletePlayer(Player player) {
         savePlayer(player);
+    }
+
+    @Override
+    public int anonymizeWithHistory(Instant retentionLimit) {
+        return playerRepository.anonymizeWithHistory(retentionLimit);
+    }
+
+    @Override
+    public int purgeWithoutHistory(Instant retentionLimit) {
+        return playerRepository.purgeDeletedWithoutHistory(retentionLimit);
     }
 }

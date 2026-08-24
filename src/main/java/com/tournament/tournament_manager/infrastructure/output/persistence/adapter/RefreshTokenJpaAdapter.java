@@ -4,18 +4,21 @@ import com.tournament.tournament_manager.domain.model.RefreshToken;
 import com.tournament.tournament_manager.domain.port.out.auth.DeleteRefreshTokenPort;
 import com.tournament.tournament_manager.domain.port.out.auth.LoadRefreshTokenPort;
 import com.tournament.tournament_manager.domain.port.out.auth.SaveRefreshTokenPort;
+import com.tournament.tournament_manager.domain.port.out.maintenance.PurgeRefreshTokensPort;
 import com.tournament.tournament_manager.infrastructure.output.persistence.entity.RefreshTokenEntity;
 import com.tournament.tournament_manager.infrastructure.output.persistence.mapper.RefreshTokenMapper;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.RefreshTokenRepository;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.Optional;
 
 /**
  * Adapter JPA implémentant les ports de gestion des refresh tokens.
  */
 @Component
-public class RefreshTokenJpaAdapter implements SaveRefreshTokenPort, LoadRefreshTokenPort, DeleteRefreshTokenPort {
+public class RefreshTokenJpaAdapter implements SaveRefreshTokenPort, LoadRefreshTokenPort,
+        DeleteRefreshTokenPort, PurgeRefreshTokensPort {
 
     private final RefreshTokenRepository refreshTokenRepository;
     private final RefreshTokenMapper refreshTokenMapper;
@@ -48,5 +51,10 @@ public class RefreshTokenJpaAdapter implements SaveRefreshTokenPort, LoadRefresh
     @Override
     public void deleteByUsername(String username) {
         refreshTokenRepository.deleteByUsername(username);
+    }
+
+    @Override
+    public int deleteExpiredBefore(Instant before) {
+        return refreshTokenRepository.deleteExpiredBefore(before);
     }
 }

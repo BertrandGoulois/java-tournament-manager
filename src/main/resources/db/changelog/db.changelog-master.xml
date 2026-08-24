@@ -21,4 +21,5 @@
     <include file="classpath:db/changelog/changes/014-add-player-anonymization.sql"/>
     <include file="classpath:db/changelog/changes/015-add-indexes-and-constraints.sql"/>
     <include file="classpath:db/changelog/changes/016-timestamptz-migration.sql"/>
+    <include file="classpath:db/changelog/changes/017-add-shedlock-table.sql"/>
 </databaseChangeLog>

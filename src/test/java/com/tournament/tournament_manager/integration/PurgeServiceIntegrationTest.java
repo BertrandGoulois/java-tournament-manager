@@ -7,7 +7,7 @@ import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.PlayerRepository;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.TournamentRepository;
-import com.tournament.tournament_manager.infrastructure.input.scheduler.PurgeService;
+import com.tournament.tournament_manager.domain.port.in.maintenance.PurgeUseCase;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -36,7 +36,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class PurgeServiceIntegrationTest {
 
     @Autowired
-    private PurgeService purgeService;
+    private PurgeUseCase purgeUseCase;
 
     @Autowired
     private PlayerRepository playerRepository;
@@ -71,7 +71,7 @@ class PurgeServiceIntegrationTest {
         active.setEmail("active@mail.com");
         playerRepository.save(active);
 
-        purgeService.purgeDeletedEntities();
+        purgeUseCase.purgeDeletedEntities(30);
 
         // JdbcTemplate bypasse le @SQLRestriction pour voir toutes les lignes
         Integer count = jdbcTemplate.queryForObject(
@@ -103,7 +103,7 @@ class PurgeServiceIntegrationTest {
         recentDeleted.setDeletedAt(Instant.now().minus(Duration.ofDays(1)));
         tournamentRepository.save(recentDeleted);
 
-        purgeService.purgeDeletedEntities();
+        purgeUseCase.purgeDeletedEntities(30);
 
         Integer count = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM tournaments WHERE deleted = true", Integer.class);
@@ -119,7 +119,7 @@ class PurgeServiceIntegrationTest {
         recentDeleted.setDeletedAt(Instant.now().minus(Duration.ofDays(5)));
         playerRepository.save(recentDeleted);
 
-        purgeService.purgeDeletedEntities();
+        purgeUseCase.purgeDeletedEntities(30);
 
         Integer count = jdbcTemplate.queryForObject(
                 "SELECT COUNT(*) FROM players WHERE deleted = true", Integer.class);
@@ -159,7 +159,7 @@ class PurgeServiceIntegrationTest {
         Long playerId = playerWithHistory.getId();
 
         // Ne doit lever aucune exception (c'était le bug : DataIntegrityViolationException).
-        purgeService.purgeDeletedEntities();
+        purgeUseCase.purgeDeletedEntities(30);
 
         // Le joueur n'a pas été supprimé physiquement : la ligne existe toujours.
         Integer stillExists = jdbcTemplate.queryForObject(
@@ -206,7 +206,7 @@ class PurgeServiceIntegrationTest {
         Timestamp beforeSecondRun = jdbcTemplate.queryForObject(
                 "SELECT anonymized_at FROM players WHERE id = ?", Timestamp.class, saved.getId());
 
-        purgeService.purgeDeletedEntities();
+        purgeUseCase.purgeDeletedEntities(30);
 
         Timestamp afterSecondRun = jdbcTemplate.queryForObject(
                 "SELECT anonymized_at FROM players WHERE id = ?", Timestamp.class, saved.getId());
