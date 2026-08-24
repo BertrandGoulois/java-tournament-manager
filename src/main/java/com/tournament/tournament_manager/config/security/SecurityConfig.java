@@ -8,6 +8,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -30,9 +31,20 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  * </ul>
  * Tous les autres endpoints nécessitent un token JWT valide.
  * Les sessions HTTP sont désactivées (stateless).
+ *
+ * <p>{@code POST /api/rpc} n'a <b>pas</b> de règle ADMIN en bloc ici, contrairement à
+ * l'ancienne version de ce fichier : Spring Security ne peut filtrer que par URL, jamais par
+ * le contenu du corps JSON, donc il ne peut pas savoir depuis ce niveau si la méthode
+ * JSON-RPC appelée (ex. {@code tournament.create}) exige ADMIN ou pas — la même URL sert les
+ * 17 méthodes exposées, avec des exigences différentes selon la méthode. {@code /api/rpc}
+ * retombe donc sur la règle par défaut (authentifié suffit), et chaque handler JSON-RPC dont
+ * l'équivalent REST exige ADMIN porte sa propre {@code @PreAuthorize("hasRole('ADMIN')")} —
+ * activée par {@code @EnableMethodSecurity} ci-dessous. Les deux canaux exposent enfin
+ * exactement les mêmes règles d'autorisation pour la même opération métier.
  */
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
@@ -73,7 +85,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/tournaments/*/start").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/matches/*/result").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/players/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.POST, "/api/rpc").hasRole("ADMIN")
+                        // Pas de règle ADMIN en bloc ici pour /api/rpc — voir la Javadoc de
+                        // cette classe : le contrôle se fait désormais par méthode JSON-RPC,
+                        // via @PreAuthorize sur chaque handler concerné.
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex

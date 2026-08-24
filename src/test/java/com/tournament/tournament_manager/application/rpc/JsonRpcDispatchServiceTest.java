@@ -86,9 +86,21 @@ class JsonRpcDispatchServiceTest {
             }
         };
 
+        JsonRpcMethodHandler accessDeniedHandler = new JsonRpcMethodHandler() {
+            @Override
+            public String methodName() {
+                return "test.forbidden";
+            }
+
+            @Override
+            public Object handle(Object params) {
+                throw new org.springframework.security.access.AccessDeniedException("Access is denied");
+            }
+        };
+
         dispatchService = new JsonRpcDispatchService(
                 List.of(handler, failingHandler, invalidParamsHandler, businessFailingHandler,
-                        optimisticLockingHandler));
+                        optimisticLockingHandler, accessDeniedHandler));
     }
 
     @Test
@@ -142,7 +154,7 @@ class JsonRpcDispatchServiceTest {
 
         assertNull(response.result());
         assertNotNull(response.error());
-        assertEquals(JsonRpcError.INTERNAL_ERROR, response.error().code());
+        assertEquals(JsonRpcError.BUSINESS_ERROR, response.error().code());
         // Les exceptions métier curées (NotFoundException, AlreadyExistsException,
         // InvalidException) restent exposées telles quelles : leur message est écrit
         // pour l'appelant, contrairement aux exceptions techniques.
@@ -180,10 +192,26 @@ class JsonRpcDispatchServiceTest {
 
         assertNull(response.result());
         assertNotNull(response.error());
+        assertEquals(JsonRpcError.CONFLICT, response.error().code());
         // Même politique que côté REST (point 20) : un conflit de verrouillage optimiste
         // n'est pas une exception technique à masquer, mais un cas métier attendu avec un
         // message exploitable pour l'appelant — pas "Une erreur inattendue s'est produite".
         assertNotEquals("Une erreur inattendue s'est produite", response.error().data());
         assertNotNull(response.error().data());
+    }
+
+    @Test
+    void dispatch_shouldReturnAccessDenied_whenPreAuthorizeRejectsHandler() throws Exception {
+        // Déclenché par @PreAuthorize sur les 5 handlers réservés ADMIN (voir point 25) :
+        // même politique que côté REST, un accès refusé est un cas attendu, pas une panne
+        // interne — c'est ce qui permet à JsonRpcController de retourner 403, pas 500.
+        JsonNode params = objectMapper.readTree("{}");
+        JsonRpcRequest request = new JsonRpcRequest("2.0", "test.forbidden", params, "7");
+
+        JsonRpcResponse response = dispatchService.dispatch(request);
+
+        assertNull(response.result());
+        assertNotNull(response.error());
+        assertEquals(JsonRpcError.ACCESS_DENIED, response.error().code());
     }
 }

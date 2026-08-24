@@ -6,6 +6,7 @@ import com.tournament.tournament_manager.domain.model.RecordMatchResultCommand;
 import com.tournament.tournament_manager.domain.port.in.match.RecordMatchResultUseCase;
 import com.tournament.tournament_manager.infrastructure.input.mapper.MatchRestMapper;
 import com.tournament.tournament_manager.infrastructure.input.rpc.AbstractJsonRpcHandler;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
 /**
@@ -32,6 +33,7 @@ public class MatchRecordResultHandler extends AbstractJsonRpcHandler {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')") // même règle que son équivalent REST (voir SecurityConfig)
     public Object handle(Object params) {
         Long matchId = getLong(params, "matchId");
         Long winnerId = getLong(params, "winnerId");

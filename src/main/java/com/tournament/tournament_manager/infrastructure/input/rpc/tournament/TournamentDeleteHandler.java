@@ -4,6 +4,7 @@ import tools.jackson.databind.ObjectMapper;
 import jakarta.validation.Validator;
 import com.tournament.tournament_manager.domain.port.in.tournament.DeleteTournamentUseCase;
 import com.tournament.tournament_manager.infrastructure.input.rpc.AbstractJsonRpcHandler;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
 /**
@@ -27,6 +28,7 @@ public class TournamentDeleteHandler extends AbstractJsonRpcHandler {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')") // même règle que son équivalent REST (voir SecurityConfig)
     public Object handle(Object params) {
         deleteTournamentUseCase.deleteTournament(getLong(params, "id"));
         return null;

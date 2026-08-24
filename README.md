@@ -165,6 +165,14 @@ En parallèle de l'API REST, un endpoint unique `POST /api/rpc` expose les même
 
 Méthodes disponibles : `tournament.create`, `tournament.start`, `tournament.getById`, `tournament.getAll`, `tournament.delete`, `tournament.getBracket`, `tournament.getStandings`, `player.create`, `player.getById`, `player.getAll`, `player.getStats`, `player.delete`, `registration.register`, `registration.getByTournament`, `match.getById`, `match.recordResult`, `match.getCommentary`.
 
+**Sécurité par méthode, pas en bloc.** `/api/rpc` n'exige pas ADMIN pour tout - Spring Security ne peut filtrer que par URL, jamais par le contenu du corps JSON, donc il ne peut pas savoir depuis ce niveau si la méthode appelée exige ADMIN ou pas. Chaque méthode dont l'équivalent REST exige ADMIN (`tournament.create`, `tournament.delete`, `tournament.start`, `match.recordResult`, `player.delete`) porte sa propre `@PreAuthorize("hasRole('ADMIN')")` sur son handler. Les deux canaux exposent enfin exactement les mêmes règles d'autorisation pour la même opération métier - un joueur normal peut consulter via JSON-RPC comme en REST, plus besoin d'ADMIN pour de la simple lecture.
+
+**Statuts HTTP différenciés**, plus de `200` systématique : `500` sur une vraie erreur interne, `403` accès refusé, `409` conflit, `400` erreur métier/paramètres/requête invalide. `200` reste réservé aux succès et à `METHOD_NOT_FOUND` (réponse protocolaire bien formée, pas une panne de transport). Codes d'erreur : `-32600` requête invalide, `-32601` méthode inconnue, `-32602` paramètres invalides, `-32603` erreur interne, `-32000` erreur métier, `-32001` accès refusé, `-32002` conflit.
+
+**Notifications.** Une requête sans `id` est exécutée mais ne reçoit aucune réponse (`204`), y compris en cas d'erreur - conforme à la spec JSON-RPC 2.0.
+
+**Batch.** Le corps peut être un objet unique ou un tableau de requêtes ; chaque élément est traité indépendamment, les notifications sont omises de la réponse (un batch composé uniquement de notifications répond `204`), un tableau vide est rejeté en `400`.
+
 ### Architecture événementielle (Kafka)
 
 Les side effects métier sont découplés du service principal via Kafka. Lorsqu'un résultat de match est enregistré, un événement `MatchFinishedEvent` est publié sur le topic `match-finished`. Quatre consumers indépendants traitent cet événement de façon asynchrone :
@@ -526,6 +534,9 @@ docker-compose up -d
   "id": "1"
 }
 ```
+
+> Statut HTTP différencié selon la nature de l'erreur (voir "API JSON-RPC 2.0" plus haut) : `500` erreur interne, `403` accès refusé, `409` conflit, `400` erreur métier/paramètres/requête invalide. `200` reste réservé aux succès et à `METHOD_NOT_FOUND` (`-32601`). Le corps peut aussi être un tableau de requêtes (batch) ; une requête sans `id` (notification) ne reçoit aucune réponse (`204`).
+
 
 > Statut HTTP toujours `200` même en cas d'erreur applicative (spec JSON-RPC 2.0). Codes : `-32601` méthode inconnue, `-32602` paramètres invalides, `-32603` erreur interne.
 

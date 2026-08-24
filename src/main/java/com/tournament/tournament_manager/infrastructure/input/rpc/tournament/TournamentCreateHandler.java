@@ -6,6 +6,7 @@ import com.tournament.tournament_manager.dto.request.tournament.CreateTournament
 import com.tournament.tournament_manager.infrastructure.input.mapper.TournamentRestMapper;
 import com.tournament.tournament_manager.infrastructure.input.rpc.AbstractJsonRpcHandler;
 import jakarta.validation.Validator;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 
 /**
@@ -34,6 +35,7 @@ public class TournamentCreateHandler extends AbstractJsonRpcHandler {
     }
 
     @Override
+    @PreAuthorize("hasRole('ADMIN')") // même règle que son équivalent REST (voir SecurityConfig)
     public Object handle(Object params) {
         CreateTournamentRequest request = convertParams(params, CreateTournamentRequest.class);
         var tournament = createTournamentUseCase.createTournament(tournamentRestMapper.toCommand(request));
