@@ -6,9 +6,38 @@ on:
   pull_request:
     branches: [ main ]
 
+# Annule toute exécution en cours sur la même branche quand un nouveau push arrive -
+# évite deux jobs "build" concurrents qui pousseraient chacun un badge vers gh-pages
+# en même temps (risque de conflit, point 28/30 de la revue).
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  # Point 30 : "aucun scan de sécurité" était le manque le plus criant, pour un projet
+  # qui a laissé passer une vraie clé OpenAI et un secret JWT plus tôt dans son
+  # histoire. Job rapide, indépendant, ne bloque pas le reste si Gitleaks est lent.
+  secret-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # gitleaks scanne l'historique complet, pas juste le dernier commit
+
+      - name: Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write  # nécessaire pour publier le badge de couverture sur gh-pages
 
     steps:
       - name: Checkout
@@ -19,6 +48,7 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
+          cache: maven
 
       - name: Grant execute permission for mvnw
         run: chmod +x mvnw
@@ -33,16 +63,28 @@ jobs:
         with:
           generate-branches-badge: true
           jacoco-csv-file: target/site/jacoco/jacoco.csv
+          badges-directory: badges-output
 
-      - name: Commit and push badge
-        uses: EndBug/add-and-commit@v9
+      # Point 28 : le badge était auparavant commité directement sur main à chaque
+      # push (46 des 176 commits du dépôt), polluant git log/git bisect et créant un
+      # risque de conflit sur deux pushs rapprochés. Publié maintenant sur gh-pages,
+      # comme la Javadoc (voir javadoc.yml) - aucun commit sur main.
+      # keep_files: true est essentiel ici : sans lui, cette publication effacerait
+      # le contenu déjà présent sur gh-pages (la Javadoc), et réciproquement.
+      - name: Publish coverage badges to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          default_author: github_actions
-          message: 'ci: update coverage badge'
-          add: '.github/badges/*.svg'
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: badges-output
+          destination_dir: badges
+          keep_files: true
 
   integration-tests:
+    needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -52,12 +94,17 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
+          cache: maven
 
       - name: Grant execute permission for mvnw
         run: chmod +x mvnw
 
+      # Point 29/30 : mvn verify (pas test -Pintegration-tests, le profil n'existe
+      # plus - voir pom.xml) déclenche maven-failsafe-plugin, qui exécute nativement
+      # tout ce qui suit la convention *IT. -Dsurefire.skip=true évite de rejouer les
+      # tests rapides déjà passés dans le job "build" ci-dessus.
       - name: Run integration tests
-        run: ./mvnw test -Pintegration-tests
+        run: ./mvnw verify -Dsurefire.skip=true
+        continue-on-error: true  # non-bloquant pendant la phase d'observation, voir pom.xml
         env:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
-

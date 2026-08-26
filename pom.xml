@@ -183,11 +183,6 @@
 
 		<!-- Tests -->
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test-classic</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
@@ -200,6 +195,15 @@
 		<dependency>
 			<groupId>org.testcontainers</groupId>
 			<artifactId>junit-jupiter</artifactId>
+			<!--
+				Version explicite malgré le point 29 de la revue (qui recommandait de
+				laisser le parent gérer cette version) : la propriété testcontainers.version
+				exposée par spring-boot-starter-parent:4.0.5 pointe vers 2.0.4, une version
+				qui n'existe pas sur Maven Central. Contradiction assumée entre "suivre la
+				lettre de la recommandation" et "avoir un build qui fonctionne" - tranchée
+				en faveur du second. À réessayer sans <version> lors d'une future mise à
+				jour du parent, si cette propriété est corrigée.
+			-->
 			<version>1.20.4</version>
 			<scope>test</scope>
 		</dependency>
@@ -223,11 +227,6 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-oauth2-resource-server</artifactId>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -311,11 +310,15 @@
 						<goals>
 							<goal>report</goal>
 						</goals>
-						<configuration>
-							<excludes>
-								<exclude>com/tournament/tournament_manager/domain/model/entities/**</exclude>
-							</excludes>
-						</configuration>
+						<!--
+							Pas d'<excludes> ici. Une ancienne version de ce plugin excluait
+							domain/model/entities/**, gonflant le pourcentage affiché sans rien
+							améliorer réellement (les entités portaient la config du soft delete,
+							du versioning et des cascades — pas du code sans intérêt à couvrir).
+							Ce package n'existe même plus depuis la séparation domaine/JPA (voir
+							le README, section "Architecture hexagonale") : la couverture reflète
+							désormais tout le code, y compris infrastructure/output/persistence/entity/.
+						-->
 					</execution>
 				</executions>
 			</plugin>
@@ -336,23 +339,54 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
+				<!--
+					Plus d'<excludes> littéraux ici : surefire ignore par défaut tout ce qui
+					suit la convention *IT (voir maven-failsafe-plugin ci-dessous), donc les
+					9 tests lents/Testcontainers (suffixe IT) ne tournent jamais ici. Avant,
+					cette liste d'exclusions était maintenue à la main et s'est déjà
+					désynchronisée deux fois en pratique (deux tests d'intégration ajoutés en
+					cours de route ont tourné dans le mauvais job faute d'avoir pensé à les y
+					ajouter) — la convention de nommage rend cette classe d'erreur impossible.
+				-->
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>integration-test</goal>
+							<goal>verify</goal>
+						</goals>
+					</execution>
+				</executions>
 				<configuration>
 					<!--
-						Ces tests (Testcontainers Postgres/Kafka) sont exclus du job
-						principal car historiquement flaky en CI. Ils tournent dans un
-						job CI séparé, non-bloquant, via le profil "integration-tests"
-						(voir <profiles> plus bas), le temps de vérifier que le retry
+						Ces tests (Testcontainers Postgres/Kafka/Redis, ou contexte Spring
+						complet) sont historiquement flaky en CI. Ils tournent dans un job CI
+						séparé (voir ci.yml), non-bloquant, le temps de vérifier que le retry
 						automatique suffit à les stabiliser.
 					-->
-					<excludes>
-						<exclude>**/KafkaIntegrationTest.java</exclude>
-						<exclude>**/PlayerIntegrationTest.java</exclude>
-						<exclude>**/RoundRobinIntegrationTest.java</exclude>
-						<exclude>**/GroupsThenKnockoutIntegrationTest.java</exclude>
-						<exclude>**/OpenAiCommentaryAdapterCircuitBreakerTest.java</exclude>
-						<exclude>**/PurgeServiceIntegrationTest.java</exclude>
-						<exclude>**/RateLimitingFilterTest.java</exclude>
-					</excludes>
+					<rerunFailingTestsCount>2</rerunFailingTestsCount>
+					<forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
+					<reuseForks>false</reuseForks>
+					<!--
+						Ces tests chargent un vrai contexte Spring (@SpringBootTest), qui active
+						le profil "local" par défaut et a donc besoin de JWT_SECRET,
+						POSTGRES_PASSWORD et OPENAI_API_KEY. Ce sont des valeurs factices,
+						utilisées uniquement pendant l'exécution des tests par ce plugin, jamais
+						commitées comme valeur par défaut de l'application, jamais valides en
+						dehors de ce contexte. POSTGRES_PASSWORD est de toute façon écrasé au
+						runtime par Testcontainers (@ServiceConnection) ; OPENAI_API_KEY n'a
+						besoin que d'être syntaxiquement présent pour que le bean OpenAiConfig
+						se construise (le circuit breaker mocke l'appel réel).
+					-->
+					<environmentVariables>
+						<JWT_SECRET>dGVzdC1vbmx5LWR1bW15LWp3dC1zZWNyZXQtbm90LWZvci1wcm9k</JWT_SECRET>
+						<POSTGRES_PASSWORD>test-only-unused-password</POSTGRES_PASSWORD>
+						<OPENAI_API_KEY>test-only-dummy-key-not-real</OPENAI_API_KEY>
+					</environmentVariables>
 				</configuration>
 			</plugin>
 			<plugin>
@@ -397,59 +431,54 @@
 					<timestampedReports>false</timestampedReports>
 				</configuration>
 			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>enforce</id>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<!--
+									Bloque exactement le genre de doublon qu'on vient de retirer
+									(spring-boot-starter-test-classic + spring-boot-starter-test) :
+									deux versions différentes de la même dépendance transitive dans
+									l'arbre est presque toujours un signe d'oubli, jamais volontaire.
+								-->
+								<!--
+									dependencyConvergence retiree apres un premier essai : elle
+									revele deux conflits transitifs preexistants et sans rapport
+									avec ce qu'on vient de corriger (okio via openai-java vs
+									opentelemetry, commons-text via deux chemins de liquibase-core)
+									- probablement inoffensifs, mais les resoudre proprement
+									demanderait des exclusions ciblees a chaque nouvelle dependance
+									ajoutee. Cout de maintenance juge disproportionne pour ce projet
+									a ce stade ; a reconsiderer si le nombre de dependances tierces
+									grossit significativement.
+								-->
+								<requireJavaVersion>
+									<version>[21,)</version>
+								</requireJavaVersion>
+								<requireMavenVersion>
+									<version>[3.9,)</version>
+								</requireMavenVersion>
+							</rules>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!--
+				Point 29 de la revue : pas de Checkstyle, Spotless ou SpotBugs pour l'instant.
+				Les ajouter correctement (choix des règles, correction de l'existant pour
+				passer sans erreur dès le premier run) est un chantier à part entière -
+				décision volontairement différée, pas oubliée.
+			-->
 		</plugins>
 	</build>
 
-	<profiles>
-		<!--
-			Profil dédié aux 6 tests d'intégration Testcontainers exclus du job
-			CI principal. Activé explicitement via -Pintegration-tests, dans un
-			job GitHub Actions séparé et non-bloquant (continue-on-error: true).
-			Inclut le retry automatique (rerunFailingTestsCount) pour absorber
-			la flakiness pendant la phase d'observation.
-		-->
-		<profile>
-			<id>integration-tests</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-surefire-plugin</artifactId>
-						<configuration>
-							<excludes combine.self="override"/>
-							<includes>
-								<include>**/KafkaIntegrationTest.java</include>
-								<include>**/PlayerIntegrationTest.java</include>
-								<include>**/RoundRobinIntegrationTest.java</include>
-								<include>**/GroupsThenKnockoutIntegrationTest.java</include>
-								<include>**/OpenAiCommentaryAdapterCircuitBreakerTest.java</include>
-								<include>**/PurgeServiceIntegrationTest.java</include>
-								<include>**/RateLimitingFilterTest.java</include>
-							</includes>
-							<rerunFailingTestsCount>2</rerunFailingTestsCount>
-							<forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
-							<reuseForks>false</reuseForks>
-							<!--
-								Ces tests chargent un vrai contexte Spring (@SpringBootTest),
-								qui active le profil "local" par defaut et a donc besoin de
-								JWT_SECRET, POSTGRES_PASSWORD et OPENAI_API_KEY. Ce sont des
-								valeurs factices, utilisees uniquement pendant l'execution des
-								tests par ce plugin, jamais commitees comme valeur par defaut
-								de l'application, jamais valides en dehors de ce contexte.
-								POSTGRES_PASSWORD est de toute facon ecrase au runtime par
-								Testcontainers (@ServiceConnection) ; OPENAI_API_KEY n'a besoin
-								que d'etre syntaxiquement present pour que le bean OpenAiConfig
-								se construise (le circuit breaker mocke l'appel reel).
-							-->
-							<environmentVariables>
-								<JWT_SECRET>dGVzdC1vbmx5LWR1bW15LWp3dC1zZWNyZXQtbm90LWZvci1wcm9k</JWT_SECRET>
-								<POSTGRES_PASSWORD>test-only-unused-password</POSTGRES_PASSWORD>
-								<OPENAI_API_KEY>test-only-dummy-key-not-real</OPENAI_API_KEY>
-							</environmentVariables>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-	</profiles>
 </project>

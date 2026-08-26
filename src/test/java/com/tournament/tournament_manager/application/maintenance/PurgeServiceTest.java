@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
 /**
  * Contrairement à sa version précédente (voir le git log), ce service ne dépend plus que
  * de ports — il devient donc, pour la première fois, testable en isolation sans base de
- * données réelle. {@code PurgeServiceIntegrationTest} reste le test de référence pour le
+ * données réelle. {@code PurgeServiceIT} reste le test de référence pour le
  * comportement métier fin (anonymisation, contraintes FK réelles) ; celui-ci vérifie
  * seulement l'orchestration.
  */

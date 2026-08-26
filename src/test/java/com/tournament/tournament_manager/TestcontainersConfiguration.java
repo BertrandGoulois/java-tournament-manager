@@ -48,7 +48,7 @@ public class TestcontainersConfiguration {
 	 * meme raison que Redis ci-dessus : ServiceConnection ne suffit pas.
 	 * Necessaire des qu'un test declenche RecordMatchResultService, qui
 	 * publie systematiquement un MatchFinishedEvent en conditions normales
-	 * (pas seulement dans KafkaIntegrationTest). Container partage par tous
+	 * (pas seulement dans KafkaIT). Container partage par tous
 	 * les tests d'integration importent cette configuration.
 	 */
 	@Bean

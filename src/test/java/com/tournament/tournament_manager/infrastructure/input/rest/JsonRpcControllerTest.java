@@ -38,7 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * d'erreur vers des statuts HTTP) — pas la logique métier de dispatch elle-même
  * ({@code JsonRpcDispatchServiceTest}), ni l'application réelle de {@code @PreAuthorize} sur
  * les handlers ADMIN (nécessite un contexte Spring complet, voir
- * {@code JsonRpcSecurityIntegrationTest}).
+ * {@code JsonRpcSecurityIT}).
  */
 @WebMvcTest(JsonRpcController.class)
 @Import(SecurityConfig.class)

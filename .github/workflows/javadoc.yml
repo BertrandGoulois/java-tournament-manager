@@ -18,6 +18,7 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
+          cache: maven
 
       - name: Generate Javadoc
         run: |
@@ -29,3 +30,7 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: target/site/apidocs
+          # Essentiel depuis que ci.yml publie aussi sur gh-pages (badges/, voir point
+          # 28 de la revue) : sans keep_files, cette publication effacerait le
+          # contenu déjà présent sur gh-pages, et réciproquement.
+          keep_files: true
