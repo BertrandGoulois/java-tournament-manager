@@ -204,7 +204,7 @@
 				en faveur du second. À réessayer sans <version> lors d'une future mise à
 				jour du parent, si cette propriété est corrigée.
 			-->
-			<version>1.20.4</version>
+			<version>1.21.4</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
