@@ -2,8 +2,8 @@
 
 ![CI](https://github.com/BertrandGoulois/java-tournament-manager/actions/workflows/ci.yml/badge.svg)
 [![Javadoc](https://img.shields.io/badge/javadoc-online-blue)](https://bertrandgoulois.github.io/java-tournament-manager/)
-![Coverage](https://bertrandgoulois.github.io/java-tournament-manager/badges/jacoco.svg)
-![Branches](https://bertrandgoulois.github.io/java-tournament-manager/badges/branches.svg)
+![Coverage](.github/badges/jacoco.svg)
+![Branches](.github/badges/branches.svg)
 
 API REST de gestion de tournois sportifs (élimination directe, round-robin, ou phase de groupes + bracket), développée en Java 21 / Spring Boot.
 
@@ -268,10 +268,10 @@ docker-compose up -d
 **Tests d'intégration (nécessitent Docker en cours d'exécution) :**
 
 ```bash
-./mvnw verify
+./mvnw test -Pintegration-tests
 ```
 
-> `maven-failsafe-plugin` fait tourner nativement tout ce qui suit la convention de nommage `*IT` - `KafkaIT`, `PlayerIT`, `PlayerStatsIT`, `RoundRobinIT`, `GroupsThenKnockoutIT`, `PurgeServiceIT`, `JsonRpcSecurityIT`, `OpenAiCommentaryAdapterCircuitBreakerIT` et `RateLimitingFilterIT` (9 classes) - chacun dans sa propre JVM (`reuseForks=false`) avec retry automatique en cas d'échec transitoire. Aucune liste d'exclusion à maintenir à la main : `./mvnw test` seul ignore déjà tout ce qui finit en `IT` (comportement par défaut de surefire), donc un nouveau test `*IT` est automatiquement pris en charge sans toucher au `pom.xml`. Tournent en CI dans un job séparé (`integration-tests`), non-bloquant, qui dépend du job principal (`needs: build`) et réutilise `mvn verify -Dsurefire.skip=true` pour ne pas rejouer les tests rapides déjà passés.
+> Fait tourner `KafkaIntegrationTest`, `PlayerIntegrationTest`, `RoundRobinIntegrationTest`, `GroupsThenKnockoutIntegrationTest`, `PurgeServiceIntegrationTest`, `OpenAiCommentaryAdapterCircuitBreakerTest` et `RateLimitingFilterTest`, chacun dans sa propre JVM (`reuseForks=false`) avec retry automatique en cas d'échec transitoire. Tournent en CI dans un job séparé (`integration-tests`), non-bloquant, indépendant du job principal qui génère le badge de couverture.
 
 **Tests de charge (Gatling) :**
 

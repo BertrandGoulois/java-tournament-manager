@@ -1,0 +1,25 @@
+# Le Dockerfile ne COPY explicitement que .mvn/, mvnw, pom.xml et src/ - tout le
+# reste ci-dessous n'a jamais été copié dans l'image, ce fichier ne fait que réduire
+# le contexte de build envoyé au démon Docker (builds plus rapides, surtout sur un
+# poste où target/ peut peser plusieurs centaines de Mo).
+
+target/
+.git/
+.github/
+.idea/
+.vscode/
+*.iml
+
+docker/
+docker-compose*.yml
+Dockerfile
+.dockerignore
+
+docs/
+*.md
+
+*.log
+kafka-debug-log.txt
+
+.env
+.env.*
