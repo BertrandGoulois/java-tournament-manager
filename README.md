@@ -196,6 +196,14 @@ Les événements publiés sont purgés périodiquement par `PurgeScheduler` (voi
 
 **Test WebSocket** : page de démonstration disponible sur `http://localhost/ws-test.html` (nécessite un token JWT, récupérable via `POST /api/auth/login`, saisi dans le champ dédié avant de se connecter).
 
+### Configuration Spring
+
+- **`spring.jpa.open-in-view=false`** (désactivé, alors que Spring Boot l'active par défaut) : une relation JPA lazy chargée en dehors d'une transaction explicite lève désormais une `LazyInitializationException` immédiate et explicite, plutôt qu'un chargement silencieux en fin de requête HTTP - ce dernier masque de vrais problèmes de performance (N+1 caché) et garde la connexion DB ouverte plus longtemps que nécessaire.
+- **Pool HikariCP dimensionné explicitement** (`spring.datasource.hikari.*`) - avant, les valeurs par défaut de Spring Boot (`maximum-pool-size=10`) étaient invisibles et non documentées.
+- **CORS configuré** (`SecurityConfig.corsConfigurationSource`), liste blanche vide par défaut (`app.cors.allowed-origins`, à surcharger selon les besoins) - sûr par défaut plutôt que permissif par défaut.
+- **Tracing échantillonné différemment par profil** : 100% en local (`application-local.properties`, pratique pour voir chaque requête pendant le développement), 10% en profil `docker` (`management.tracing.sampling.probability=0.1`) - tracer 100% du trafic devient coûteux avec un vrai volume (stockage Jaeger, overhead réseau OTLP).
+- **`spring.jpa.show-sql` et le logging Spring Security en `DEBUG`** ne vivent plus que dans `application-local.properties`, pas dans le fichier de configuration partagé par tous les profils - ils tournaient auparavant sans discrimination même en profil `docker`. `logging.level.org.hibernate.SQL=DEBUG` remplace `show-sql=true` : passe par le vrai framework de logging (filtrable, redirigeable) au lieu d'écrire directement sur stdout.
+
 ### Purge périodique
 
 Un job `@Scheduled` (`PurgeScheduler`, `infrastructure/input/scheduler/`) tourne tous les jours à 2h du matin et purge trois choses :

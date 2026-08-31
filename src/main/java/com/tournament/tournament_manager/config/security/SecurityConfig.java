@@ -1,12 +1,14 @@
 package com.tournament.tournament_manager.config.security;
 
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -17,6 +19,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Configuration Spring Security de l'application.
@@ -51,6 +59,9 @@ public class SecurityConfig {
     private final UserDetailsServiceImpl userDetailsService;
     private final RateLimitingFilter rateLimitingFilter;
 
+    @Value("${app.cors.allowed-origins:}")
+    private String allowedOriginsRaw;
+
     public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter,
                           UserDetailsServiceImpl userDetailsService,
                           RateLimitingFilter rateLimitingFilter) {
@@ -63,6 +74,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)
+                .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/auth/**",
@@ -118,5 +130,39 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    /**
+     * Configuration CORS - absente auparavant (point 33 de la revue), ce qui bloquait
+     * silencieusement toute requête cross-origin depuis un navigateur (aucun frontend de
+     * ce type n'existe encore dans ce projet, mais l'absence totale de configuration
+     * aurait surpris quiconque essayant d'en brancher un).
+     *
+     * <p>Liste blanche vide par défaut ({@code app.cors.allowed-origins}, non définie) :
+     * aucune origine autorisée tant qu'elle n'est pas explicitement configurée - sûr par
+     * défaut plutôt que permissif par défaut. {@code allowCredentials(true)} est
+     * nécessaire puisque l'API utilise un header {@code Authorization: Bearer}, mais
+     * {@code allowedOrigins("*")} est alors interdit par la spec CORS elle-même
+     * (incompatible avec les credentials) - d'où une liste explicite plutôt qu'un
+     * joker, même si elle finissait par contenir une seule valeur.
+     */
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        List<String> allowedOrigins = allowedOriginsRaw == null || allowedOriginsRaw.isBlank()
+                ? List.of()
+                : Arrays.stream(allowedOriginsRaw.split(","))
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .toList();
+
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(allowedOrigins);
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }
