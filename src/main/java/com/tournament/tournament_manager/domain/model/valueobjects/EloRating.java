@@ -42,6 +42,24 @@ public record EloRating(int value) {
     }
 
     /**
+     * Indique si appliquer {@code delta} à cette valeur produirait un résultat plafonné
+     * à {@link #MIN} (c'est-à-dire que le calcul brut aurait donné une valeur négative).
+     *
+     * <p>{@link #add} plafonne silencieusement — ce plafonnement est une perte
+     * d'information (le classement "réel" aurait continué à baisser), invisible pour
+     * quiconque ne vérifie pas explicitement. Cette méthode existe pour que l'appelant
+     * (qui a accès au logging, contrairement à ce value object qui reste volontairement
+     * pur - voir la Javadoc de la classe) puisse le détecter et le journaliser -
+     * voir {@code EloService.updateElo}.
+     *
+     * @param delta la variation qui serait appliquée
+     * @return {@code true} si le résultat brut (non plafonné) aurait été négatif
+     */
+    public boolean wouldClamp(int delta) {
+        return value + delta < MIN;
+    }
+
+    /**
      * Retourne un {@code EloRating} initialisé à la valeur par défaut ({@link #DEFAULT}).
      *
      * @return un {@code EloRating} à {@code 1000}

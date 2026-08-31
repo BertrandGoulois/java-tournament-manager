@@ -212,6 +212,16 @@ Toutes les erreurs REST sont renvoyées au format **`ProblemDetail`** (RFC 7807 
 - **`AccessDeniedException` a désormais un handler** (`403`) - absent auparavant, un accès refusé (ex. joueur non-admin sur un endpoint réservé) tombait dans le handler générique et ressortait en `500`.
 - **Un seul format pour tout REST**, y compris les échecs qui interviennent avant d'atteindre un contrôleur (`SecurityConfig.authenticationEntryPoint`/`accessDeniedHandler`, pour les `401`/`403` déclenchés au niveau du filtre de sécurité) - avant, ces cas produisaient le format d'erreur par défaut de Spring Boot, différent de celui utilisé partout ailleurs. Le format **JSON-RPC** (`/api/rpc`) reste volontairement distinct : protocole différent, avec sa propre spec (voir "API JSON-RPC 2.0" plus haut).
 
+### Classement ELO
+
+- **Facteur K configurable** (`elo.k-factor`, défaut `32`) - auparavant une valeur en dur dans `EloService`, sans aucun moyen de l'ajuster sans recompiler.
+- **Plafonnement à 0 visible** : `EloRating.wouldClamp(delta)` permet à `EloService` de journaliser un `WARN` quand un classement aurait dû devenir négatif - ce plafonnement était auparavant totalement silencieux, une perte d'information invisible pour quiconque ne vérifiait pas explicitement.
+- **N+1 corrigé sur les statistiques joueur** (`GetPlayerStatsService`) : `EloHistoryRepository` charge désormais l'historique ELO avec un `JOIN FETCH` explicite en une seule requête, plutôt qu'une requête séparée par relation et par ligne d'historique (les associations `@ManyToOne` de `EloHistoryEntity` sont EAGER par défaut JPA, sans `fetch` précisé).
+
+### Sécurité HTTP (nginx)
+
+`docker/nginx/nginx.conf` ajoute `Referrer-Policy` - le seul header de sécurité vraiment absent : Spring Security pose déjà par défaut `X-Content-Type-Options`, `X-Frame-Options` et `X-XSS-Protection` (voir `HeaderWriterFilter`), les dupliquer côté nginx aurait produit des headers en double, et même une contradiction sur `X-XSS-Protection` (Spring Security le désactive à raison - header obsolète, l'activer peut introduire une faille sur les vieux navigateurs). Un bloc HTTPS complet est documenté dans le fichier, désactivé par défaut (nécessite un certificat qui n'existe pas dans le dépôt) - instructions pour un certificat auto-signé en local, note sur Let's Encrypt/TLS terminé en amont pour une vraie production.
+
 ### Purge périodique
 
 Un job `@Scheduled` (`PurgeScheduler`, `infrastructure/input/scheduler/`) tourne tous les jours à 2h du matin et purge trois choses :

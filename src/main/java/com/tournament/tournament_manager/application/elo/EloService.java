@@ -3,10 +3,12 @@ package com.tournament.tournament_manager.application.elo;
 import com.tournament.tournament_manager.domain.model.EloHistory;
 import com.tournament.tournament_manager.domain.model.Match;
 import com.tournament.tournament_manager.domain.model.Player;
+import com.tournament.tournament_manager.domain.model.valueobjects.EloRating;
 import com.tournament.tournament_manager.domain.port.in.elo.UpdateEloUseCase;
 import com.tournament.tournament_manager.domain.port.out.elo.SaveAllPlayersPort;
 import com.tournament.tournament_manager.domain.port.out.elo.SaveEloHistoryPort;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -40,6 +42,16 @@ public class EloService implements UpdateEloUseCase {
 
     private final SaveAllPlayersPort saveAllPlayersPort;
     private final SaveEloHistoryPort saveEloHistoryPort;
+
+    /**
+     * Facteur K de la formule ELO — auparavant en dur (int K = 32) dans
+     * {@link #updateElo}, désormais configurable via {@code elo.k-factor}
+     * (point 35 de la revue). Un K plus élevé fait bouger les classements plus vite
+     * (utile en phase de rodage d'un nouveau système de classement, ou pour des
+     * tournois à fort enjeu), un K plus bas les stabilise.
+     */
+    @Value("${elo.k-factor:32}")
+    private int kFactor;
 
     public EloService(SaveAllPlayersPort saveAllPlayersPort,
                       SaveEloHistoryPort saveEloHistoryPort) {
@@ -81,18 +93,34 @@ public class EloService implements UpdateEloUseCase {
         double expectedWinner = 1.0 / (1 + Math.pow(10, (eloLoser - eloWinner) / 400.0));
         double expectedLoser = 1.0 - expectedWinner;
 
-        int K = 32;
-        int newEloWinner = (int) Math.round(eloWinner + K * (1 - expectedWinner));
-        int newEloLoser = (int) Math.round(eloLoser + K * (0 - expectedLoser));
+        int newEloWinner = (int) Math.round(eloWinner + kFactor * (1 - expectedWinner));
+        int newEloLoser = (int) Math.round(eloLoser + kFactor * (0 - expectedLoser));
 
-        winner.setEloRating(winner.getEloRating().add(newEloWinner - eloWinner));
-        loser.setEloRating(loser.getEloRating().add(newEloLoser - eloLoser));
+        int winnerDelta = newEloWinner - eloWinner;
+        int loserDelta = newEloLoser - eloLoser;
+
+        // Point 35 : le plafonnement à 0 était auparavant totalement silencieux - ce
+        // n'arrivera en pratique presque jamais pour le vainqueur (qui gagne toujours des
+        // points), mais un perdant déjà proche de 0 peut légitimement s'y heurter. Sans ce
+        // log, cette perte d'information (le classement "réel" aurait continué à baisser)
+        // n'était visible nulle part.
+        if (winner.getEloRating().wouldClamp(winnerDelta)) {
+            log.warn("ELO du vainqueur plafonné à {} (aurait été négatif) [playerId={}, delta={}]",
+                    EloRating.MIN, winner.getId(), winnerDelta);
+        }
+        if (loser.getEloRating().wouldClamp(loserDelta)) {
+            log.warn("ELO du perdant plafonné à {} (aurait été négatif) [playerId={}, delta={}]",
+                    EloRating.MIN, loser.getId(), loserDelta);
+        }
+
+        winner.setEloRating(winner.getEloRating().add(winnerDelta));
+        loser.setEloRating(loser.getEloRating().add(loserDelta));
 
         try {
             saveAllPlayersPort.saveAllPlayers(List.of(winner, loser));
 
-            saveEloHistory(winner, match, newEloWinner - eloWinner, newEloWinner);
-            saveEloHistory(loser, match, newEloLoser - eloLoser, newEloLoser);
+            saveEloHistory(winner, match, winnerDelta, newEloWinner);
+            saveEloHistory(loser, match, loserDelta, newEloLoser);
         } catch (DataIntegrityViolationException e) {
             log.warn("Historique ELO déjà inséré pour ce match par une exécution concurrente, "
                     + "ignoré [matchId={}]", match.getId());

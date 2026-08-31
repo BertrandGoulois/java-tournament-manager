@@ -6,12 +6,14 @@ import com.tournament.tournament_manager.domain.model.Player;
 import com.tournament.tournament_manager.domain.model.valueobjects.EloRating;
 import com.tournament.tournament_manager.domain.port.out.elo.SaveAllPlayersPort;
 import com.tournament.tournament_manager.domain.port.out.elo.SaveEloHistoryPort;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 
@@ -29,6 +31,14 @@ class EloServiceTest {
 
     @InjectMocks
     private EloService eloService;
+
+    @BeforeEach
+    void setUp() {
+        // @Value n'est jamais resolu par @InjectMocks (pas de contexte Spring ici) - sans
+        // ceci, kFactor vaudrait 0 (valeur par defaut du type primitif), et tous les
+        // calculs ELO attendus dans ce fichier (bases sur K=32) seraient faux.
+        ReflectionTestUtils.setField(eloService, "kFactor", 32);
+    }
 
     /**
      * Deux joueurs ELO 1000 : expected = 0.5
