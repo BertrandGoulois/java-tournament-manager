@@ -4,7 +4,7 @@ import com.tournament.tournament_manager.domain.port.in.registration.GetRegistra
 import com.tournament.tournament_manager.domain.port.in.registration.RegisterPlayerUseCase;
 import com.tournament.tournament_manager.dto.request.registration.CreateRegistrationRequest;
 import com.tournament.tournament_manager.dto.response.registration.RegistrationResponse;
-import com.tournament.tournament_manager.exception.handler.ErrorResponse;
+import org.springframework.http.ProblemDetail;
 import com.tournament.tournament_manager.infrastructure.input.mapper.RegistrationRestMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -48,9 +48,9 @@ public class RegistrationController {
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Inscription créée"),
             @ApiResponse(responseCode = "400", description = "Tournoi non ouvert, joueur déjà inscrit ou tournoi complet",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
             @ApiResponse(responseCode = "404", description = "Joueur ou tournoi introuvable",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @PostMapping
     public ResponseEntity<RegistrationResponse> createRegistration(
@@ -64,7 +64,7 @@ public class RegistrationController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Liste des inscriptions"),
             @ApiResponse(responseCode = "404", description = "Tournoi introuvable",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @GetMapping("/{tournamentId}")
     public ResponseEntity<Page<RegistrationResponse>> getTournamentRegistrations(

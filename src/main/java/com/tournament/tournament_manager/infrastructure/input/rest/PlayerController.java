@@ -7,7 +7,7 @@ import com.tournament.tournament_manager.domain.port.in.player.GetPlayerUseCase;
 import com.tournament.tournament_manager.dto.request.player.CreatePlayerRequest;
 import com.tournament.tournament_manager.dto.response.player.PlayerResponse;
 import com.tournament.tournament_manager.dto.response.player.PlayerStatsResponse;
-import com.tournament.tournament_manager.exception.handler.ErrorResponse;
+import org.springframework.http.ProblemDetail;
 import com.tournament.tournament_manager.infrastructure.input.mapper.PlayerRestMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -58,9 +58,9 @@ public class PlayerController {
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Joueur créé"),
             @ApiResponse(responseCode = "400", description = "Paramètres invalides",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
             @ApiResponse(responseCode = "409", description = "Username ou email déjà utilisé",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @PostMapping
     public ResponseEntity<PlayerResponse> createPlayer(
@@ -83,7 +83,7 @@ public class PlayerController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Joueur trouvé"),
             @ApiResponse(responseCode = "404", description = "Joueur introuvable",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @GetMapping("/{id}")
     public ResponseEntity<PlayerResponse> getPlayerById(
@@ -96,7 +96,7 @@ public class PlayerController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Statistiques du joueur"),
             @ApiResponse(responseCode = "404", description = "Joueur introuvable",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @GetMapping("/{id}/stats")
     public ResponseEntity<PlayerStatsResponse> getPlayerStats(
@@ -109,7 +109,7 @@ public class PlayerController {
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Joueur supprimé"),
             @ApiResponse(responseCode = "404", description = "Joueur introuvable",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deletePlayer(

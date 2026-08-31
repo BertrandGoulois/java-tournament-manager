@@ -5,7 +5,7 @@ import com.tournament.tournament_manager.domain.port.in.auth.RefreshTokenUseCase
 import com.tournament.tournament_manager.dto.request.auth.LoginRequest;
 import com.tournament.tournament_manager.dto.request.auth.RefreshTokenRequest;
 import com.tournament.tournament_manager.dto.response.auth.AuthResponse;
-import com.tournament.tournament_manager.exception.handler.ErrorResponse;
+import org.springframework.http.ProblemDetail;
 import com.tournament.tournament_manager.infrastructure.input.mapper.AuthRestMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -50,7 +50,7 @@ public class AuthController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Authentification réussie"),
             @ApiResponse(responseCode = "400", description = "Credentials invalides",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
@@ -63,7 +63,7 @@ public class AuthController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Token rafraîchi"),
             @ApiResponse(responseCode = "400", description = "Refresh token invalide ou révoqué",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshTokenRequest request) {

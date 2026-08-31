@@ -6,15 +6,20 @@ import com.tournament.tournament_manager.exception.domain.NotFoundException;
 import com.tournament.tournament_manager.exception.domain.OpenAiUnavailableException;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.ProblemDetail;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
+import java.util.List;
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GlobalExceptionHandlerTest {
 
@@ -22,73 +27,87 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void handleNotFound_shouldReturn404() {
-        ResponseEntity<ErrorResponse> response = handler.handleNotFound(
-                new NotFoundException("Player not found") {});
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertEquals(404, response.getBody().status());
-        assertEquals("Not Found", response.getBody().error());
+        ProblemDetail problem = handler.handleNotFound(new NotFoundException("Player not found") {});
+        assertEquals(404, problem.getStatus());
+        assertEquals("Not Found", problem.getTitle());
+        assertEquals("Player not found", problem.getDetail());
     }
 
     @Test
     void handleAlreadyExists_shouldReturn409() {
-        ResponseEntity<ErrorResponse> response = handler.handleAlreadyExists(
-                new AlreadyExistsException("Already exists") {});
-        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-        assertEquals(409, response.getBody().status());
+        ProblemDetail problem = handler.handleAlreadyExists(new AlreadyExistsException("Already exists") {});
+        assertEquals(409, problem.getStatus());
     }
 
     @Test
     void handleInvalid_shouldReturn400() {
-        ResponseEntity<ErrorResponse> response = handler.handleInvalid(
-                new InvalidException("Invalid input"));
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals(400, response.getBody().status());
-        assertEquals("Invalid input", response.getBody().message());
+        ProblemDetail problem = handler.handleInvalid(new InvalidException("Invalid input"));
+        assertEquals(400, problem.getStatus());
+        assertEquals("Invalid input", problem.getDetail());
     }
 
+    /**
+     * Point 34 : vérifie que TOUTES les erreurs de validation sont renvoyées, pas juste
+     * la première - avant, un formulaire avec 3 champs invalides ne révélait le 2e problème
+     * qu'après avoir corrigé et renvoyé le 1er.
+     */
     @Test
-    void handleValidation_shouldReturn400_withFieldName() throws Exception {
+    void handleValidation_shouldReturnAllFieldErrors_notJustTheFirst() throws Exception {
         BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult(new Object(), "object");
         bindingResult.addError(new FieldError("object", "username", "must not be blank"));
+        bindingResult.addError(new FieldError("object", "email", "must be a valid email"));
+        bindingResult.addError(new FieldError("object", "maxPlayers", "must be a power of 2"));
         MethodArgumentNotValidException ex = new MethodArgumentNotValidException(null, bindingResult);
-        ResponseEntity<ErrorResponse> response = handler.handleValidation(ex);
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("username : must not be blank", response.getBody().message());
+
+        ProblemDetail problem = handler.handleValidation(ex);
+
+        assertEquals(400, problem.getStatus());
+        @SuppressWarnings("unchecked")
+        List<Map<String, String>> errors = (List<Map<String, String>>) problem.getProperties().get("errors");
+        assertEquals(3, errors.size());
+        assertTrue(errors.stream().anyMatch(e -> "username".equals(e.get("field"))));
+        assertTrue(errors.stream().anyMatch(e -> "email".equals(e.get("field"))));
+        assertTrue(errors.stream().anyMatch(e -> "maxPlayers".equals(e.get("field"))));
     }
 
     @Test
     void handleOpenAiUnavailable_shouldReturn503() {
-        ResponseEntity<ErrorResponse> response = handler.handleOpenAiUnavailable(
+        ProblemDetail problem = handler.handleOpenAiUnavailable(
                 new OpenAiUnavailableException("OpenAI down", new RuntimeException()));
-        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode());
-        assertEquals(503, response.getBody().status());
+        assertEquals(503, problem.getStatus());
     }
 
     @Test
     void handleOptimisticLocking_shouldReturn409() {
-        ResponseEntity<ErrorResponse> response = handler.handleOptimisticLocking(
+        ProblemDetail problem = handler.handleOptimisticLocking(
                 new ObjectOptimisticLockingFailureException(
                         com.tournament.tournament_manager.domain.model.Player.class, 1L));
-        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
-        assertEquals(409, response.getBody().status());
-        assertNotNull(response.getBody().message());
+        assertEquals(409, problem.getStatus());
+        assertNotNull(problem.getDetail());
     }
 
     @Test
     void handleBadCredentials_shouldReturn401() {
-        ResponseEntity<ErrorResponse> response = handler.handleBadCredentials(
-                new BadCredentialsException("Bad credentials"));
-        assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
-        assertEquals(401, response.getBody().status());
-        assertEquals("Identifiants invalides", response.getBody().message());
+        ProblemDetail problem = handler.handleBadCredentials(new BadCredentialsException("Bad credentials"));
+        assertEquals(401, problem.getStatus());
+        assertEquals("Identifiants invalides", problem.getDetail());
+    }
+
+    /**
+     * Point 34 : handler manquant auparavant - un accès refusé (@PreAuthorize côté JSON-RPC,
+     * voir point 25) tombait dans handleGeneric et ressortait en 500 générique.
+     */
+    @Test
+    void handleAccessDenied_shouldReturn403() {
+        ProblemDetail problem = handler.handleAccessDenied(new AccessDeniedException("Access is denied"));
+        assertEquals(403, problem.getStatus());
+        assertNotNull(problem.getDetail());
     }
 
     @Test
     void handleGeneric_shouldReturn500() {
-        ResponseEntity<ErrorResponse> response = handler.handleGeneric(
-                new RuntimeException("Unexpected error"));
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertEquals(500, response.getBody().status());
-        assertNotNull(response.getBody().timestamp());
+        ProblemDetail problem = handler.handleGeneric(new RuntimeException("Unexpected error"));
+        assertEquals(500, problem.getStatus());
+        assertNotNull(problem.getProperties().get("timestamp"));
     }
 }

@@ -2,8 +2,8 @@
 
 ![CI](https://github.com/BertrandGoulois/java-tournament-manager/actions/workflows/ci.yml/badge.svg)
 [![Javadoc](https://img.shields.io/badge/javadoc-online-blue)](https://bertrandgoulois.github.io/java-tournament-manager/)
-![Coverage](.github/badges/jacoco.svg)
-![Branches](.github/badges/branches.svg)
+![Coverage](https://bertrandgoulois.github.io/java-tournament-manager/badges/jacoco.svg)
+![Branches](https://bertrandgoulois.github.io/java-tournament-manager/badges/branches.svg)
 
 API REST de gestion de tournois sportifs (élimination directe, round-robin, ou phase de groupes + bracket), développée en Java 21 / Spring Boot.
 
@@ -97,7 +97,7 @@ src/main/java/com/tournament/tournament_manager/
 ├── config/                 -> configuration Spring (Redis, Jackson, Swagger, Cache, Security, Kafka, WebSocket)
 └── exception/
     ├── domain/             -> exceptions métier (NotFoundException, InvalidException, ...)
-    └── handler/            -> GlobalExceptionHandler, ErrorResponse
+    └── handler/            -> GlobalExceptionHandler (ProblemDetail, RFC 7807)
 ```
 
 ### Flux d'un appel REST
@@ -120,7 +120,7 @@ Exemple : `PUT /api/matches/1/result` - du client jusqu'à la réponse HTTP.
 12. **MatchKafkaAdapter** (`infrastructure/output/messaging/`) - implémente `PublishMatchEventPort` **via le pattern Outbox** : écrit une ligne dans `outbox_events`, dans la **même transaction** que le match (pas d'appel Kafka direct ici)
 13. **OutboxPublisherService** (`infrastructure/input/scheduler/`) - poller indépendant (toutes les 500ms, hors de toute transaction métier) qui publie réellement les événements en attente vers Kafka, avec la clé de partition `tournamentId`
 14. **Kafka** `match-finished` - les 4 listeners consomment en asynchrone (ELO, Bracket, WebSocket, Commentary)
-15. **GlobalExceptionHandler** (`exception/handler/`) - intercepte toute exception → `ErrorResponse` JSON uniforme
+15. **GlobalExceptionHandler** (`exception/handler/`) - intercepte toute exception → `ProblemDetail` (RFC 7807) uniforme
 16. **MatchController** - reconvertit le `Match` du domaine en `MatchResponse` via `MatchRestMapper`, retourne `200 OK` + JSON au client
 
 > Pourquoi l'écriture Kafka n'a pas lieu directement à l'étape 12 : si elle avait lieu pendant la transaction (avant le commit), un rollback après envoi laisserait les consumers traiter un match jamais réellement passé à `FINISHED`, et un consumer rapide pourrait lire le match avant le commit. Le pattern Outbox rend l'écriture DB et la publication Kafka atomiques l'une vis-à-vis de l'autre : soit les deux finissent par arriver, soit ni l'une ni l'autre.
@@ -203,6 +203,14 @@ Les événements publiés sont purgés périodiquement par `PurgeScheduler` (voi
 - **CORS configuré** (`SecurityConfig.corsConfigurationSource`), liste blanche vide par défaut (`app.cors.allowed-origins`, à surcharger selon les besoins) - sûr par défaut plutôt que permissif par défaut.
 - **Tracing échantillonné différemment par profil** : 100% en local (`application-local.properties`, pratique pour voir chaque requête pendant le développement), 10% en profil `docker` (`management.tracing.sampling.probability=0.1`) - tracer 100% du trafic devient coûteux avec un vrai volume (stockage Jaeger, overhead réseau OTLP).
 - **`spring.jpa.show-sql` et le logging Spring Security en `DEBUG`** ne vivent plus que dans `application-local.properties`, pas dans le fichier de configuration partagé par tous les profils - ils tournaient auparavant sans discrimination même en profil `docker`. `logging.level.org.hibernate.SQL=DEBUG` remplace `show-sql=true` : passe par le vrai framework de logging (filtrable, redirigeable) au lieu d'écrire directement sur stdout.
+
+### Gestion des erreurs HTTP
+
+Toutes les erreurs REST sont renvoyées au format **`ProblemDetail`** (RFC 7807 - "Problem Details for HTTP APIs"), supporté nativement par Spring depuis la 6.0/Boot 3.0 - remplace l'ancien DTO maison `ErrorResponse`. Champs standard `type`/`title`/`status`/`detail`/`instance`, plus une extension `timestamp` pour corréler avec les logs serveur.
+
+- **Toutes les erreurs de validation sont renvoyées en une seule réponse**, pas juste la première (`errors: [{field, message}, ...]`) - avant, une requête avec 3 champs invalides ne révélait le 2ᵉ problème qu'après avoir corrigé et renvoyé le 1ᵉʳ.
+- **`AccessDeniedException` a désormais un handler** (`403`) - absent auparavant, un accès refusé (ex. joueur non-admin sur un endpoint réservé) tombait dans le handler générique et ressortait en `500`.
+- **Un seul format pour tout REST**, y compris les échecs qui interviennent avant d'atteindre un contrôleur (`SecurityConfig.authenticationEntryPoint`/`accessDeniedHandler`, pour les `401`/`403` déclenchés au niveau du filtre de sécurité) - avant, ces cas produisaient le format d'erreur par défaut de Spring Boot, différent de celui utilisé partout ailleurs. Le format **JSON-RPC** (`/api/rpc`) reste volontairement distinct : protocole différent, avec sa propre spec (voir "API JSON-RPC 2.0" plus haut).
 
 ### Purge périodique
 
@@ -573,7 +581,7 @@ Toutes les erreurs REST retournent un JSON uniforme :
 - Phase de groupes configurable avec transition automatique vers bracket final
 - Classement round-robin calculé à la demande (`GET /tournaments/{id}/standings`)
 - API JSON-RPC 2.0 en parallèle de REST - même pattern Strategy pour le dispatch
-- Réponses d'erreur uniformes via `GlobalExceptionHandler` + `ErrorResponse`
+- Réponses d'erreur uniformes via `GlobalExceptionHandler` + `ProblemDetail` (RFC 7807)
 - Documentation API interactive via Swagger UI (`@Operation`, `@ApiResponse`, `@Tag`) avec schéma d'erreur uniforme
 - Calcul ELO après chaque match (K=32, formule standard), idempotent
 - Seeding ELO du bracket (algorithme de seeding standard, seed 1/seed 2 ne se rencontrent qu'en finale) - byes attribués aux meilleurs seeds en priorité

@@ -5,6 +5,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -22,7 +24,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import tools.jackson.databind.ObjectMapper;
 
+import java.io.IOException;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 
@@ -58,16 +63,19 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final UserDetailsServiceImpl userDetailsService;
     private final RateLimitingFilter rateLimitingFilter;
+    private final ObjectMapper objectMapper;
 
     @Value("${app.cors.allowed-origins:}")
     private String allowedOriginsRaw;
 
     public SecurityConfig(JwtAuthenticationFilter jwtAuthFilter,
                           UserDetailsServiceImpl userDetailsService,
-                          RateLimitingFilter rateLimitingFilter) {
+                          RateLimitingFilter rateLimitingFilter,
+                          ObjectMapper objectMapper) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.userDetailsService = userDetailsService;
         this.rateLimitingFilter = rateLimitingFilter;
+        this.objectMapper = objectMapper;
     }
 
     @Bean
@@ -103,8 +111,17 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint((request, response, authException) ->
-                                response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized"))
+                        // Point 34 : ces deux handlers interviennent au niveau du filtre de
+                        // sécurité, avant même que la requête n'atteigne un contrôleur -
+                        // @ControllerAdvice (GlobalExceptionHandler) ne les voit jamais passer.
+                        // Sans eux, un 401/403 déclenché ici produisait le format d'erreur par
+                        // défaut de Spring Boot (page /error), différent du ProblemDetail RFC
+                        // 7807 renvoyé partout ailleurs - un des 3 formats d'erreur qui
+                        // coexistaient avant unification (voir la Javadoc de GlobalExceptionHandler).
+                        .authenticationEntryPoint(this::writeUnauthorized)
+                        .accessDeniedHandler((request, response, accessDeniedException) ->
+                                writeProblemDetail(response, HttpStatus.FORBIDDEN,
+                                        "Vous n'avez pas les droits nécessaires pour cette opération"))
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
@@ -130,6 +147,22 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    private void writeUnauthorized(jakarta.servlet.http.HttpServletRequest request,
+                                   HttpServletResponse response,
+                                   org.springframework.security.core.AuthenticationException authException)
+            throws IOException {
+        writeProblemDetail(response, HttpStatus.UNAUTHORIZED, "Authentification requise ou token invalide");
+    }
+
+    private void writeProblemDetail(HttpServletResponse response, HttpStatus status, String detail)
+            throws IOException {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, detail);
+        problem.setProperty("timestamp", Instant.now());
+        response.setStatus(status.value());
+        response.setContentType("application/problem+json");
+        response.getWriter().write(objectMapper.writeValueAsString(problem));
     }
 
     /**

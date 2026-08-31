@@ -5,7 +5,7 @@ import com.tournament.tournament_manager.dto.request.tournament.CreateTournament
 import com.tournament.tournament_manager.dto.response.tournament.BracketResponse;
 import com.tournament.tournament_manager.dto.response.tournament.StandingsResponse;
 import com.tournament.tournament_manager.dto.response.tournament.TournamentResponse;
-import com.tournament.tournament_manager.exception.handler.ErrorResponse;
+import org.springframework.http.ProblemDetail;
 import com.tournament.tournament_manager.infrastructure.input.mapper.TournamentRestMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -62,9 +62,9 @@ public class TournamentController {
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Tournoi créé"),
             @ApiResponse(responseCode = "400", description = "Paramètres invalides",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
             @ApiResponse(responseCode = "409", description = "Nom de tournoi déjà utilisé",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @PostMapping
     public ResponseEntity<TournamentResponse> createTournament(
@@ -87,7 +87,7 @@ public class TournamentController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Tournoi trouvé"),
             @ApiResponse(responseCode = "404", description = "Tournoi introuvable",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @GetMapping("/{id}")
     public ResponseEntity<TournamentResponse> getTournamentById(
@@ -100,9 +100,9 @@ public class TournamentController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Tournoi démarré"),
             @ApiResponse(responseCode = "400", description = "Tournoi non ouvert ou moins de 2 joueurs",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
             @ApiResponse(responseCode = "404", description = "Tournoi introuvable",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @PostMapping("/{id}/start")
     public ResponseEntity<Void> startTournament(
@@ -116,7 +116,7 @@ public class TournamentController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Bracket du tournoi"),
             @ApiResponse(responseCode = "404", description = "Tournoi introuvable",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @GetMapping("/{id}/bracket")
     public ResponseEntity<BracketResponse> getBracket(
@@ -129,7 +129,7 @@ public class TournamentController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Classement du tournoi"),
             @ApiResponse(responseCode = "404", description = "Tournoi introuvable",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @GetMapping("/{id}/standings")
     public ResponseEntity<StandingsResponse> getStandings(
@@ -142,7 +142,7 @@ public class TournamentController {
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Tournoi supprimé"),
             @ApiResponse(responseCode = "404", description = "Tournoi introuvable",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTournament(

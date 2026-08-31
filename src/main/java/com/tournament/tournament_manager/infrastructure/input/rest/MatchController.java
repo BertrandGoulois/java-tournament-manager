@@ -6,7 +6,7 @@ import com.tournament.tournament_manager.domain.port.in.match.RecordMatchResultU
 import com.tournament.tournament_manager.dto.request.match.RecordMatchResultRequest;
 import com.tournament.tournament_manager.dto.response.match.MatchCommentaryResponse;
 import com.tournament.tournament_manager.dto.response.match.MatchResponse;
-import com.tournament.tournament_manager.exception.handler.ErrorResponse;
+import org.springframework.http.ProblemDetail;
 import com.tournament.tournament_manager.infrastructure.input.mapper.MatchRestMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -51,9 +51,9 @@ public class MatchController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Résultat enregistré"),
             @ApiResponse(responseCode = "400", description = "Match déjà terminé ou vainqueur invalide",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
             @ApiResponse(responseCode = "404", description = "Match introuvable",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @PutMapping("/{id}/result")
     public ResponseEntity<MatchResponse> recordMatchResult(
@@ -67,7 +67,7 @@ public class MatchController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Match trouvé"),
             @ApiResponse(responseCode = "404", description = "Match introuvable",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @GetMapping("/{id}")
     public ResponseEntity<MatchResponse> getMatchById(
@@ -81,7 +81,7 @@ public class MatchController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Commentaire du match"),
             @ApiResponse(responseCode = "404", description = "Match introuvable",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @GetMapping("/{id}/commentary")
     public ResponseEntity<MatchCommentaryResponse> getMatchCommentary(
