@@ -1,0 +1,113 @@
+groups:
+
+  # §8 de la revue. Les métriques métier existaient déjà pour partie, et cette session en a
+  # ajouté d'autres (outbox, claims de round) — mais une métrique que personne ne regarde ne
+  # vaut pas mieux que pas de métrique. Ces règles leur donnent un destinataire.
+  #
+  # Le fil conducteur du choix des seuils : alerter sur ce qui demande une DÉCISION HUMAINE,
+  # pas sur ce qui se répare tout seul. Le projet retente beaucoup de choses de lui-même
+  # (retry Kafka, republication outbox, libération de claim) ; réveiller quelqu'un pour un
+  # incident que le système est en train de résoudre est le meilleur moyen de faire ignorer
+  # les alertes qui comptent.
+  - name: tournament-outbox
+    rules:
+
+      # Un événement abandonné ne repartira JAMAIS seul : c'est une perte de donnée
+      # définitive, un match dont l'ELO ne sera jamais calculé. Le seuil est donc 1, pas un
+      # taux : la première occurrence est déjà l'incident.
+      - alert: OutboxEventAbandoned
+        expr: outbox_failed_events > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Événement outbox abandonné définitivement"
+          description: >-
+            {{ $value }} événement(s) outbox en échec permanent (payload illisible, message
+            trop gros, topic invalide). Ils ne seront plus retentés et ne partiront jamais
+            seuls. Inspecter la colonne last_error de outbox_events, corriger, puis remettre
+            failed_at à NULL pour relancer.
+
+      # L'outbox se vide normalement en quelques centaines de millisecondes. Une profondeur
+      # durablement non nulle signifie que Kafka est injoignable ou que le publisher est
+      # bloqué. 15 minutes de "for" parce qu'un pic transitoire est normal et se résorbe :
+      # ce qui doit alerter, c'est la persistance, pas la valeur instantanée.
+      - alert: OutboxBacklogGrowing
+        expr: outbox_pending_events > 50
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "L'outbox ne se vide plus"
+          description: >-
+            {{ $value }} événements en attente depuis plus de 15 minutes. Les tournois
+            n'avancent probablement plus (l'avancement de bracket et le calcul d'ELO
+            transitent par ces événements). Vérifier la disponibilité de Kafka.
+
+  - name: tournament-bracket
+    rules:
+
+      # Le cas nominal — transaction annulée — est déjà traité à chaud par la libération sur
+      # rollback. Si le job de réconciliation trouve quelque chose, c'est qu'un processus est
+      # mort brutalement (kill -9, OOM, nœud perdu) : ça ne se produit pas en régime normal
+      # et ça mérite qu'on aille voir pourquoi.
+      - alert: StaleRoundClaimReleased
+        expr: increase(round_claims_stale_released_total[1h]) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Claim de round libéré par la réconciliation"
+          description: >-
+            Une transaction d'avancement de bracket est morte sans se nettoyer. Le round a
+            été libéré et le retry Kafka devrait reprendre, mais la cause de la mort du
+            processus reste à identifier (chercher OOM, kill, redémarrage de pod).
+
+  - name: tournament-security
+    rules:
+
+      # Mode dégradé du rate limiting : les requêtes passent SANS vérification. Ce n'est pas
+      # une panne visible pour l'utilisateur, ce qui la rend d'autant plus importante à
+      # signaler — la protection contre le bourrage d'identifiants est simplement absente,
+      # en silence.
+      - alert: RateLimitingDegraded
+        expr: increase(rate_limit_degraded_total[5m]) > 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Rate limiting inopérant, requêtes non vérifiées"
+          description: >-
+            Redis est injoignable : les requêtes vers /api/auth/login et /api/players
+            passent sans limitation. La protection contre le bourrage d'identifiants est
+            absente tant que cette alerte est active.
+
+      # Un pic de blocages est le comportement NORMAL du rate limiting face à une attaque —
+      # c'est son travail. Le seuil est donc haut et la sévérité basse : c'est une
+      # information de contexte pour corréler avec d'autres signaux, pas un appel à l'aide.
+      - alert: RateLimitBlockedSpike
+        expr: rate(rate_limit_blocked_total[5m]) > 1
+        for: 10m
+        labels:
+          severity: info
+        annotations:
+          summary: "Taux de blocage par rate limiting inhabituel"
+          description: >-
+            Plus d'un blocage par seconde en moyenne depuis 10 minutes. Le rate limiting
+            fonctionne comme prévu ; à corréler avec les logs d'accès pour déterminer s'il
+            s'agit d'une attaque ou d'un client mal configuré.
+
+  - name: tournament-availability
+    rules:
+
+      # La règle la plus basique et celle qui manquait : si l'application ne répond plus,
+      # aucune des alertes ci-dessus ne peut se déclencher, puisqu'elles reposent toutes sur
+      # des métriques que l'application expose elle-même.
+      - alert: ApplicationDown
+        expr: up{job="tournament-app"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Application injoignable"
+          description: "Prometheus ne parvient plus à scraper app:9001 depuis 2 minutes."

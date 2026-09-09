@@ -22,4 +22,7 @@
     <include file="classpath:db/changelog/changes/015-add-indexes-and-constraints.sql"/>
     <include file="classpath:db/changelog/changes/016-timestamptz-migration.sql"/>
     <include file="classpath:db/changelog/changes/017-add-shedlock-table.sql"/>
+    <include file="classpath:db/changelog/changes/018-fix-users-sequence.sql"/>
+    <include file="classpath:db/changelog/changes/019-round-advancement-status.sql"/>
+    <include file="classpath:db/changelog/changes/020-outbox-poison-handling.sql"/>
 </databaseChangeLog>

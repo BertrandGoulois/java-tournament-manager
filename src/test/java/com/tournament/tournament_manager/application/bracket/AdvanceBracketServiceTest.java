@@ -184,5 +184,49 @@ class AdvanceBracketServiceTest {
         // Aucun match créé, aucun statut de tournoi modifié : no-op idempotent.
         verify(saveMatchPort, never()).saveMatch(any());
         verify(saveTournamentPort, never()).saveTournament(any());
+        // Et surtout : pas de confirmation d'un claim qui appartient à quelqu'un d'autre.
+        verify(claimRoundAdvancementPort, never()).markCompleted(anyLong(), anyInt());
+    }
+
+    /**
+     * Point 2.2 de la revue. Le claim se prend en deux temps : {@code tryClaim} réserve,
+     * {@code markCompleted} confirme. Sans la confirmation, un claim commité dans sa
+     * transaction indépendante survit à l'annulation de la transaction métier — le round
+     * reste réservé pour des matchs qui n'existent pas, et la redelivery Kafka sort en
+     * succès sur « round déjà réclamé ». Tournoi bloqué, aucune erreur nulle part.
+     */
+    @Test
+    void advanceToNextRound_shouldConfirmClaim_afterCreatingNextRoundMatches() {
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Test Tournament"), TournamentStatus.OPEN, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
+        Player winner1 = new Player();
+        Player winner2 = new Player();
+        Match match1 = Match.reconstitute(null, 4, 0, null, MatchStatus.FINISHED, null, null, null, null, null, winner1);
+        Match match2 = Match.reconstitute(null, 4, 1, null, MatchStatus.FINISHED, null, null, null, null, null, winner2);
+        when(loadMatchByTournamentPort.loadByTournamentIdAndRound(1L, 4))
+                .thenReturn(List.of(match1, match2));
+
+        advanceBracketService.advanceToNextRound(tournament, 4);
+
+        verify(claimRoundAdvancementPort, times(1)).markCompleted(1L, 2);
+    }
+
+    /**
+     * Le dernier round ne crée aucun match, mais son claim doit être confirmé quand même :
+     * il a servi à empêcher deux terminaisons concurrentes. Laissé non confirmé, le job de
+     * réconciliation le libérerait et une seconde tentative de {@code finish()} partirait
+     * sur un tournoi déjà FINISHED.
+     */
+    @Test
+    void advanceToNextRound_shouldConfirmClaim_whenFinishingTournament() {
+        Tournament tournament = Tournament.reconstitute(1L, new TournamentName("Test Tournament"), TournamentStatus.IN_PROGRESS, TournamentFormat.SINGLE_ELIMINATION, null, null, 0, null, false, null);
+        Player winner = new Player();
+        Match finalMatch = Match.reconstitute(null, 2, 0, null, MatchStatus.FINISHED, null, null, null, null, null, winner);
+        when(loadMatchByTournamentPort.loadByTournamentIdAndRound(1L, 2))
+                .thenReturn(List.of(finalMatch));
+
+        advanceBracketService.advanceToNextRound(tournament, 2);
+
+        verify(saveTournamentPort, times(1)).saveTournament(tournament);
+        verify(claimRoundAdvancementPort, times(1)).markCompleted(1L, 1);
     }
 }

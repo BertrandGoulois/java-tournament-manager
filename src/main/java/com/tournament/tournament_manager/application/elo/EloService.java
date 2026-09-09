@@ -11,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,8 +31,23 @@ import java.util.List;
  * condition de course sous exécution concurrente (deux redeliveries traitées simultanément
  * par des threads différents pourraient toutes deux passer le check avant que l'une des
  * deux n'insère). La contrainte {@code UNIQUE(match_id, player_id)} sur {@code elo_history}
- * (voir migration {@code 015}) est le vrai filet de sécurité : {@link #updateElo} rattrape
- * sa violation et l'interprète comme "déjà traité" plutôt que de laisser planter le listener.
+ * (voir migration {@code 015}) est le vrai filet de sécurité.
+ *
+ * <p><b>Où cette violation est rattrapée (point 2.1 de la revue).</b> Elle ne l'est
+ * délibérément <i>pas</i> ici. {@link #updateElo} était auparavant entourée d'un
+ * {@code catch (DataIntegrityViolationException)} censé absorber le doublon — un filet
+ * illusoire : la méthode est {@code @Transactional}, et une violation de contrainte marque
+ * la transaction {@code rollback-only}. Sortir « normalement » de la méthode après avoir
+ * avalé l'exception ne faisait que la transformer en {@code UnexpectedRollbackException} au
+ * commit, levée <i>hors</i> du bloc catch, qui remontait donc quand même au listener et
+ * renvoyait le message en retry puis en DLT. Le cas était en plus invisible en test : un
+ * mock qui lève {@code DataIntegrityViolationException} n'a pas de transaction à marquer,
+ * donc le catch semblait fonctionner.
+ *
+ * <p>Le rattrapage vit maintenant dans {@code EloListener}, en dehors de la frontière
+ * transactionnelle : la transaction est intégralement annulée (état cohérent, pas d'effet
+ * partiel où l'historique du vainqueur serait inséré et pas celui du perdant), puis
+ * l'exception est interprétée comme « déjà traité » et l'événement acquitté.
  */
 @Slf4j
 @Service
@@ -68,10 +82,11 @@ public class EloService implements UpdateEloUseCase {
      * Le résultat ELO est plafonné à {@code 0} (un ELO ne peut pas être négatif).
      *
      * <p>Si une exécution concurrente a déjà inséré l'historique pour ce match entre le
-     * moment où {@code EloListener} a vérifié {@code existsByMatchId} et l'insertion
-     * réelle ici, la violation de contrainte {@code UNIQUE(match_id, player_id)} est
-     * rattrapée silencieusement (log warn) plutôt que de remonter comme une erreur — le
-     * résultat recherché (un historique par match et par joueur) est de toute façon atteint.
+     * moment où {@code EloListener} a vérifié {@code existsByMatchId} et l'insertion réelle
+     * ici, la violation de contrainte {@code UNIQUE(match_id, player_id)} <b>remonte</b> :
+     * la transaction est annulée en entier et c'est {@code EloListener} qui l'interprète
+     * comme « déjà traité ». Voir la Javadoc de la classe pour la raison — un catch posé
+     * ici ne peut pas fonctionner.
      *
      * @param match le match terminé, avec {@code winner} renseigné et {@code player2} non null
      */
@@ -116,15 +131,12 @@ public class EloService implements UpdateEloUseCase {
         winner.setEloRating(winner.getEloRating().add(winnerDelta));
         loser.setEloRating(loser.getEloRating().add(loserDelta));
 
-        try {
-            saveAllPlayersPort.saveAllPlayers(List.of(winner, loser));
+        // Aucun try/catch ici : voir la Javadoc de la classe. La violation de contrainte est
+        // rattrapée par EloListener, une fois la transaction terminée et intégralement annulée.
+        saveAllPlayersPort.saveAllPlayers(List.of(winner, loser));
 
-            saveEloHistory(winner, match, winnerDelta, newEloWinner);
-            saveEloHistory(loser, match, loserDelta, newEloLoser);
-        } catch (DataIntegrityViolationException e) {
-            log.warn("Historique ELO déjà inséré pour ce match par une exécution concurrente, "
-                    + "ignoré [matchId={}]", match.getId());
-        }
+        saveEloHistory(winner, match, winnerDelta, newEloWinner);
+        saveEloHistory(loser, match, loserDelta, newEloLoser);
     }
 
     /**

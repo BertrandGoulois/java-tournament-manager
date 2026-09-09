@@ -33,11 +33,11 @@ public class EloHistoryEntity {
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
-    @ManyToOne()
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "player_id", nullable = false)
     private PlayerEntity player;
 
-    @ManyToOne()
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "match_id", nullable = false)
     private MatchEntity match;
 

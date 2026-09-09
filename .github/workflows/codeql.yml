@@ -1,0 +1,65 @@
+name: CodeQL
+
+# §8/§6 de la revue : aucune analyse statique de sécurité n'existait. Gitleaks (ajouté dans
+# ci.yml) cherche des secrets ; CodeQL cherche des vulnérabilités dans le code lui-même —
+# injection SQL, désérialisation non sûre, chemins de fichiers non validés, fuites de
+# ressources. Les deux sont complémentaires et ne se remplacent pas.
+#
+# Workflow séparé de ci.yml délibérément : l'analyse dure plusieurs minutes et n'a pas à
+# rallonger la boucle de retour sur chaque push. Le scan hebdomadaire compte autant que
+# celui des PR — la base de règles CodeQL évolue, et du code inchangé peut devenir
+# vulnérable quand une nouvelle règle sait le détecter.
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Lundi 4h du matin : ne concurrence pas les builds de la journée.
+    - cron: '0 4 * * 1'
+
+jobs:
+  analyze:
+    name: Analyse CodeQL (Java)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      # security-events: write est ce qui permet la remontée des alertes dans l'onglet
+      # Security du dépôt. Sans lui, l'analyse tourne et les résultats sont perdus.
+      security-events: write
+      contents: read
+      actions: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: java-kotlin
+          # security-and-quality ajoute aux règles de sécurité des règles de qualité
+          # (ressources non fermées, comparaisons douteuses, code mort). Plus bavard que
+          # le jeu par défaut, mais c'est précisément le genre de défaut que cette revue
+          # a trouvé à la main.
+          queries: security-and-quality
+
+      # Build manuel plutôt qu'autobuild : le projet a besoin de -DskipTests pour ne pas
+      # démarrer les conteneurs Testcontainers, que CodeQL n'a aucune raison d'exécuter.
+      - name: Build
+        run: |
+          chmod +x mvnw
+          ./mvnw -B compile -DskipTests
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:java-kotlin"

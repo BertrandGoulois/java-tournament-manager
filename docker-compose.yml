@@ -84,12 +84,17 @@ services:
     expose:
       - "8080"
       - "9001"
-    ports:
-      # Port de management (actuator) publié directement sur l'hôte pour un accès
-      # dev local (ex. http://localhost:9001/actuator/health), en dehors de nginx :
-      # il ne passe donc jamais par le port 80 exposé publiquement. À retirer si
-      # l'app tourne derrière un vrai réseau privé en production.
-      - "9001:9001"
+    # Point 1.6 de la revue : "ports: 9001:9001" a été retiré. ManagementSecurityConfig
+    # fait permitAll() sur tout l'actuator en justifiant que « seul le réseau interne peut
+    # l'atteindre » — ce qui était faux tant que le port était publié sur l'hôte :
+    # /actuator/metrics et /actuator/prometheus (noms d'endpoints, latences, compteurs
+    # métier, versions de dépendances) étaient lisibles par quiconque atteignait la machine.
+    # Le commentaire et le compose se contredisaient ; c'est le compose qui avait tort.
+    #
+    # Prometheus scrape app:9001 par le réseau interne docker-compose (voir prometheus.yml),
+    # il n'a jamais eu besoin de cette publication. Pour un accès depuis l'hôte en dev :
+    #     docker compose exec app wget -qO- http://localhost:9001/actuator/health
+    # ou, ponctuellement : docker compose run --rm --publish 9001:9001 app
     environment:
       SPRING_PROFILES_ACTIVE: docker
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -97,6 +102,8 @@ services:
       MANAGEMENT_OPENTELEMETRY_TRACING_EXPORT_OTLP_ENDPOINT: http://jaeger:4318/v1/traces
       JWT_SECRET: ${JWT_SECRET}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
+      # Point 1.5 : mot de passe initial du compte admin. Absent = démarrage en échec.
+      ADMIN_INITIAL_PASSWORD: ${ADMIN_INITIAL_PASSWORD}
     depends_on:
       postgres:
         condition: service_healthy
@@ -127,6 +134,9 @@ services:
       - "9090:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      # §8 : regles d'alerte, montees separement pour rester lisibles et versionnables
+      # independamment de la configuration de scrape.
+      - ./docker/prometheus/alert-rules.yml:/etc/prometheus/alert-rules.yml
     depends_on:
       app:
         condition: service_healthy

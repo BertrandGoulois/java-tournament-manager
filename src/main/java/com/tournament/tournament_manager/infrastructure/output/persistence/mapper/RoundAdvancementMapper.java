@@ -1,6 +1,7 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.mapper;
 
 import com.tournament.tournament_manager.domain.model.RoundAdvancement;
+import com.tournament.tournament_manager.domain.model.enums.RoundAdvancementStatus;
 import com.tournament.tournament_manager.infrastructure.output.persistence.entity.RoundAdvancementEntity;
 import org.springframework.stereotype.Component;
 
@@ -23,6 +24,9 @@ public class RoundAdvancementMapper {
         RoundAdvancementEntity entity = new RoundAdvancementEntity();
         entity.setTournamentId(tournamentId);
         entity.setRound(round);
+        // Un claim nait toujours PENDING : il ne devient DONE qu'une fois les matchs crees
+        // ET la transaction metier commitee (voir AdvanceBracketService).
+        entity.setStatus(RoundAdvancementStatus.PENDING);
         return entity;
     }
 }

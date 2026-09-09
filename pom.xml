@@ -14,6 +14,14 @@
 
 	<properties>
 		<java.version>21</java.version>
+		<!--
+			Quarantaine ciblée des tests d'intégration instables (§6 de la revue). Vide par
+			défaut : tout tourne, et le job CI est bloquant. Un test réellement flaky reçoit
+			un @Tag("flaky") et cette propriété passe à "flaky" — ce qui rend la quarantaine
+			nominative et visible dans le diff, au lieu du continue-on-error global qui
+			désarmait les 9 tests d'intégration d'un coup.
+		-->
+		<failsafe.excludedGroups></failsafe.excludedGroups>
 	</properties>
 
 	<dependencies>
@@ -254,6 +262,15 @@
 							<artifactId>lombok</artifactId>
 						</exclude>
 					</excludes>
+					<!--
+					  Point 2.4 de la revue : spring.profiles.active=local a ete retire de
+					  application.properties (il etait cuit dans le jar livre). Le confort de
+					  "./mvnw spring-boot:run" est preserve ici, cote outillage de build, ou il
+					  ne suit PAS l'artefact deploye.
+					-->
+					<profiles>
+						<profile>local</profile>
+					</profiles>
 				</configuration>
 			</plugin>
 
@@ -348,6 +365,12 @@
 					cours de route ont tourné dans le mauvais job faute d'avoir pensé à les y
 					ajouter) — la convention de nommage rend cette classe d'erreur impossible.
 				-->
+				<configuration>
+					<environmentVariables>
+						<JWT_SECRET>dGVzdC1vbmx5LWR1bW15LWp3dC1zZWNyZXQtbm90LWZvci1wcm9k</JWT_SECRET>
+						<ADMIN_INITIAL_PASSWORD>test-only-admin-password</ADMIN_INITIAL_PASSWORD>
+					</environmentVariables>
+				</configuration>
 			</plugin>
 
 			<plugin>
@@ -364,28 +387,48 @@
 				<configuration>
 					<!--
 						Ces tests (Testcontainers Postgres/Kafka/Redis, ou contexte Spring
-						complet) sont historiquement flaky en CI. Ils tournent dans un job CI
-						séparé (voir ci.yml), non-bloquant, le temps de vérifier que le retry
-						automatique suffit à les stabiliser.
+						complet) sont historiquement flaky en CI. Le job qui les exécute était
+						pour cette raison marqué continue-on-error dans ci.yml : les 9 tests
+						d'intégration — dont la sécurité JSON-RPC, le rate limiting et les
+						parcours de tournoi complets — ne bloquaient donc rien du tout, et une
+						régression sur JsonRpcSecurityIT serait passée au vert.
+
+						Le job est redevenu bloquant (§6 de la revue). La flakiness est traitée
+						là où elle se produit plutôt qu'en désarmant la CI entière :
+						  - rerunFailingTestsCount ci-dessous absorbe l'aléa ponctuel ;
+						  - un test réellement instable se voit poser @Tag("flaky"), ce qui
+						    l'exclut nommément de la CI via excludedGroups, en laissant les 8
+						    autres bloquants. Une quarantaine porte alors un nom et se voit
+						    dans le diff, au lieu d'être un drapeau global qu'on oublie.
+
+						Pour exécuter aussi les tests en quarantaine :
+						  ./mvnw verify -DexcludedGroups=
 					-->
+					<excludedGroups>${failsafe.excludedGroups}</excludedGroups>
 					<rerunFailingTestsCount>2</rerunFailingTestsCount>
 					<forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
 					<reuseForks>false</reuseForks>
 					<!--
-						Ces tests chargent un vrai contexte Spring (@SpringBootTest), qui active
-						le profil "local" par défaut et a donc besoin de JWT_SECRET,
-						POSTGRES_PASSWORD et OPENAI_API_KEY. Ce sont des valeurs factices,
-						utilisées uniquement pendant l'exécution des tests par ce plugin, jamais
-						commitées comme valeur par défaut de l'application, jamais valides en
-						dehors de ce contexte. POSTGRES_PASSWORD est de toute façon écrasé au
-						runtime par Testcontainers (@ServiceConnection) ; OPENAI_API_KEY n'a
-						besoin que d'être syntaxiquement présent pour que le bean OpenAiConfig
-						se construise (le circuit breaker mocke l'appel réel).
+						Valeurs de test injectées par le build, jamais commitées comme défaut
+						de l'application. Spring Boot les mappe automatiquement vers
+						jwt.secret et admin.initial-password (relaxed binding), ce qui évite
+						d'injecter le vrai secret de signature dans un runner CI.
+
+						ADMIN_INITIAL_PASSWORD est indispensable : la migration 003 crée le
+						compte admin avec un hash bcrypt public, et AdminAccountInitializer
+						fait volontairement échouer le démarrage tant que ce hash est là sans
+						mot de passe fourni.
+
+						POSTGRES_PASSWORD est de toute façon écrasé au runtime par
+						Testcontainers (@ServiceConnection) ; OPENAI_API_KEY n'a besoin que
+						d'être syntaxiquement présent pour que le bean OpenAiConfig se
+						construise (le circuit breaker mocke l'appel réel).
 					-->
 					<environmentVariables>
 						<JWT_SECRET>dGVzdC1vbmx5LWR1bW15LWp3dC1zZWNyZXQtbm90LWZvci1wcm9k</JWT_SECRET>
 						<POSTGRES_PASSWORD>test-only-unused-password</POSTGRES_PASSWORD>
 						<OPENAI_API_KEY>test-only-dummy-key-not-real</OPENAI_API_KEY>
+						<ADMIN_INITIAL_PASSWORD>test-only-admin-password</ADMIN_INITIAL_PASSWORD>
 					</environmentVariables>
 				</configuration>
 			</plugin>
@@ -419,9 +462,19 @@
 					<targetTests>
 						<param>com.tournament.tournament_manager.application.*</param>
 					</targetTests>
-					<excludedClasses>
-						<param>com.tournament.tournament_manager.application.shared.*</param>
-					</excludedClasses>
+					<!--
+						§7 de la revue : application.shared.* était exclu du mutation testing.
+						C'est précisément le package qui contient BracketUtils et
+						RoundRobinUtils — le seeding de bracket et la méthode du cercle, soit
+						l'arithmétique la plus dense et la plus mutable du projet, celle où un
+						off-by-one passe le plus facilement au travers d'une assertion trop
+						large. L'exclusion visait exactement l'inverse de sa cible utile ; elle
+						est levée.
+
+						Aucune classe n'est exclue aujourd'hui. Si le rapport PIT devient trop
+						long à produire, réduire plutôt le périmètre par targetClasses que par
+						excludedClasses, pour que le retrait reste lisible.
+					-->
 					<mutators>
 						<mutator>DEFAULTS</mutator>
 					</mutators>
@@ -429,6 +482,66 @@
 						<outputFormat>HTML</outputFormat>
 					</outputFormats>
 					<timestampedReports>false</timestampedReports>
+				</configuration>
+			</plugin>
+
+			<!--
+				§6 de la revue : aucun outil de mise en forme n'existait, d'ou les fins de
+				ligne melangees CRLF/LF fichier par fichier (53 CRLF pour 147 LF sur un
+				echantillon de 200 sources).
+
+				Configuration DELIBEREMENT minimaliste : pas de formateur global type
+				google-java-format ou palantir. Un reformatage complet reecrirait les ~250
+				fichiers du projet et noierait toute revue future sous du bruit d'indentation.
+				Ici, seulement de l'hygiene : imports inutilises, espaces en fin de ligne,
+				retour a la ligne final, fins de ligne normalisees en LF.
+
+				Volontairement NON lie a une phase du build. `mvn verify` ne le declenche pas.
+				Deux raisons : ne pas casser le build de quelqu'un qui n'a pas encore lance
+				spotless:apply, et surtout garder le reformatage dans un commit SEPARE des
+				changements fonctionnels - un diff melant logique et mise en forme est
+				irrevisable.
+
+				  ./mvnw spotless:check    verifie sans modifier
+				  ./mvnw spotless:apply    corrige
+			-->
+			<plugin>
+				<groupId>com.diffplug.spotless</groupId>
+				<artifactId>spotless-maven-plugin</artifactId>
+				<version>2.44.0</version>
+				<configuration>
+					<java>
+						<removeUnusedImports/>
+						<trimTrailingWhitespace/>
+						<endWithNewline/>
+						<importOrder>
+							<order>java,javax,jakarta,org,com,</order>
+						</importOrder>
+					</java>
+					<pom>
+						<sortPom>
+							<expandEmptyElements>false</expandEmptyElements>
+						</sortPom>
+					</pom>
+					<formats>
+						<format>
+							<includes>
+								<include>src/main/resources/**/*.properties</include>
+								<include>src/main/resources/**/*.sql</include>
+								<include>*.yml</include>
+								<include>docker/**/*.yml</include>
+								<include>.github/**/*.yml</include>
+							</includes>
+							<trimTrailingWhitespace/>
+							<endWithNewline/>
+						</format>
+					</formats>
+					<!--
+						LF partout, en accord avec le `* text=auto eol=lf` de .gitattributes.
+						Les deux doivent rester coherents, sinon chaque developpeur reecrit
+						les fins de ligne de l'autre a chaque commit.
+					-->
+					<lineEndings>UNIX</lineEndings>
 				</configuration>
 			</plugin>
 

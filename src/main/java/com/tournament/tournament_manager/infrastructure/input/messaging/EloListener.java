@@ -8,8 +8,10 @@ import com.tournament.tournament_manager.domain.port.out.elo.ExistsEloHistoryPor
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchPort;
 import com.tournament.tournament_manager.exception.domain.MatchNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.UnexpectedRollbackException;
 
 /**
  * Consomme les événements {@link MatchFinishedEvent} depuis le topic Kafka
@@ -57,6 +59,22 @@ public class EloListener {
                 event.matchId(),
                 match.getPlayer1().getUsername(),
                 match.getPlayer2().getUsername());
-        updateEloUseCase.updateElo(match);
+
+        try {
+            updateEloUseCase.updateElo(match);
+        } catch (DataIntegrityViolationException | UnexpectedRollbackException e) {
+            // Course perdue : une autre exécution (redelivery Kafka, autre partition, autre
+            // instance) a inséré l'historique de ce match entre notre existsByMatchId et le
+            // flush. La contrainte UNIQUE(match_id, player_id) a fait son travail, la
+            // transaction d'EloService est intégralement annulée, l'état reste cohérent et le
+            // résultat recherché est déjà en base : on acquitte l'événement.
+            //
+            // Ce rattrapage doit vivre ICI et pas dans EloService (point 2.1 de la revue) :
+            // à l'intérieur d'une méthode @Transactional, la transaction est déjà marquée
+            // rollback-only au moment où l'exception est levée, et l'avaler ne fait que la
+            // muer en UnexpectedRollbackException au commit — donc hors de portée du catch.
+            log.warn("Historique ELO déjà inséré pour ce match par une exécution concurrente, "
+                    + "événement acquitté sans retraitement [matchId={}]", event.matchId());
+        }
     }
 }

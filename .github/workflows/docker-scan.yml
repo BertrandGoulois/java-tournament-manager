@@ -1,0 +1,76 @@
+name: Scan image Docker
+
+# §6 de la revue : l'image livrée n'était jamais analysée. Le code applicatif n'est qu'une
+# fraction de ce qui tourne en production — l'image embarque une distribution Alpine, un JRE,
+# et l'arbre complet des dépendances Maven. Une CVE critique dans l'une d'elles n'apparaît
+# ni dans CodeQL (qui lit le code source) ni dans Gitleaks (qui cherche des secrets).
+#
+# Trivy couvre les trois d'un coup : paquets système, dépendances Java du jar, et secrets
+# éventuellement copiés dans une couche.
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Hebdomadaire, et c'est le point important : une image inchangée devient vulnérable
+    # avec le temps, au fil des CVE publiées. Ne scanner qu'au build donnerait un faux
+    # sentiment de sécurité sur une image déployée depuis des mois.
+    - cron: '0 5 * * 1'
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      security-events: write
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Build local, sans push : on analyse exactement l'image que produirait un déploiement,
+      # sans avoir besoin d'un registre ni de droits de publication.
+      - name: Build de l'image
+        run: docker build -t tournament-manager:scan .
+
+      - name: Scan Trivy
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: tournament-manager:scan
+          format: sarif
+          output: trivy-results.sarif
+          scanners: vuln,secret
+          # ignore-unfixed est délibéré : une CVE sans correctif disponible ne donne aucune
+          # action possible à part changer d'image de base. La signaler à chaque build
+          # entraînerait exactement ce qu'on veut éviter — une CI rouge en permanence que
+          # tout le monde apprend à ignorer.
+          ignore-unfixed: true
+          # Le job ne bloque pas sur ce seuil (voir exit-code plus bas) : les résultats
+          # partent dans l'onglet Security pour être triés, pas pour arrêter la chaîne.
+          severity: 'CRITICAL,HIGH'
+          exit-code: '0'
+
+      - name: Remontée des résultats
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-results.sarif
+          category: trivy-image
+
+      # Second passage, bloquant celui-là, et volontairement limité aux CVE critiques
+      # corrigeables. Distinguer les deux passages évite le piège habituel : soit on bloque
+      # sur tout et la CI devient inutilisable, soit on ne bloque sur rien et le scan ne
+      # sert qu'à décorer. Ici une CVE critique avec correctif disponible arrête la chaîne,
+      # tout le reste est remonté pour triage.
+      - name: Échec sur CVE critique corrigeable
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: tournament-manager:scan
+          format: table
+          scanners: vuln
+          ignore-unfixed: true
+          severity: 'CRITICAL'
+          exit-code: '1'

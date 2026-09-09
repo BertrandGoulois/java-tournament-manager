@@ -1,5 +1,6 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.entity;
 
+import com.tournament.tournament_manager.domain.model.enums.RoundAdvancementStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,4 +31,13 @@ public class RoundAdvancementEntity {
 
     @Column(nullable = false)
     private Instant createdAt = Instant.now();
+
+    /**
+     * Voir {@link RoundAdvancementStatus} et la migration 019. Pas de valeur par defaut ici :
+     * c'est {@code RoundAdvancementMapper.toNewEntity} qui pose PENDING, pour qu'un claim
+     * naisse toujours non confirme.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private RoundAdvancementStatus status;
 }

@@ -194,11 +194,22 @@ class EloServiceTest {
         assertEquals(match, histories.get(1).getMatch());
     }
 
+    /**
+     * Point 2.1 de la revue. Ce test affirmait auparavant l'inverse
+     * ({@code assertDoesNotThrow}) et passait au vert — mais pour une mauvaise raison : avec
+     * un port mocké, il n'existe aucune transaction à marquer {@code rollback-only}, donc le
+     * {@code catch (DataIntegrityViolationException)} qui vivait dans {@code EloService}
+     * semblait absorber le doublon. En conditions réelles, la transaction déjà marquée
+     * rollback-only faisait échouer le commit avec une {@code UnexpectedRollbackException},
+     * levée après la sortie du bloc catch : le message repartait quand même en retry puis en
+     * DLT. Le test validait donc une protection qui n'existait pas.
+     *
+     * <p>Le contrat est maintenant explicite : {@code EloService} <b>laisse remonter</b> la
+     * violation, et c'est {@code EloListener} — hors frontière transactionnelle — qui décide
+     * de l'acquitter (voir {@code EloListenerTest}).
+     */
     @Test
-    void updateElo_shouldNotThrow_whenConcurrentExecutionAlreadyInsertedHistory() {
-        // Simule la contrainte UNIQUE(match_id, player_id) violée par une exécution
-        // concurrente ayant déjà inséré l'historique entre le check d'EloListener et cet
-        // appel — ne doit pas planter le listener, juste être rattrapé silencieusement.
+    void updateElo_shouldPropagate_whenConcurrentExecutionAlreadyInsertedHistory() {
         Player winner = new Player();
         winner.setEloRating(new EloRating(1000));
         Player loser = new Player();
@@ -209,6 +220,8 @@ class EloServiceTest {
         doThrow(new org.springframework.dao.DataIntegrityViolationException("duplicate key"))
                 .when(saveEloHistoryPort).saveEloHistory(any());
 
-        org.junit.jupiter.api.Assertions.assertDoesNotThrow(() -> eloService.updateElo(match));
+        org.junit.jupiter.api.Assertions.assertThrows(
+                org.springframework.dao.DataIntegrityViolationException.class,
+                () -> eloService.updateElo(match));
     }
 }

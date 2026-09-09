@@ -1,7 +1,7 @@
 package com.tournament.tournament_manager.application.auth;
 
 import com.tournament.tournament_manager.application.token.RefreshTokenService;
-import com.tournament.tournament_manager.config.security.JwtService;
+import com.tournament.tournament_manager.domain.port.out.auth.TokenProviderPort;
 import com.tournament.tournament_manager.domain.model.AuthResult;
 import com.tournament.tournament_manager.domain.port.in.auth.LoginUseCase;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -16,12 +16,12 @@ import org.springframework.stereotype.Service;
 public class AuthService implements LoginUseCase {
 
     private final AuthenticationManager authenticationManager;
-    private final JwtService jwtService;
+    private final TokenProviderPort tokenProviderPort;
     private final RefreshTokenService refreshTokenService;
 
-    public AuthService(AuthenticationManager authenticationManager, JwtService jwtService, RefreshTokenService refreshTokenService) {
+    public AuthService(AuthenticationManager authenticationManager, TokenProviderPort tokenProviderPort, RefreshTokenService refreshTokenService) {
         this.authenticationManager = authenticationManager;
-        this.jwtService = jwtService;
+        this.tokenProviderPort = tokenProviderPort;
         this.refreshTokenService = refreshTokenService;
     }
 
@@ -43,7 +43,7 @@ public class AuthService implements LoginUseCase {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(username, password)
         );
-        String accessToken = jwtService.generateToken(username);
+        String accessToken = tokenProviderPort.generateAccessToken(username);
         String refreshToken = refreshTokenService.generateRefreshToken(username);
         return new AuthResult(accessToken, refreshToken);
     }

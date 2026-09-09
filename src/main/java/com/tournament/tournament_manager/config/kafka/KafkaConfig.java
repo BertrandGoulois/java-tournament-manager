@@ -39,6 +39,23 @@ import java.util.Map;
  * <p>En cas d'échec répété d'un listener (3 tentatives espacées de 1 seconde),
  * le message est redirigé vers le topic {@code match-finished.DLT}
  * (Dead Letter Topic) pour inspection et rejeu manuel.
+ *
+ * <p><b>Source unique de vérité (point 2.4 de la revue).</b> Cette classe déclare
+ * explicitement {@code ProducerFactory} et {@code ConsumerFactory}, ce qui fait reculer
+ * l'auto-configuration Spring Boot : toutes les propriétés {@code spring.kafka.producer.*}
+ * et {@code spring.kafka.consumer.*} étaient donc <b>sans aucun effet</b>. Elles étaient
+ * pourtant présentes dans {@code application.properties}, dupliquant ce qui est codé ici et
+ * donnant l'illusion qu'on pouvait régler Kafka sans toucher au Java.
+ *
+ * <p>Ce n'était pas qu'une redondance esthétique : {@code auto-offset-reset=earliest} était
+ * déclaré dans les propriétés et n'était repris nulle part ici, si bien que les consommateurs
+ * tournaient en réalité sur le défaut Kafka ({@code latest}). Un nouveau groupe de
+ * consommateurs ignorait silencieusement tout l'historique du topic — l'inverse exact de ce
+ * que la configuration affichait. Le réglage est désormais appliqué pour de bon, ci-dessous.
+ *
+ * <p>Seul {@code spring.kafka.bootstrap-servers} reste dans les propriétés : il varie par
+ * environnement (localhost en dev, {@code kafka:29092} en docker) et est lu ici via
+ * {@code @Value}. Tout le reste se règle dans cette classe.
  */
 @EnableKafka
 @Configuration
@@ -51,6 +68,9 @@ public class KafkaConfig {
     public static final String WEBSOCKET_GROUP = "websocket-group";
     public static final String DLT_GROUP = "dlt-group";
     public static final String COMMENTARY_GROUP = "commentary-group";
+
+    /** Seul package dont la desérialisation est autorisée — voir TRUSTED_PACKAGES. */
+    private static final String EVENT_PACKAGE = "com.tournament.tournament_manager.domain.event";
 
     /**
      * Nombre de tentatives avant redirection vers la DLQ.
@@ -130,19 +150,23 @@ public class KafkaConfig {
      * Clé : {@code StringDeserializer}, valeur : {@code JacksonJsonDeserializer}
      * avec {@code MatchFinishedEvent} comme type cible par défaut.
      *
-     * <p>Le {@code GROUP_ID_CONFIG} ici ({@code "elo-group"}) sert de valeur par défaut
+     * <p>Le {@code GROUP_ID_CONFIG} ici ({@link #ELO_GROUP}) sert de valeur par défaut
      * — chaque listener surcharge son propre {@code groupId} via {@code @KafkaListener}.
      */
     @Bean
     public ConsumerFactory<String, Object> consumerFactory() {
         Map<String, Object> config = new HashMap<>();
         config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
-        config.put(ConsumerConfig.GROUP_ID_CONFIG, "elo-group");
+        config.put(ConsumerConfig.GROUP_ID_CONFIG, ELO_GROUP);
+        // Point 2.4 : ce reglage etait declare dans application.properties, ou il n'avait
+        // aucun effet (l'auto-configuration recule devant ce bean). Les consommateurs
+        // tournaient donc sur "latest" et un nouveau groupe sautait tout l'historique du
+        // topic. Applique ici, il fait enfin ce qu'il annonce.
+        config.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JacksonJsonDeserializer.class);
-        config.put(JacksonJsonDeserializer.TRUSTED_PACKAGES, "com.tournament.tournament_manager.domain.event");
-        config.put(JacksonJsonDeserializer.VALUE_DEFAULT_TYPE,
-                "com.tournament.tournament_manager.domain.event.MatchFinishedEvent");
+        config.put(JacksonJsonDeserializer.TRUSTED_PACKAGES, EVENT_PACKAGE);
+        config.put(JacksonJsonDeserializer.VALUE_DEFAULT_TYPE, EVENT_PACKAGE + ".MatchFinishedEvent");
         // Le topic ne véhicule qu'un seul type d'événement : on ignore l'en-tête __TypeId__
         // (que tout producteur capable de publier sur le topic pourrait sinon forger) et on
         // force systématiquement la désérialisation vers VALUE_DEFAULT_TYPE.

@@ -29,6 +29,16 @@ import java.util.stream.Collectors;
  * sur un autre thread/partition — la création est silencieusement ignorée plutôt que de
  * dupliquer le round avec un tirage au sort différent.
  *
+ * <p><b>Le claim se prend en deux temps (point 2.2 de la revue).</b> {@code tryClaim} le
+ * réserve, {@code markCompleted} le confirme une fois les matchs créés — dans cette
+ * transaction, donc solidairement avec eux. La réservation seule ne suffisait pas : elle est
+ * commitée dans une transaction indépendante (nécessaire pour être visible des concurrents),
+ * si bien qu'un échec de la création des matchs annulait la transaction métier en laissant
+ * le claim derrière. Le round devenait définitivement inaccessible et, plus pernicieux, la
+ * redelivery Kafka tombait sur « round déjà réclamé » puis <b>sortait en succès</b> : le
+ * tournoi restait bloqué sans qu'aucune erreur ne remonte. Un claim confirmé fait foi ; un
+ * claim resté non confirmé est libéré, et le retry Kafka reprend normalement.
+ *
  * <p>L'avancement est déterministe, pas tiré au hasard : le vainqueur des matchs aux
  * positions {@code 2k} et {@code 2k+1} du round courant avance vers la position {@code k}
  * du round suivant — c'est ce qui fait du bracket un vrai arbre plutôt qu'un simple
@@ -73,6 +83,11 @@ public class AdvanceBracketService implements AdvanceBracketUseCase {
         if (nextRound < 2) {
             tournament.finish();
             saveTournamentPort.saveTournament(tournament);
+            // Confirmation indispensable meme ici : aucun match n'est cree pour ce "round",
+            // mais le claim a bien rempli son office (empecher deux terminaisons concurrentes).
+            // Le laisser non confirme le ferait liberer par le job de reconciliation, ce qui
+            // autoriserait une seconde tentative de finish() sur un tournoi deja FINISHED.
+            claimRoundAdvancementPort.markCompleted(tournament.getId(), nextRound);
             return;
         }
 
@@ -89,5 +104,10 @@ public class AdvanceBracketService implements AdvanceBracketUseCase {
             int nextPosition = i / 2;
             BracketUtils.createMatch(tournament, player1, player2, nextRound, nextPosition, saveMatchPort);
         }
+
+        // Confirme le claim dans CETTE transaction, donc en meme temps que les matchs
+        // ci-dessus. Si quoi que ce soit echoue avant le commit, la confirmation est annulee
+        // avec le reste et le claim est libere (voir RoundAdvancementJpaAdapter).
+        claimRoundAdvancementPort.markCompleted(tournament.getId(), nextRound);
     }
 }

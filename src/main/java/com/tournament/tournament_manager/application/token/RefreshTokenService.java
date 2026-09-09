@@ -1,6 +1,6 @@
 package com.tournament.tournament_manager.application.token;
 
-import com.tournament.tournament_manager.config.security.JwtService;
+import com.tournament.tournament_manager.domain.port.out.auth.TokenProviderPort;
 import com.tournament.tournament_manager.domain.model.AuthResult;
 import com.tournament.tournament_manager.domain.model.RefreshToken;
 import com.tournament.tournament_manager.domain.port.in.auth.RefreshTokenUseCase;
@@ -46,7 +46,7 @@ import java.util.UUID;
 @Transactional(readOnly = true)
 public class RefreshTokenService implements RefreshTokenUseCase {
 
-    private final JwtService jwtService;
+    private final TokenProviderPort tokenProviderPort;
     private final SaveRefreshTokenPort saveRefreshTokenPort;
     private final LoadRefreshTokenPort loadRefreshTokenPort;
     private final DeleteRefreshTokenPort deleteRefreshTokenPort;
@@ -55,12 +55,12 @@ public class RefreshTokenService implements RefreshTokenUseCase {
     @Value("${jwt.refresh-expiration}")
     private long refreshExpiration;
 
-    public RefreshTokenService(JwtService jwtService,
+    public RefreshTokenService(TokenProviderPort tokenProviderPort,
                                SaveRefreshTokenPort saveRefreshTokenPort,
                                LoadRefreshTokenPort loadRefreshTokenPort,
                                DeleteRefreshTokenPort deleteRefreshTokenPort,
                                UserExistsPort userExistsPort) {
-        this.jwtService = jwtService;
+        this.tokenProviderPort = tokenProviderPort;
         this.saveRefreshTokenPort = saveRefreshTokenPort;
         this.loadRefreshTokenPort = loadRefreshTokenPort;
         this.deleteRefreshTokenPort = deleteRefreshTokenPort;
@@ -115,7 +115,7 @@ public class RefreshTokenService implements RefreshTokenUseCase {
         token.setRevoked(true);
         saveRefreshTokenPort.saveRefreshToken(token);
 
-        String newAccessToken = jwtService.generateToken(token.getUsername());
+        String newAccessToken = tokenProviderPort.generateAccessToken(token.getUsername());
         String newRefreshToken = issueNewToken(token.getUsername());
         return new AuthResult(newAccessToken, newRefreshToken);
     }

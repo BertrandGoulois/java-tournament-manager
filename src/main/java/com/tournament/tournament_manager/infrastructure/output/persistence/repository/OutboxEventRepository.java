@@ -14,7 +14,7 @@ import java.util.List;
 public interface OutboxEventRepository extends JpaRepository<OutboxEventEntity, Long> {
 
     @Query(value = "SELECT * FROM outbox_events "
-            + "WHERE published_at IS NULL "
+            + "WHERE published_at IS NULL AND failed_at IS NULL "
             + "ORDER BY id "
             + "LIMIT :batchSize "
             + "FOR UPDATE SKIP LOCKED",
@@ -24,4 +24,15 @@ public interface OutboxEventRepository extends JpaRepository<OutboxEventEntity, 
     @Modifying
     @Query("DELETE FROM OutboxEventEntity e WHERE e.publishedAt IS NOT NULL AND e.publishedAt < :cutoff")
     int deletePublishedBefore(@Param("cutoff") Instant cutoff);
+
+    /**
+     * Nombre d'evenements definitivement abandonnes (point 2.3). Alimente une metrique de
+     * supervision : toute valeur non nulle demande une intervention humaine, ces evenements
+     * ne repartiront jamais seuls.
+     *
+     * <p>Volontairement absent de la purge : un evenement abandonne est une anomalie a
+     * examiner, pas un dechet a balayer. Le supprimer automatiquement reviendrait a masquer
+     * la perte de donnees qu'il represente.
+     */
+    long countByFailedAtIsNotNull();
 }

@@ -58,7 +58,7 @@ class MatchJpaAdapterTest {
 
     @Test
     void loadMatch_shouldReturnMatch_whenFound() {
-        when(matchRepository.findById(1L)).thenReturn(Optional.of(entityWithId(1L)));
+        when(matchRepository.findByIdWithAssociations(1L)).thenReturn(Optional.of(entityWithId(1L)));
 
         Match result = matchJpaAdapter.loadMatch(1L);
 
@@ -67,7 +67,7 @@ class MatchJpaAdapterTest {
 
     @Test
     void loadMatch_shouldThrow_whenNotFound() {
-        when(matchRepository.findById(99L)).thenReturn(Optional.empty());
+        when(matchRepository.findByIdWithAssociations(99L)).thenReturn(Optional.empty());
 
         assertThrows(MatchNotFoundException.class, () -> matchJpaAdapter.loadMatch(99L));
     }

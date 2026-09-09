@@ -1,7 +1,7 @@
 package com.tournament.tournament_manager.application.auth;
 
 import com.tournament.tournament_manager.application.token.RefreshTokenService;
-import com.tournament.tournament_manager.config.security.JwtService;
+import com.tournament.tournament_manager.domain.port.out.auth.TokenProviderPort;
 import com.tournament.tournament_manager.domain.model.AuthResult;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,7 +23,7 @@ class AuthServiceTest {
     private AuthenticationManager authenticationManager;
 
     @Mock
-    private JwtService jwtService;
+    private TokenProviderPort tokenProviderPort;
 
     @Mock
     private RefreshTokenService refreshTokenService;
@@ -36,7 +36,7 @@ class AuthServiceTest {
         when(authenticationManager.authenticate(any())).thenReturn(
                 new UsernamePasswordAuthenticationToken("admin", "password123")
         );
-        when(jwtService.generateToken("admin")).thenReturn("jwt-token");
+        when(tokenProviderPort.generateAccessToken("admin")).thenReturn("jwt-token");
         when(refreshTokenService.generateRefreshToken("admin")).thenReturn("refresh-token");
 
         AuthResult result = authService.login("admin", "password123");
@@ -44,7 +44,7 @@ class AuthServiceTest {
         assertEquals("jwt-token", result.accessToken());
         assertEquals("refresh-token", result.refreshToken());
         verify(authenticationManager, times(1)).authenticate(any());
-        verify(jwtService, times(1)).generateToken("admin");
+        verify(tokenProviderPort, times(1)).generateAccessToken("admin");
         verify(refreshTokenService, times(1)).generateRefreshToken("admin");
     }
 

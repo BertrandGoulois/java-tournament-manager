@@ -127,8 +127,12 @@ Exemple : `PUT /api/matches/1/result` - du client jusqu'à la réponse HTTP.
 
 ### Architecture hexagonale
 
-- `domain/` ne dépend d'aucune librairie technique ni d'aucun DTO REST/JSON-RPC (voir `DomainIsolationTest`)
-- `application/` implémente les use cases en s'appuyant sur les ports du domaine
+- `domain/` ne dépend d'aucune librairie technique ni d'aucun DTO REST/JSON-RPC
+- `application/` implémente les use cases en s'appuyant **uniquement sur les ports du domaine** : ni `infrastructure/`, ni `config/`
+
+Les deux règles sont vérifiées par `DomainIsolationTest` (ArchUnit). La seconde ne l'était pas : seul `domain/` était surveillé, ce qui laissait `application/` libre de dépendre de n'importe quoi - et `AuthService` en profitait pour importer directement `config.security.JwtService`. L'architecture hexagonale était affirmée ici et vérifiée à moitié dans la CI. L'émission de jeton passe désormais par `TokenProviderPort`, qui ne mentionne ni JWT, ni signature, ni expiration : remplacer les JWT par des jetons opaques ne toucherait que l'adaptateur.
+
+Une exception subsiste, **nommée dans une règle plutôt que tacite** : `application.rpc` manipule l'enveloppe JSON-RPC, parce que router une requête suppose d'en lire le champ `method` et d'en produire le format d'erreur. Le jour où un autre paquet applicatif importera des DTO, la CI le dira.
 - `infrastructure/input/` contient les **adapters primaires** : ce qui déclenche le domaine (REST, Kafka consumers, scheduler)
 - `infrastructure/output/` contient les **adapters secondaires** : ce dont le domaine a besoin (base de données, Kafka producer, OpenAI)
 - `config/` configure le contexte Spring sans appartenir au domaine ni à l'infra
@@ -189,8 +193,15 @@ En cas d'échec répété (3 tentatives espacées d'1 seconde), le message est r
 **Pattern Outbox transactionnel.** La publication ne se fait jamais directement pendant la transaction métier. `RecordMatchResultService` écrit le match ET une ligne dans `outbox_events`, dans la même transaction (atomique par construction). Un poller séparé, `OutboxPublisherService`, tourne toutes les 500ms hors de toute transaction métier :
 
 - verrouille un lot d'événements non publiés avec `FOR UPDATE SKIP LOCKED` (sûr avec plusieurs instances de l'app en parallèle)
-- les envoie réellement à Kafka, avec `tournamentId` comme clé de partition (ordre garanti par tournoi une fois le topic multi-partitions)
-- marque `publishedAt` en cas de succès ; en cas d'échec (Kafka indisponible), la ligne reste en base et sera retentée au cycle suivant - jamais silencieusement perdue
+- les envoie **tous** à Kafka avant d'attendre le moindre accusé de réception, avec `tournamentId` comme clé de partition (ordre garanti par tournoi une fois le topic multi-partitions)
+- attend les confirmations sous une **échéance globale** de 10 secondes, et non par événement : un `send().get(5s)` par message aurait borné le pire cas à 100 × 5 s, soit plus de huit minutes de transaction ouverte gardant ses verrous `FOR UPDATE` sur 100 lignes. Une lenteur Kafka se serait transformée en blocage PostgreSQL.
+- marque `publishedAt` en cas de succès ; en cas d'échec transitoire (Kafka indisponible), la ligne reste en base et sera retentée au cycle suivant - jamais silencieusement perdue
+
+**Événements empoisonnés.** Un événement dont le payload est illisible ne peut pas se réparer par la répétition : il serait relu toutes les 500 ms indéfiniment, en inondant les logs. Ces événements sont abandonnés explicitement (`failed_at`, `last_error`) et cessent d'être relus.
+
+L'abandon repose sur la **nature** de l'erreur, jamais sur un compteur de tentatives. À 500 ms par cycle, n'importe quel seuil serait franchi par une panne Kafka de quelques secondes, ce qui jetterait tous les événements en attente et transformerait un incident passager en perte de données définitive. Seules les erreurs qui tiennent au contenu du message sont définitives : payload illisible, message dépassant la taille maximale du broker, topic invalide. Une indisponibilité de Kafka n'entraîne jamais d'abandon, quelle que soit sa durée.
+
+Les événements abandonnés ne sont pas purgés : ce sont des anomalies à examiner, pas des déchets à balayer.
 
 Les événements publiés sont purgés périodiquement par `PurgeScheduler` (voir ci-dessous) ; les non-publiés ne le sont jamais, quel que soit leur âge.
 
@@ -204,6 +215,39 @@ Les événements publiés sont purgés périodiquement par `PurgeScheduler` (voi
 - **Tracing échantillonné différemment par profil** : 100% en local (`application-local.properties`, pratique pour voir chaque requête pendant le développement), 10% en profil `docker` (`management.tracing.sampling.probability=0.1`) - tracer 100% du trafic devient coûteux avec un vrai volume (stockage Jaeger, overhead réseau OTLP).
 - **`spring.jpa.show-sql` et le logging Spring Security en `DEBUG`** ne vivent plus que dans `application-local.properties`, pas dans le fichier de configuration partagé par tous les profils - ils tournaient auparavant sans discrimination même en profil `docker`. `logging.level.org.hibernate.SQL=DEBUG` remplace `show-sql=true` : passe par le vrai framework de logging (filtrable, redirigeable) au lieu d'écrire directement sur stdout.
 
+### Chargement des associations JPA
+
+Les `@ManyToOne` sont toutes en `FetchType.LAZY`, alors que le défaut JPA - contre-intuitif - est EAGER. Charger un match ne tire plus systématiquement le tournoi et les trois joueurs.
+
+Le passage en LAZY **ne suffit pas à lui seul**, et c'est le point à retenir avant d'ajouter une requête : les mappers (`MatchMapper.toDomain` et consorts) déréférencent toutes les associations sans condition, à chaque conversion. Une association LAZY non préchargée ne disparaît donc pas, elle se transforme en un SELECT supplémentaire au moment du mapping - ce qui est *pire* que la jointure EAGER qu'elle remplace.
+
+Toutes les méthodes de lecture de `MatchRepository` font donc leurs `JOIN FETCH`, y compris `findByIdWithAssociations` qui remplace le `findById` hérité de `JpaRepository` sur le chemin `loadMatch`. **Toute nouvelle requête renvoyant des entités destinées à un mapper doit préciser ses `JOIN FETCH`.** `open-in-view=false` rend l'oubli visible hors transaction (`LazyInitializationException`), mais à l'intérieur d'une transaction il ne se manifeste que par un N+1 silencieux.
+
+Le seul endroit où LAZY est un gain immédiat sans contrepartie est `saveCommentary`, qui chargeait un tournoi et trois joueurs pour écrire une seule colonne de texte.
+
+### Avancement de bracket et idempotence
+
+L'avancement au round suivant est déclenché par un événement Kafka, donc soumis à l'at-least-once : le même événement peut être traité deux fois, ou par deux instances en parallèle. `round_advancements` porte une contrainte d'unicité sur `(tournament_id, round)` qui sert de réservation.
+
+Le claim se prend **en deux temps** : `tryClaim` réserve (`PENDING`), `markCompleted` confirme (`DONE`) une fois les matchs créés, dans la même transaction qu'eux. La réservation seule ne suffisait pas - elle est commitée dans une transaction indépendante, nécessaire pour être visible des concurrents, si bien qu'un échec de la création des matchs annulait la transaction métier en laissant le claim derrière. Le round devenait alors définitivement inaccessible, et la redelivery Kafka tombait sur « round déjà réclamé », journalisait un `warn` et **sortait en succès** : le tournoi restait bloqué sans qu'aucune erreur ne remonte nulle part.
+
+Deux mécanismes ferment cette fenêtre :
+
+- `RoundAdvancementJpaAdapter` enregistre une `TransactionSynchronization` qui libère le claim si la transaction appelante est annulée. C'est un `afterCompletion` et non un `try/catch` : une transaction peut aussi échouer **au commit**, hors de portée de tout bloc catch placé dans la méthode.
+- `StaleRoundClaimScheduler` libère les claims restés `PENDING` au-delà de `round-claims.stale-after` (10 min). Filet de dernier recours, pour le cas d'un processus tué entre le commit du claim et la fin de la transaction métier. Toute libération est journalisée en `ERROR` et comptée : ce job ne doit jamais rien trouver en régime normal.
+
+Aucun redéclenchement manuel n'est nécessaire après libération : l'offset Kafka n'ayant pas été commité, l'événement est redélivré et trouve le round de nouveau réclamable.
+
+### Supervision et alertes
+
+Les métriques métier (`outbox.pending.events`, `outbox.failed.events`, `round.claims.stale.released`, `rate.limit.blocked`, `rate.limit.degraded`) sont exposées sur `/actuator/prometheus` et couvertes par des règles d'alerte dans `docker/prometheus/alert-rules.yml`.
+
+Le principe de sélection : alerter sur ce qui demande une **décision humaine**, pas sur ce qui se répare tout seul. Le système retente beaucoup de choses de lui-même (retry Kafka, republication outbox, libération de claim) ; réveiller quelqu'un pour un incident en cours de résolution est le meilleur moyen de faire ignorer les alertes qui comptent.
+
+D'où des seuils volontairement asymétriques : `OutboxEventAbandoned` se déclenche à **1** - un événement abandonné est une perte de donnée définitive, un match dont l'ELO ne sera jamais calculé - tandis que `OutboxBacklogGrowing` attend 50 événements pendant 15 minutes, un pic transitoire étant normal.
+
+`RateLimitingDegraded` mérite une mention : c'est une panne **invisible pour l'utilisateur**. Redis tombe, les requêtes passent sans vérification, tout a l'air normal - et la protection contre le bourrage d'identifiants est simplement absente.
+
 ### Gestion des erreurs HTTP
 
 Toutes les erreurs REST sont renvoyées au format **`ProblemDetail`** (RFC 7807 - "Problem Details for HTTP APIs"), supporté nativement par Spring depuis la 6.0/Boot 3.0 - remplace l'ancien DTO maison `ErrorResponse`. Champs standard `type`/`title`/`status`/`detail`/`instance`, plus une extension `timestamp` pour corréler avec les logs serveur.
@@ -216,7 +260,7 @@ Toutes les erreurs REST sont renvoyées au format **`ProblemDetail`** (RFC 7807 
 
 - **Facteur K configurable** (`elo.k-factor`, défaut `32`) - auparavant une valeur en dur dans `EloService`, sans aucun moyen de l'ajuster sans recompiler.
 - **Plafonnement à 0 visible** : `EloRating.wouldClamp(delta)` permet à `EloService` de journaliser un `WARN` quand un classement aurait dû devenir négatif - ce plafonnement était auparavant totalement silencieux, une perte d'information invisible pour quiconque ne vérifiait pas explicitement.
-- **N+1 corrigé sur les statistiques joueur** (`GetPlayerStatsService`) : `EloHistoryRepository` charge désormais l'historique ELO avec un `JOIN FETCH` explicite en une seule requête, plutôt qu'une requête séparée par relation et par ligne d'historique (les associations `@ManyToOne` de `EloHistoryEntity` sont EAGER par défaut JPA, sans `fetch` précisé).
+- **N+1 corrigé sur les statistiques joueur** (`GetPlayerStatsService`) : `EloHistoryRepository` charge l'historique ELO avec un `JOIN FETCH` explicite en une seule requête, plutôt qu'une requête séparée par relation et par ligne d'historique.
 
 ### Sécurité HTTP (nginx)
 
@@ -245,17 +289,26 @@ git clone https://github.com/BertrandGoulois/java-tournament-manager.git
 cd java-tournament-manager
 ```
 
-2. Créer un fichier `.env` à la racine :
+2. Créer le fichier `.env` à partir du modèle fourni :
 
-```
-POSTGRES_PASSWORD=tonmotdepasse
-JWT_SECRET=une-valeur-base64-generee-avec-openssl-rand-base64-32
-OPENAI_API_KEY=sk-...ta-clef
-GRAFANA_ADMIN_PASSWORD=tonmotdepasse-grafana
-REDIS_PASSWORD=tonmotdepasse-redis
+```bash
+cp .env.example .env
 ```
 
-> `JWT_SECRET` doit être une chaîne Base64 valide. Génère-en une avec `openssl rand -base64 32`.
+`.env.example` liste chaque variable attendue avec la commande qui génère sa valeur. Aucune n'a de valeur par défaut en profil `docker` : une variable manquante fait échouer le démarrage plutôt que de laisser l'application tourner dans une configuration inattendue.
+
+```
+POSTGRES_PASSWORD=
+JWT_SECRET=
+OPENAI_API_KEY=
+GRAFANA_ADMIN_PASSWORD=
+REDIS_PASSWORD=
+ADMIN_INITIAL_PASSWORD=
+```
+
+> `JWT_SECRET` doit être une chaîne **Base64** : `JwtService` la décode via `Decoders.BASE64`. Une chaîne hexadécimale « fonctionne » par accident (l'alphabet hex est un sous-ensemble de Base64) mais fournit environ moitié moins d'entropie que sa longueur ne le suggère. Génère-la avec `openssl rand -base64 64`.
+
+> `ADMIN_INITIAL_PASSWORD` définit le mot de passe du compte `admin`. La migration `003` crée ce compte avec un hash bcrypt présent dans le dépôt, donc public et identique sur toutes les installations ; `AdminAccountInitializer` le remplace au démarrage par la valeur de cette variable. Tant qu'elle n'est pas définie et que le hash commité est encore en place, **l'application refuse de démarrer**. La variable étant réappliquée à chaque démarrage, elle sert aussi de mécanisme de rotation.
 
 3. Démarrer tous les services :
 
@@ -275,13 +328,28 @@ docker-compose up -d
 ./mvnw spring-boot:run
 ```
 
-**Tests unitaires (aucune dépendance externe, pas de Docker requis) :**
+**Tests unitaires seuls (aucune dépendance externe, pas de Docker requis) :**
+
+```bash
+./mvnw test
+```
+
+**Build complet, tests d'intégration compris (Docker requis) :**
 
 ```bash
 ./mvnw verify
 ```
 
-> Génère aussi le rapport de couverture JaCoCo. Les tests nécessitant Testcontainers (Postgres/Redis/Kafka) en sont exclus - voir ci-dessous.
+> Génère aussi le rapport de couverture JaCoCo. Les tests `*IT` démarrent de vrais conteneurs Postgres, Kafka et Redis via Testcontainers - compter une dizaine de minutes.
+
+**Mise en forme (Spotless) :**
+
+```bash
+./mvnw spotless:check    # vérifie sans modifier
+./mvnw spotless:apply    # corrige
+```
+
+> Volontairement non lié au cycle de vie : `verify` ne le déclenche pas. La configuration se limite à de l'hygiène (imports inutilisés, espaces en fin de ligne, fins de ligne en LF) plutôt qu'à un reformatage global, qui réécrirait tous les fichiers et rendrait les revues illisibles. À lancer dans un commit séparé des changements fonctionnels.
 
 **Tests de mutation (PIT) :**
 
@@ -316,8 +384,14 @@ docker-compose up -d
 | Prometheus | `http://localhost:9090` |
 | Grafana | `http://localhost:3000` (admin / valeur de `GRAFANA_ADMIN_PASSWORD` dans `.env`) |
 | Jaeger UI | `http://localhost:16686` |
-| Health (détails, port de management) | `http://localhost:9001/actuator/health` |
+| Health (détails, port de management) | non publié sur l'hôte - voir ci-dessous |
 | Liveness / readiness (port principal, public) | `http://localhost/livez`, `http://localhost/readyz` |
+
+> Le port de management (9001) n'est **pas** publié sur l'hôte. `ManagementSecurityConfig` fait `permitAll()` sur tout l'actuator en s'appuyant sur le fait que seul le réseau interne peut l'atteindre - ce qui était faux tant que `docker-compose.yml` contenait `ports: "9001:9001"` : `/actuator/metrics` et `/actuator/prometheus` étaient lisibles sans authentification par quiconque atteignait la machine. Prometheus scrape `app:9001` par le réseau interne et n'a jamais eu besoin de cette publication. Pour un accès ponctuel depuis l'hôte :
+>
+> ```bash
+> docker compose exec app wget -qO- http://localhost:9001/actuator/health
+> ```
 
 ---
 

@@ -15,8 +15,12 @@ concurrency:
 
 jobs:
   # Point 30 : "aucun scan de sécurité" était le manque le plus criant, pour un projet
-  # qui a laissé passer une vraie clé OpenAI et un secret JWT plus tôt dans son
-  # histoire. Job rapide, indépendant, ne bloque pas le reste si Gitleaks est lent.
+  # qui a laissé passer un secret JWT plus tôt dans son histoire (commits f791295 et
+  # 1d2569d). Job rapide, indépendant, ne bloque pas le reste si Gitleaks est lent.
+  #
+  # Rappel : Gitleaks n'aurait PAS attrapé ce secret-là. C'était une chaîne hexadécimale,
+  # qui ne correspond à aucune signature de secret connue - contrairement à un "sk-proj-…".
+  # Un scanner de secrets réduit la surface, il ne la ferme pas.
   secret-scan:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -36,8 +40,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # §6 de la revue : ce job avait "contents: write" pour publier le badge de couverture,
+    # ce qui donnait un droit d'écriture sur le dépôt au job qui exécute aussi tout le code
+    # de test et toutes les dépendances tierces. La publication du badge est déplacée dans
+    # le job "publish-badges" ci-dessous ; celui-ci redescend en lecture seule.
     permissions:
-      contents: write  # nécessaire pour publier le badge de couverture sur gh-pages
+      contents: read
 
     steps:
       - name: Checkout
@@ -53,10 +61,11 @@ jobs:
       - name: Grant execute permission for mvnw
         run: chmod +x mvnw
 
+      # Plus de "env: JWT_SECRET" ici : le vrai secret de signature de l'application n'a
+      # aucune raison d'entrer dans un runner CI (point 1.1). Les tests prennent désormais
+      # leur clé dans src/test/resources/application.properties, valeur de test dédiée.
       - name: Build and test
         run: ./mvnw verify
-        env:
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
 
       - name: Generate JaCoCo Badge
         uses: cicirello/jacoco-badge-generator@v2
@@ -65,19 +74,12 @@ jobs:
           jacoco-csv-file: target/site/jacoco/jacoco.csv
           badges-directory: badges-output
 
-      # Point 28 : le badge était auparavant commité directement sur main à chaque
-      # push (46 des 176 commits du dépôt), polluant git log/git bisect et créant un
-      # risque de conflit sur deux pushs rapprochés. Publié maintenant sur gh-pages,
-      # comme la Javadoc (voir javadoc.yml) - aucun commit sur main.
-      # keep_files: true est essentiel ici : sans lui, cette publication effacerait
-      # le contenu déjà présent sur gh-pages (la Javadoc), et réciproquement.
-      - name: Publish coverage badges to gh-pages
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Upload coverage badges
+        uses: actions/upload-artifact@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: badges-output
-          destination_dir: badges
-          keep_files: true
+          name: coverage-badges
+          path: badges-output
+          retention-days: 1
 
   integration-tests:
     needs: build
@@ -103,8 +105,55 @@ jobs:
       # plus - voir pom.xml) déclenche maven-failsafe-plugin, qui exécute nativement
       # tout ce qui suit la convention *IT. -Dsurefire.skip=true évite de rejouer les
       # tests rapides déjà passés dans le job "build" ci-dessus.
+      #
+      # §6 de la revue : "continue-on-error: true" a été RETIRÉ. Les 9 tests d'intégration
+      # (sécurité JSON-RPC, rate limiting, parcours de tournoi complets) ne bloquaient rien
+      # et une régression sur JsonRpcSecurityIT serait passée au vert. La "phase
+      # d'observation" invoquée n'avait pas de date de fin ; elle s'arrête ici.
+      #
+      # La flakiness reste traitée, mais nommément : rerunFailingTestsCount=2 absorbe
+      # l'aléa ponctuel, et un test réellement instable se voit poser @Tag("flaky") plus
+      # -Dfailsafe.excludedGroups=flaky, ce qui met UN test en quarantaine visible au lieu
+      # de désarmer le job entier.
       - name: Run integration tests
         run: ./mvnw verify -Dsurefire.skip=true
-        continue-on-error: true  # non-bloquant pendant la phase d'observation, voir pom.xml
-        env:
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+
+      - name: Upload failsafe reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: failsafe-reports
+          path: target/failsafe-reports
+          retention-days: 7
+
+  # Point 28 : le badge était auparavant commité directement sur main à chaque push
+  # (46 des 176 commits du dépôt), polluant git log/git bisect et créant un risque de
+  # conflit sur deux pushs rapprochés. Publié sur gh-pages, comme la Javadoc (voir
+  # javadoc.yml) - aucun commit sur main.
+  #
+  # §6 : job dédié, seul à porter "contents: write", et qui n'exécute aucun code du
+  # projet - il ne fait que republier un artefact déjà produit. Une dépendance compromise
+  # dans l'arbre Maven ne dispose donc plus d'un jeton en écriture.
+  publish-badges:
+    needs: [ build, integration-tests ]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Download coverage badges
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-badges
+          path: badges-output
+
+      # keep_files: true est essentiel ici : sans lui, cette publication effacerait le
+      # contenu déjà présent sur gh-pages (la Javadoc), et réciproquement.
+      - name: Publish coverage badges to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: badges-output
+          destination_dir: badges
+          keep_files: true

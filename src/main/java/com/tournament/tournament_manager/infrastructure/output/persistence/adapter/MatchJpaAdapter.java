@@ -43,7 +43,10 @@ public class MatchJpaAdapter implements LoadMatchPort, SaveMatchPort, LoadMatchB
 
     @Override
     public Match loadMatch(Long id) {
-        MatchEntity entity = matchRepository.findById(id)
+        // findByIdWithAssociations et non findById : depuis le passage en LAZY (§4), le
+        // findById hérité laisserait quatre proxies que MatchMapper.toDomain déréférencerait
+        // aussitôt, soit quatre SELECT là où une requête jointe suffit.
+        MatchEntity entity = matchRepository.findByIdWithAssociations(id)
                 .orElseThrow(() -> new MatchNotFoundException(id));
         return matchMapper.toDomain(entity);
     }
@@ -87,6 +90,10 @@ public class MatchJpaAdapter implements LoadMatchPort, SaveMatchPort, LoadMatchB
 
     @Override
     public void saveCommentary(Long matchId, String commentary) {
+        // findById volontairement, sans JOIN FETCH : ce chemin n'appelle pas le mapper et
+        // n'a besoin d'aucune association pour écrire une seule colonne. C'est le cas où le
+        // passage en LAZY (§4) est un gain net — l'EAGER implicite chargeait ici le tournoi
+        // et les trois joueurs pour rien.
         MatchEntity entity = matchRepository.findById(matchId)
                 .orElseThrow(() -> new MatchNotFoundException(matchId));
         entity.setCommentary(commentary);

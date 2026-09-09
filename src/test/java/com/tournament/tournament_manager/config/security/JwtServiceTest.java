@@ -14,7 +14,13 @@ class JwtServiceTest {
     void setUp() {
         jwtService = new JwtService();
         ReflectionTestUtils.setField(jwtService, "secretKey",
-                "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970");
+                // Secret de TEST uniquement, sans aucun lien avec un environnement réel.
+                // Cette ligne portait auparavant la valeur exacte de JWT_SECRET utilisée en
+                // docker-compose : le secret de production vivait donc en clair dans le code
+                // source, en plus de son passage dans l'historique git (commits f791295,
+                // 1d2569d). Gitleaks ne l'attrapait pas — une chaîne hexadécimale ne
+                // correspond à aucune signature de secret connue.
+                "dGVzdC1vbmx5LWtleS1uZXZlci11c2VkLW91dHNpZGUtdW5pdC10ZXN0cy1wYWRkaW5nLXRvLTUxMi1iaXRzLWZvci1obWFjLXNoYTUxMg==");
         ReflectionTestUtils.setField(jwtService, "expiration", 86400000L);
     }
 

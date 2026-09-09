@@ -1,6 +1,12 @@
 global:
   scrape_interval: 15s
 
+# §8 de la revue : les regles d'alerte donnent un destinataire aux metriques. Sans elles,
+# outbox_failed_events ou round_claims_stale_released ne sont que des nombres sur un
+# graphique que personne ne regarde a 3h du matin.
+rule_files:
+  - /etc/prometheus/alert-rules.yml
+
 scrape_configs:
   - job_name: 'tournament-app'
     metrics_path: '/actuator/prometheus'

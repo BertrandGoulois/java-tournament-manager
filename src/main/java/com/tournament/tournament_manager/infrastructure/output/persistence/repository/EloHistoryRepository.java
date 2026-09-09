@@ -12,16 +12,23 @@ import java.util.List;
 public interface EloHistoryRepository extends JpaRepository<EloHistoryEntity, Long> {
 
     /**
-     * Point 35 de la revue : N+1 caché, corrigé ici. {@code EloHistoryEntity.player} et
-     * {@code .match} sont en {@code @ManyToOne} sans {@code fetch} explicite (EAGER par
-     * défaut JPA) - {@code MatchMapper.toDomain} reconstruit ensuite un {@code Match}
-     * complet à chaque ligne (tournoi + 2 joueurs + vainqueur), ce qui déclenchait, sans
-     * ce {@code JOIN FETCH}, une requête SQL séparée par relation et par ligne d'historique
-     * (potentiellement N×5+ requêtes pour N entrées). Une seule requête désormais, quel
-     * que soit le nombre d'entrées.
+     * Point 35 de la revue : N+1 caché, corrigé ici. {@code MatchMapper.toDomain}
+     * reconstruit un {@code Match} complet à chaque ligne (tournoi + 2 joueurs + vainqueur),
+     * ce qui déclencherait, sans ce {@code JOIN FETCH}, une requête SQL séparée par relation
+     * et par ligne d'historique (potentiellement N×5+ requêtes pour N entrées). Une seule
+     * requête désormais, quel que soit le nombre d'entrées.
+     *
+     * <p>Ce {@code JOIN FETCH} est devenu <b>indispensable</b> et non plus seulement
+     * bénéfique : depuis le §4, {@code EloHistoryEntity.player}/{@code .match} et les
+     * associations de {@code MatchEntity} sont en {@code FetchType.LAZY}. Avant, l'EAGER
+     * implicite garantissait au moins que les données finissaient par arriver ; ici, retirer
+     * une seule ligne de {@code JOIN FETCH} produit soit un N+1, soit une
+     * {@code LazyInitializationException} si le mapping sort de la transaction
+     * ({@code open-in-view=false}).
      */
     @Query("""
             SELECT eh FROM EloHistoryEntity eh
+            LEFT JOIN FETCH eh.player
             LEFT JOIN FETCH eh.match m
             LEFT JOIN FETCH m.tournament
             LEFT JOIN FETCH m.player1

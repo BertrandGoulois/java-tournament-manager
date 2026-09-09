@@ -29,11 +29,11 @@ public class RegistrationEntity {
     @Column(nullable = false, updatable = false)
     private Instant registeredAt;
 
-    @ManyToOne()
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tournament_id", nullable = false)
     private TournamentEntity tournament;
 
-    @ManyToOne()
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "player_id", nullable = false)
     private PlayerEntity player;
 

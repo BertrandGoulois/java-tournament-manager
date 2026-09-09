@@ -56,4 +56,65 @@ class DomainIsolationTest {
 
         rule.check(classes);
     }
+
+    /**
+     * Point 3.2 de la revue : la couche applicative n'a pas le droit de nommer
+     * l'infrastructure.
+     *
+     * <p>La regle ci-dessus ne surveillait que {@code domain}, ce qui laissait
+     * {@code application} libre de dependre de n'importe quoi — et elle en profitait :
+     * {@code AuthService} et {@code RefreshTokenService} importaient directement
+     * {@code config.security.JwtService}. L'architecture hexagonale etait donc affirmee
+     * partout dans le README et verifiee a moitie dans la CI. Un choix technologique (JWT)
+     * remontait jusque dans le code metier, ou il n'a rien a faire : l'emission de jeton
+     * passe desormais par {@code TokenProviderPort}.
+     */
+    @Test
+    void applicationShouldNotDependOnInfrastructure() {
+        var classes = new ClassFileImporter()
+                .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+                .importPackages(BASE_PACKAGE);
+
+        ArchRule rule = noClasses()
+                .that().resideInAPackage(BASE_PACKAGE + ".application..")
+                .should().dependOnClassesThat().resideInAnyPackage(
+                        BASE_PACKAGE + ".infrastructure..",
+                        BASE_PACKAGE + ".config.."
+                )
+                .because("la couche applicative orchestre le metier et ne doit connaitre que "
+                        + "des ports (domain.port.out) — voir TokenProviderPort, introduit "
+                        + "pour que l'emission de jeton cesse de nommer JwtService");
+
+        rule.check(classes);
+    }
+
+    /**
+     * Les DTO de transport ne remontent pas dans la couche applicative — a une exception
+     * pres, nommee ici plutot que tacite.
+     *
+     * <p>{@code application.rpc} manipule l'enveloppe JSON-RPC ({@code JsonRpcRequest},
+     * {@code JsonRpcResponse}, {@code JsonRpcError}) parce que le dispatch <i>est</i> le
+     * protocole : router une requete JSON-RPC suppose d'en lire le champ {@code method} et
+     * d'en produire le format d'erreur normalise. C'est une dette assumee, pas un oubli.
+     *
+     * <p>L'interet de l'ecrire sous forme de regle est qu'elle est <b>bornee</b> : le jour
+     * ou un autre paquet applicatif se mettra a importer des DTO, la CI le dira. Une
+     * exception invisible se serait propagee sans que personne ne s'en apercoive.
+     */
+    @Test
+    void applicationShouldNotDependOnTransportDtos_exceptJsonRpcEnvelope() {
+        var classes = new ClassFileImporter()
+                .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+                .importPackages(BASE_PACKAGE);
+
+        ArchRule rule = noClasses()
+                .that().resideInAPackage(BASE_PACKAGE + ".application..")
+                .and().resideOutsideOfPackage(BASE_PACKAGE + ".application.rpc..")
+                .should().dependOnClassesThat().resideInAnyPackage(BASE_PACKAGE + ".dto..")
+                .because("les DTO sont des objets de transport HTTP (annotations Swagger, "
+                        + "validation Jakarta) ; seul application.rpc y touche, parce que "
+                        + "l'enveloppe JSON-RPC est le protocole qu'il route");
+
+        rule.check(classes);
+    }
 }

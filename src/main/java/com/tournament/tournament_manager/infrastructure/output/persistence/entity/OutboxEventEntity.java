@@ -38,4 +38,23 @@ public class OutboxEventEntity {
     private Instant createdAt = Instant.now();
 
     private Instant publishedAt;
+
+    /**
+     * Nombre de tentatives de publication echouees. Purement informatif : l'abandon ne
+     * repose PAS sur ce compteur (voir la migration 020 et
+     * {@code OutboxPublisherService.isPermanentFailure}). Il sert au diagnostic et permet de
+     * reperer un evenement qui rame sans etre pour autant irrecuperable.
+     */
+    @Column(nullable = false)
+    private int attempts = 0;
+
+    /**
+     * Horodatage de l'abandon definitif. {@code null} tant que l'evenement reste candidat a
+     * la publication ; renseigne uniquement sur erreur non rejouable.
+     */
+    private Instant failedAt;
+
+    /** Cause de l'abandon, pour ne pas avoir a retrouver la ligne de log correspondante. */
+    @Column(columnDefinition = "TEXT")
+    private String lastError;
 }

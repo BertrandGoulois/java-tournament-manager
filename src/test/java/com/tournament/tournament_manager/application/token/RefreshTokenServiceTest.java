@@ -1,6 +1,6 @@
 package com.tournament.tournament_manager.application.token;
 
-import com.tournament.tournament_manager.config.security.JwtService;
+import com.tournament.tournament_manager.domain.port.out.auth.TokenProviderPort;
 import com.tournament.tournament_manager.domain.model.RefreshToken;
 import com.tournament.tournament_manager.domain.port.out.auth.DeleteRefreshTokenPort;
 import com.tournament.tournament_manager.domain.port.out.auth.LoadRefreshTokenPort;
@@ -30,7 +30,7 @@ import static org.mockito.Mockito.*;
 class RefreshTokenServiceTest {
 
     @Mock
-    private JwtService jwtService;
+    private TokenProviderPort tokenProviderPort;
     @Mock
     private SaveRefreshTokenPort saveRefreshTokenPort;
     @Mock
@@ -91,7 +91,7 @@ class RefreshTokenServiceTest {
 
         when(loadRefreshTokenPort.loadByToken(sha256Hex(rawToken))).thenReturn(Optional.of(stored));
         when(userExistsPort.existsByUsername("admin")).thenReturn(true);
-        when(jwtService.generateToken("admin")).thenReturn("new-jwt");
+        when(tokenProviderPort.generateAccessToken("admin")).thenReturn("new-jwt");
         when(saveRefreshTokenPort.saveRefreshToken(any())).thenAnswer(inv -> inv.getArgument(0));
 
         AuthResult result = refreshTokenService.refresh(rawToken);
@@ -150,7 +150,7 @@ class RefreshTokenServiceTest {
 
         assertThrows(InvalidException.class, () -> refreshTokenService.refresh("refresh-token"));
         // Aucun nouvel access token ne doit être émis pour un compte qui n'existe plus.
-        verify(jwtService, never()).generateToken(anyString());
+        verify(tokenProviderPort, never()).generateAccessToken(anyString());
     }
 
     @Test

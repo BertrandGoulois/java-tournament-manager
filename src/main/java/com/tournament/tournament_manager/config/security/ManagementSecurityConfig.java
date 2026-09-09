@@ -17,10 +17,17 @@ import org.springframework.security.web.SecurityFilterChain;
  * {@code /actuator/prometheus}, ce qui empêche Prometheus de scraper les métriques.
  *
  * <p>On choisit ici de confier la protection de ce port au réseau plutôt qu'à
- * l'authentification applicative : il n'est jamais relayé par nginx (voir
- * {@code docker-compose.yml}), seuls le réseau interne docker-compose et l'hôte local
- * (pour le dev) peuvent l'atteindre. À armer d'une authentification HTTP Basic si ce
- * port devait un jour être joignable depuis un réseau moins maîtrisé.
+ * l'authentification applicative : il n'est jamais relayé par nginx et n'est plus publié
+ * sur l'hôte (voir {@code docker-compose.yml}), seul le réseau interne docker-compose peut
+ * donc l'atteindre — c'est ainsi que Prometheus le scrape.
+ *
+ * <p><b>Point 1.6 de la revue.</b> Cette justification était fausse jusqu'ici : le compose
+ * contenait {@code ports: "9001:9001"}, qui publiait le port sur l'hôte. Sur toute machine
+ * un tant soit peu exposée, {@code /actuator/metrics} et {@code /actuator/prometheus}
+ * étaient donc lisibles sans authentification. La publication a été retirée plutôt que
+ * d'armer le HTTP Basic : Prometheus passe par le réseau interne, personne d'autre n'a de
+ * raison légitime d'atteindre ce port. À basculer sur HTTP Basic le jour où ce port devrait
+ * être joignable depuis un réseau moins maîtrisé.
  */
 @Configuration
 public class ManagementSecurityConfig {
