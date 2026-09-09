@@ -65,3 +65,4 @@ com.tournament.tournament_manager.infrastructure.output.persistence.adapter
 com.tournament.tournament_manager.infrastructure.output.persistence.entity
 com.tournament.tournament_manager.infrastructure.output.persistence.mapper
 com.tournament.tournament_manager.infrastructure.output.persistence.repository
+com.tournament.tournament_manager.infrastructure.output.security
