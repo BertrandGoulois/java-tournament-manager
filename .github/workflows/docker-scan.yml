@@ -37,7 +37,7 @@ jobs:
         run: docker build -t tournament-manager:scan .
 
       - name: Scan Trivy
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.36.0
         with:
           image-ref: tournament-manager:scan
           format: sarif
@@ -66,7 +66,7 @@ jobs:
       # sert qu'à décorer. Ici une CVE critique avec correctif disponible arrête la chaîne,
       # tout le reste est remonté pour triage.
       - name: Échec sur CVE critique corrigeable
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.36.0
         with:
           image-ref: tournament-manager:scan
           format: table
