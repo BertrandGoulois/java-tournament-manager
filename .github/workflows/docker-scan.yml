@@ -29,7 +29,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # Build local, sans push : on analyse exactement l'image que produirait un déploiement,
       # sans avoir besoin d'un registre ni de droits de publication.
