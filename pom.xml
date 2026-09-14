@@ -14,14 +14,28 @@
 
 	<properties>
 		<java.version>21</java.version>
+
 		<!--
-			Quarantaine ciblée des tests d'intégration instables (§6 de la revue). Vide par
-			défaut : tout tourne, et le job CI est bloquant. Un test réellement flaky reçoit
-			un @Tag("flaky") et cette propriété passe à "flaky" — ce qui rend la quarantaine
-			nominative et visible dans le diff, au lieu du continue-on-error global qui
-			désarmait les 9 tests d'intégration d'un coup.
-		-->
+           Quarantaine ciblée des tests d'intégration instables (§6 de la revue). Vide par
+           défaut : tout tourne, et le job CI est bloquant. Un test réellement flaky reçoit
+           un @Tag("flaky") et cette propriété passe à "flaky" — ce qui rend la quarantaine
+           nominative et visible dans le diff, au lieu du continue-on-error global qui
+           désarmait les 9 tests d'intégration d'un coup.
+        -->
 		<failsafe.excludedGroups></failsafe.excludedGroups>
+
+		<!--
+           Surcharges de sécurité sur les dépendances transitives du BOM Spring Boot, qui ne
+           les remonte pas aussi vite que les correctifs sortent. Détectées par le scan Trivy
+           de la CI (voir .github/workflows/docker-scan.yml).
+             tomcat 11.0.21 -> 11.0.25 : 6 CVE critiques (contournements d'authentification
+                                         DIGEST/FORM et de contraintes de sécurité)
+             netty  4.2.12  -> 4.2.17  : CVE-2026-75595
+           À retirer dès qu'une version du BOM embarque au moins ces versions : une surcharge
+           oubliée finit par bloquer les montées de version au lieu de les précéder.
+        -->
+		<tomcat.version>11.0.25</tomcat.version>
+		<netty.version>4.2.17.Final</netty.version>
 	</properties>
 
 	<dependencies>
