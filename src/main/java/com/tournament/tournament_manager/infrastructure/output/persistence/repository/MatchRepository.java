@@ -1,13 +1,14 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.repository;
 
-import com.tournament.tournament_manager.infrastructure.output.persistence.entity.MatchEntity;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.MatchEntity;
 
 /**
  * <p><b>§4 de la revue.</b> Depuis le passage des {@code @ManyToOne} de {@code MatchEntity}

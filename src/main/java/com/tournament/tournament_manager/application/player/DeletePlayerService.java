@@ -1,14 +1,16 @@
 package com.tournament.tournament_manager.application.player;
 
+import java.time.Instant;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.tournament.tournament_manager.domain.model.Player;
 import com.tournament.tournament_manager.domain.port.in.player.DeletePlayerUseCase;
 import com.tournament.tournament_manager.domain.port.out.player.LoadPlayerPort;
 import com.tournament.tournament_manager.domain.port.out.player.SoftDeletePlayerPort;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Cas d'utilisation : suppression (soft delete) d'un joueur.

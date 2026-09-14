@@ -1,5 +1,11 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.adapter;
 
+import java.time.Instant;
+import java.util.List;
+
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Component;
+
 import com.tournament.tournament_manager.domain.model.EloHistory;
 import com.tournament.tournament_manager.domain.model.PageRequest;
 import com.tournament.tournament_manager.domain.model.PageResult;
@@ -13,11 +19,6 @@ import com.tournament.tournament_manager.infrastructure.output.persistence.mappe
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.EloHistoryRepository;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.MatchRepository;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.PlayerRepository;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Component;
-
-import java.time.Instant;
-import java.util.List;
 
 /**
  * Adapter JPA implémentant les ports de chargement, sauvegarde

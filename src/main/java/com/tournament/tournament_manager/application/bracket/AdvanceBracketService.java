@@ -1,23 +1,24 @@
 package com.tournament.tournament_manager.application.bracket;
 
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.tournament.tournament_manager.application.shared.BracketUtils;
 import com.tournament.tournament_manager.domain.model.Match;
 import com.tournament.tournament_manager.domain.model.Player;
 import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
-import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
 import com.tournament.tournament_manager.domain.port.in.tournament.AdvanceBracketUseCase;
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchByTournamentPort;
 import com.tournament.tournament_manager.domain.port.out.match.SaveMatchPort;
 import com.tournament.tournament_manager.domain.port.out.tournament.ClaimRoundAdvancementPort;
 import com.tournament.tournament_manager.domain.port.out.tournament.SaveTournamentPort;
-import com.tournament.tournament_manager.application.shared.BracketUtils;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Cas d'utilisation : avancement du bracket au tour suivant.

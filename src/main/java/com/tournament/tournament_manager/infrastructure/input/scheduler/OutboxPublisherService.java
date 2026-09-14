@@ -1,12 +1,15 @@
 package com.tournament.tournament_manager.infrastructure.input.scheduler;
 
-import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
-import com.tournament.tournament_manager.infrastructure.output.persistence.entity.OutboxEventEntity;
-import com.tournament.tournament_manager.infrastructure.output.persistence.repository.OutboxEventRepository;
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.Gauge;
-import io.micrometer.core.instrument.MeterRegistry;
-import lombok.extern.slf4j.Slf4j;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicLong;
+
 import org.apache.kafka.common.errors.InvalidTopicException;
 import org.apache.kafka.common.errors.RecordTooLargeException;
 import org.apache.kafka.common.errors.SerializationException;
@@ -15,18 +18,17 @@ import org.springframework.kafka.support.SendResult;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.OutboxEventEntity;
+import com.tournament.tournament_manager.infrastructure.output.persistence.repository.OutboxEventRepository;
+
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
+import lombok.extern.slf4j.Slf4j;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.ObjectMapper;
-
-import java.time.Duration;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Publie vers Kafka les événements écrits dans l'outbox transactionnel (voir

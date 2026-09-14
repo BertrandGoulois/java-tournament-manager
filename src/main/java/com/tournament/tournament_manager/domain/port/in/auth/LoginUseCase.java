@@ -1,7 +1,8 @@
 package com.tournament.tournament_manager.domain.port.in.auth;
 
-import com.tournament.tournament_manager.domain.model.AuthResult;
 import org.springframework.security.authentication.BadCredentialsException;
+
+import com.tournament.tournament_manager.domain.model.AuthResult;
 
 /**
  * Port entrant : cas d'utilisation pour l'authentification par mot de passe.

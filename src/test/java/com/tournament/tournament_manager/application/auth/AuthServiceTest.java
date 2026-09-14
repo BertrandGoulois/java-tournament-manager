@@ -1,8 +1,9 @@
 package com.tournament.tournament_manager.application.auth;
 
-import com.tournament.tournament_manager.application.token.RefreshTokenService;
-import com.tournament.tournament_manager.domain.port.out.auth.TokenProviderPort;
-import com.tournament.tournament_manager.domain.model.AuthResult;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.*;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -12,9 +13,9 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.*;
+import com.tournament.tournament_manager.application.token.RefreshTokenService;
+import com.tournament.tournament_manager.domain.model.AuthResult;
+import com.tournament.tournament_manager.domain.port.out.auth.TokenProviderPort;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {

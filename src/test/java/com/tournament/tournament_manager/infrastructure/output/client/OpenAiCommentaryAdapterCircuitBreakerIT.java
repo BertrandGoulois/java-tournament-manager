@@ -1,11 +1,10 @@
 package com.tournament.tournament_manager.infrastructure.output.client;
 
-import com.openai.client.OpenAIClient;
-import com.openai.models.chat.completions.ChatCompletionCreateParams;
-import com.tournament.tournament_manager.TestcontainersConfiguration;
-import com.tournament.tournament_manager.exception.domain.OpenAiUnavailableException;
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Answers;
@@ -16,10 +15,13 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import com.openai.client.OpenAIClient;
+import com.openai.models.chat.completions.ChatCompletionCreateParams;
+import com.tournament.tournament_manager.TestcontainersConfiguration;
+import com.tournament.tournament_manager.exception.domain.OpenAiUnavailableException;
+
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 
 /**
  * Vérifie le comportement du circuit breaker Resilience4j protégeant l'appel OpenAI.

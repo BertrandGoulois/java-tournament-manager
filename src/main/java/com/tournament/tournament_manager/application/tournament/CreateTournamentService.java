@@ -1,5 +1,8 @@
 package com.tournament.tournament_manager.application.tournament;
 
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.tournament.tournament_manager.domain.model.CreateTournamentCommand;
 import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
@@ -9,10 +12,9 @@ import com.tournament.tournament_manager.domain.port.out.tournament.ExistsTourna
 import com.tournament.tournament_manager.domain.port.out.tournament.SaveTournamentPort;
 import com.tournament.tournament_manager.exception.domain.InvalidTournamentException;
 import com.tournament.tournament_manager.exception.domain.TournamentAlreadyExistsException;
+
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Cas d'utilisation : création d'un tournoi. Retourne un objet de domaine pur — voir la

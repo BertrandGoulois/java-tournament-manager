@@ -1,5 +1,9 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.adapter;
 
+import java.util.List;
+
+import org.springframework.stereotype.Component;
+
 import com.tournament.tournament_manager.domain.model.Match;
 import com.tournament.tournament_manager.domain.model.Player;
 import com.tournament.tournament_manager.domain.port.out.match.*;
@@ -11,9 +15,6 @@ import com.tournament.tournament_manager.infrastructure.output.persistence.mappe
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.MatchRepository;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.PlayerRepository;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.TournamentRepository;
-import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 /**
  * Adapter JPA implémentant les ports de chargement et sauvegarde des matchs.

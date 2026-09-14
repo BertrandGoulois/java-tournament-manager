@@ -1,11 +1,14 @@
 package com.tournament.tournament_manager.infrastructure.input.rpc.tournament;
 
-import tools.jackson.databind.ObjectMapper;
 import jakarta.validation.Validator;
+
+import org.springframework.stereotype.Component;
+
 import com.tournament.tournament_manager.domain.port.in.tournament.GetTournamentUseCase;
 import com.tournament.tournament_manager.infrastructure.input.mapper.TournamentRestMapper;
 import com.tournament.tournament_manager.infrastructure.input.rpc.AbstractJsonRpcHandler;
-import org.springframework.stereotype.Component;
+
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Handler JSON-RPC de la méthode {@code tournament.getAll}.

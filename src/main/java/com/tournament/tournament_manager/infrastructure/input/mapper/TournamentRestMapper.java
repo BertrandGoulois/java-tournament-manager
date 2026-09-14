@@ -1,5 +1,9 @@
 package com.tournament.tournament_manager.infrastructure.input.mapper;
 
+import java.util.List;
+
+import org.springframework.stereotype.Component;
+
 import com.tournament.tournament_manager.domain.model.Bracket;
 import com.tournament.tournament_manager.domain.model.BracketRound;
 import com.tournament.tournament_manager.domain.model.CreateTournamentCommand;
@@ -15,9 +19,6 @@ import com.tournament.tournament_manager.dto.response.tournament.BracketRoundRes
 import com.tournament.tournament_manager.dto.response.tournament.StandingEntryResponse;
 import com.tournament.tournament_manager.dto.response.tournament.StandingsResponse;
 import com.tournament.tournament_manager.dto.response.tournament.TournamentResponse;
-import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 /**
  * Convertit entre le domaine pur ({@link Tournament}, {@link Bracket}, {@link Standings})

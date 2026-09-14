@@ -1,28 +1,29 @@
 package com.tournament.tournament_manager.infrastructure.input.scheduler;
 
-import com.tournament.tournament_manager.infrastructure.output.persistence.entity.OutboxEventEntity;
-import com.tournament.tournament_manager.infrastructure.output.persistence.repository.OutboxEventRepository;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.clients.producer.RecordMetadata;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InOrder;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.support.SendResult;
-import tools.jackson.databind.json.JsonMapper;
-
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-
 import static com.tournament.tournament_manager.config.kafka.KafkaConfig.MATCH_FINISHED_TOPIC;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.SendResult;
+
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.OutboxEventEntity;
+import com.tournament.tournament_manager.infrastructure.output.persistence.repository.OutboxEventRepository;
+
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import tools.jackson.databind.json.JsonMapper;
 
 @ExtendWith(MockitoExtension.class)
 class OutboxPublisherServiceTest {

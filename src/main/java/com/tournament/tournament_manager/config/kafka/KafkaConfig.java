@@ -1,5 +1,8 @@
 package com.tournament.tournament_manager.config.kafka;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -18,9 +21,6 @@ import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.kafka.support.serializer.JacksonJsonDeserializer;
 import org.springframework.kafka.support.serializer.JacksonJsonSerializer;
 import org.springframework.util.backoff.FixedBackOff;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Configuration Kafka de l'application.

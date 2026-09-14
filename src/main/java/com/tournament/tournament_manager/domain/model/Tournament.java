@@ -1,12 +1,12 @@
 package com.tournament.tournament_manager.domain.model;
 
+import java.time.Instant;
+import java.util.Objects;
+
 import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
 import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
 import com.tournament.tournament_manager.exception.domain.InvalidException;
-
-import java.time.Instant;
-import java.util.Objects;
 
 /**
  * Un tournoi, tel que le domaine métier le connaît.

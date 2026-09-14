@@ -1,12 +1,14 @@
 package com.tournament.tournament_manager.infrastructure.input.scheduler;
 
-import com.tournament.tournament_manager.domain.model.PurgeResult;
-import com.tournament.tournament_manager.domain.port.in.maintenance.PurgeUseCase;
-import lombok.extern.slf4j.Slf4j;
-import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import com.tournament.tournament_manager.domain.model.PurgeResult;
+import com.tournament.tournament_manager.domain.port.in.maintenance.PurgeUseCase;
+
+import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 
 /**
  * Déclenche la purge périodique. Adapter d'entrée pur : aucune logique métier ici, tout

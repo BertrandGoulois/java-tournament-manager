@@ -1,16 +1,19 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.entity;
 
-import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
-import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.hibernate.annotations.SQLRestriction;
-
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+
+import jakarta.persistence.*;
+
+import org.hibernate.annotations.SQLRestriction;
+
+import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
+import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * Entité JPA pour la persistance d'un tournoi.

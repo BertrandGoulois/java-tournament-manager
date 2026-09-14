@@ -1,8 +1,25 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.adapter;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import com.tournament.tournament_manager.domain.model.Match;
 import com.tournament.tournament_manager.domain.model.Player;
 import com.tournament.tournament_manager.domain.model.Tournament;
+import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
+import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
+import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
 import com.tournament.tournament_manager.exception.domain.MatchNotFoundException;
 import com.tournament.tournament_manager.infrastructure.output.persistence.entity.MatchEntity;
 import com.tournament.tournament_manager.infrastructure.output.persistence.entity.PlayerEntity;
@@ -13,22 +30,6 @@ import com.tournament.tournament_manager.infrastructure.output.persistence.mappe
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.MatchRepository;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.PlayerRepository;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.TournamentRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
-import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
-import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
-import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 
 @ExtendWith(MockitoExtension.class)
 class MatchJpaAdapterTest {

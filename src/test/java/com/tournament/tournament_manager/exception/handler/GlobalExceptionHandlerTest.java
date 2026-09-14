@@ -1,11 +1,13 @@
 package com.tournament.tournament_manager.exception.handler;
 
-import com.tournament.tournament_manager.exception.domain.AlreadyExistsException;
-import com.tournament.tournament_manager.exception.domain.InvalidException;
-import com.tournament.tournament_manager.exception.domain.NotFoundException;
-import com.tournament.tournament_manager.exception.domain.OpenAiUnavailableException;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.List;
+import java.util.Map;
+
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
@@ -14,12 +16,10 @@ import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import com.tournament.tournament_manager.exception.domain.AlreadyExistsException;
+import com.tournament.tournament_manager.exception.domain.InvalidException;
+import com.tournament.tournament_manager.exception.domain.NotFoundException;
+import com.tournament.tournament_manager.exception.domain.OpenAiUnavailableException;
 
 class GlobalExceptionHandlerTest {
 

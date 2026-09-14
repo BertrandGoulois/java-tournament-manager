@@ -1,23 +1,24 @@
 package com.tournament.tournament_manager.application.tournament;
 
-import com.tournament.tournament_manager.domain.model.Match;
-import com.tournament.tournament_manager.domain.model.Tournament;
-import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
-import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
-import com.tournament.tournament_manager.domain.port.out.match.LoadMatchesByTournamentPort;
-import com.tournament.tournament_manager.domain.port.out.tournament.SaveTournamentPort;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
+
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.*;
-import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
+import com.tournament.tournament_manager.domain.model.Match;
+import com.tournament.tournament_manager.domain.model.Tournament;
+import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
+import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
+import com.tournament.tournament_manager.domain.port.out.match.LoadMatchesByTournamentPort;
+import com.tournament.tournament_manager.domain.port.out.tournament.SaveTournamentPort;
 
 @ExtendWith(MockitoExtension.class)
 class CheckTournamentCompletionServiceTest {

@@ -1,11 +1,10 @@
 package com.tournament.tournament_manager.application.elo;
 
-import com.tournament.tournament_manager.domain.model.EloHistory;
-import com.tournament.tournament_manager.domain.model.Match;
-import com.tournament.tournament_manager.domain.model.Player;
-import com.tournament.tournament_manager.domain.model.valueobjects.EloRating;
-import com.tournament.tournament_manager.domain.port.out.elo.SaveAllPlayersPort;
-import com.tournament.tournament_manager.domain.port.out.elo.SaveEloHistoryPort;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
+
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,11 +14,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.*;
+import com.tournament.tournament_manager.domain.model.EloHistory;
+import com.tournament.tournament_manager.domain.model.Match;
+import com.tournament.tournament_manager.domain.model.Player;
 import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
+import com.tournament.tournament_manager.domain.model.valueobjects.EloRating;
+import com.tournament.tournament_manager.domain.port.out.elo.SaveAllPlayersPort;
+import com.tournament.tournament_manager.domain.port.out.elo.SaveEloHistoryPort;
 
 @ExtendWith(MockitoExtension.class)
 class EloServiceTest {

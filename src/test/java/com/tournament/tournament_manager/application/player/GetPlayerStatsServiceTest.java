@@ -1,26 +1,27 @@
 package com.tournament.tournament_manager.application.player;
 
-import com.tournament.tournament_manager.domain.model.EloHistory;
-import com.tournament.tournament_manager.domain.model.Match;
-import com.tournament.tournament_manager.domain.model.Player;
-import com.tournament.tournament_manager.domain.model.valueobjects.EloRating;
-import com.tournament.tournament_manager.domain.port.out.player.CountMatchesByPlayerPort;
-import com.tournament.tournament_manager.domain.port.out.player.LoadEloHistoryPort;
-import com.tournament.tournament_manager.domain.port.out.player.LoadPlayerPort;
-import com.tournament.tournament_manager.domain.model.PlayerStats;
-import com.tournament.tournament_manager.exception.domain.PlayerNotFoundException;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
+
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.when;
+import com.tournament.tournament_manager.domain.model.EloHistory;
+import com.tournament.tournament_manager.domain.model.Match;
+import com.tournament.tournament_manager.domain.model.Player;
+import com.tournament.tournament_manager.domain.model.PlayerStats;
 import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
+import com.tournament.tournament_manager.domain.model.valueobjects.EloRating;
+import com.tournament.tournament_manager.domain.port.out.player.CountMatchesByPlayerPort;
+import com.tournament.tournament_manager.domain.port.out.player.LoadEloHistoryPort;
+import com.tournament.tournament_manager.domain.port.out.player.LoadPlayerPort;
+import com.tournament.tournament_manager.exception.domain.PlayerNotFoundException;
 
 @ExtendWith(MockitoExtension.class)
 class GetPlayerStatsServiceTest {

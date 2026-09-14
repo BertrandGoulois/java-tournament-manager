@@ -1,9 +1,10 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.mapper;
 
+import org.springframework.stereotype.Component;
+
 import com.tournament.tournament_manager.domain.model.Player;
 import com.tournament.tournament_manager.domain.model.valueobjects.EloRating;
 import com.tournament.tournament_manager.infrastructure.output.persistence.entity.PlayerEntity;
-import org.springframework.stereotype.Component;
 
 /**
  * Convertit entre le domaine pur {@link Player} et sa contrepartie JPA {@link PlayerEntity}.

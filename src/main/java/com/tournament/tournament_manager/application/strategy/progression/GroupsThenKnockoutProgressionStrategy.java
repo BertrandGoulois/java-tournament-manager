@@ -1,12 +1,13 @@
 package com.tournament.tournament_manager.application.strategy.progression;
 
+import org.springframework.stereotype.Component;
+
 import com.tournament.tournament_manager.domain.model.Match;
 import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 import com.tournament.tournament_manager.domain.port.in.tournament.AdvanceBracketUseCase;
 import com.tournament.tournament_manager.domain.port.in.tournament.GenerateKnockoutBracketFromGroupsUseCase;
 import com.tournament.tournament_manager.domain.port.out.strategy.TournamentProgressionStrategy;
-import org.springframework.stereotype.Component;
 
 /**
  * Stratégie de progression pour le format {@link TournamentFormat#GROUPS_THEN_KNOCKOUT}.

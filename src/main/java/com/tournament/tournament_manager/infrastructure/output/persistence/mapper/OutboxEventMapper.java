@@ -1,8 +1,9 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.mapper;
 
+import org.springframework.stereotype.Component;
+
 import com.tournament.tournament_manager.domain.model.OutboxEvent;
 import com.tournament.tournament_manager.infrastructure.output.persistence.entity.OutboxEventEntity;
-import org.springframework.stereotype.Component;
 
 @Component
 public class OutboxEventMapper {

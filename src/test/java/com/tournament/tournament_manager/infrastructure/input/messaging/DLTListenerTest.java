@@ -1,10 +1,11 @@
 package com.tournament.tournament_manager.infrastructure.input.messaging;
 
-import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
 
 @ExtendWith(MockitoExtension.class)
 class DLTListenerTest {

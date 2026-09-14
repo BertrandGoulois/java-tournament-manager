@@ -1,8 +1,9 @@
 package com.tournament.tournament_manager.dto.request.registration;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public record CreateRegistrationRequest(
         @NotNull(message = "L'identifiant du joueur est obligatoire")

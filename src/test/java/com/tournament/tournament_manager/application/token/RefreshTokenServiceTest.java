@@ -1,19 +1,9 @@
 package com.tournament.tournament_manager.application.token;
 
-import com.tournament.tournament_manager.domain.port.out.auth.TokenProviderPort;
-import com.tournament.tournament_manager.domain.model.RefreshToken;
-import com.tournament.tournament_manager.domain.port.out.auth.DeleteRefreshTokenPort;
-import com.tournament.tournament_manager.domain.port.out.auth.LoadRefreshTokenPort;
-import com.tournament.tournament_manager.domain.port.out.auth.SaveRefreshTokenPort;
-import com.tournament.tournament_manager.domain.port.out.auth.UserExistsPort;
-import com.tournament.tournament_manager.domain.model.AuthResult;
-import com.tournament.tournament_manager.exception.domain.InvalidException;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
 
 import java.security.MessageDigest;
 import java.time.Duration;
@@ -21,10 +11,21 @@ import java.time.Instant;
 import java.util.HexFormat;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.tournament.tournament_manager.domain.model.AuthResult;
+import com.tournament.tournament_manager.domain.model.RefreshToken;
+import com.tournament.tournament_manager.domain.port.out.auth.DeleteRefreshTokenPort;
+import com.tournament.tournament_manager.domain.port.out.auth.LoadRefreshTokenPort;
+import com.tournament.tournament_manager.domain.port.out.auth.SaveRefreshTokenPort;
+import com.tournament.tournament_manager.domain.port.out.auth.TokenProviderPort;
+import com.tournament.tournament_manager.domain.port.out.auth.UserExistsPort;
+import com.tournament.tournament_manager.exception.domain.InvalidException;
 
 @ExtendWith(MockitoExtension.class)
 class RefreshTokenServiceTest {

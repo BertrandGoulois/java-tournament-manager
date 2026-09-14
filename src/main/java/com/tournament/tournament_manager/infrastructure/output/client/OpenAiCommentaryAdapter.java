@@ -1,13 +1,15 @@
 package com.tournament.tournament_manager.infrastructure.output.client;
 
+import org.springframework.stereotype.Component;
+
 import com.openai.client.OpenAIClient;
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
 import com.tournament.tournament_manager.domain.port.out.match.GenerateCommentaryPort;
 import com.tournament.tournament_manager.exception.domain.OpenAiUnavailableException;
+
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 /**
  * Adapter OpenAI implémentant la génération de commentaire via GPT.

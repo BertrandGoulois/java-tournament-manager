@@ -1,14 +1,14 @@
 package com.tournament.tournament_manager.application.shared;
 
-import com.tournament.tournament_manager.domain.model.Match;
-import com.tournament.tournament_manager.domain.model.Player;
-import com.tournament.tournament_manager.domain.model.Tournament;
-import com.tournament.tournament_manager.domain.port.out.match.SaveMatchPort;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import com.tournament.tournament_manager.domain.model.Match;
+import com.tournament.tournament_manager.domain.model.Player;
+import com.tournament.tournament_manager.domain.model.Tournament;
+import com.tournament.tournament_manager.domain.port.out.match.SaveMatchPort;
 
 /**
  * Utilitaires partagés pour la gestion du bracket.

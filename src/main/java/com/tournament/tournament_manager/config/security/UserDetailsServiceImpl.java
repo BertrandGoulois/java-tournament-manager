@@ -1,6 +1,7 @@
 package com.tournament.tournament_manager.config.security;
 
-import com.tournament.tournament_manager.infrastructure.output.persistence.repository.UserRepository;
+import java.util.List;
+
 import org.springframework.lang.NonNull;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -9,7 +10,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import com.tournament.tournament_manager.infrastructure.output.persistence.repository.UserRepository;
 
 /**
  * Implémentation de {@code UserDetailsService} qui charge les utilisateurs

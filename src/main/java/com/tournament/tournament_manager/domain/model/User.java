@@ -1,9 +1,9 @@
 package com.tournament.tournament_manager.domain.model;
 
-import com.tournament.tournament_manager.domain.model.enums.Role;
-
 import java.time.Instant;
 import java.util.Objects;
+
+import com.tournament.tournament_manager.domain.model.enums.Role;
 
 /**
  * Un utilisateur (compte de connexion), tel que le domaine métier le connaît.

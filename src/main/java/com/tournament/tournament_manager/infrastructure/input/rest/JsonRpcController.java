@@ -1,26 +1,28 @@
 package com.tournament.tournament_manager.infrastructure.input.rest;
 
-import com.tournament.tournament_manager.application.rpc.JsonRpcDispatchService;
-import com.tournament.tournament_manager.dto.request.rpc.JsonRpcRequest;
-import com.tournament.tournament_manager.dto.response.rpc.JsonRpcError;
-import com.tournament.tournament_manager.dto.response.rpc.JsonRpcResponse;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.extern.slf4j.Slf4j;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.tournament.tournament_manager.application.rpc.JsonRpcDispatchService;
+import com.tournament.tournament_manager.dto.request.rpc.JsonRpcRequest;
+import com.tournament.tournament_manager.dto.response.rpc.JsonRpcError;
+import com.tournament.tournament_manager.dto.response.rpc.JsonRpcResponse;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Point d'entrée unique pour les requêtes JSON-RPC 2.0.
@@ -66,13 +68,13 @@ public class JsonRpcController {
             description = """
                     Endpoint unique JSON-RPC 2.0. Le champ `method` détermine l'opération à exécuter.
                     Accepte soit un objet requête unique, soit un tableau de requêtes (batch).
-                    
+
                     Méthodes disponibles :
                     - `tournament.create`, `tournament.start`, `tournament.getById`, `tournament.getAll`, `tournament.delete`, `tournament.getBracket`, `tournament.getStandings`
                     - `player.create`, `player.getById`, `player.getAll`, `player.getStats`, `player.delete`
                     - `registration.register`, `registration.getByTournament`
                     - `match.getById`, `match.recordResult`, `match.getCommentary`
-                    
+
                     Le statut HTTP reflète la nature de l'erreur (200 succès ou erreur protocolaire,
                     400 requête/paramètres invalides, 403 accès refusé, 409 conflit, 500 erreur interne).
                     Une requête sans `id` (notification) ne reçoit aucune réponse (204).

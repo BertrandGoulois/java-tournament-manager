@@ -1,11 +1,12 @@
 package com.tournament.tournament_manager.application.match;
 
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.tournament.tournament_manager.domain.model.Match;
 import com.tournament.tournament_manager.domain.port.in.match.GetMatchUseCase;
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchPort;
 import com.tournament.tournament_manager.exception.domain.MatchNotFoundException;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Cas d'utilisation : consultation d'un match. Retourne un objet de domaine pur — voir la

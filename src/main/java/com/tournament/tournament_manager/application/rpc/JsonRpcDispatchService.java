@@ -1,5 +1,13 @@
 package com.tournament.tournament_manager.application.rpc;
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Service;
+
 import com.tournament.tournament_manager.domain.port.out.rpc.JsonRpcMethodHandler;
 import com.tournament.tournament_manager.dto.request.rpc.JsonRpcRequest;
 import com.tournament.tournament_manager.dto.response.rpc.JsonRpcError;
@@ -7,14 +15,8 @@ import com.tournament.tournament_manager.dto.response.rpc.JsonRpcResponse;
 import com.tournament.tournament_manager.exception.domain.AlreadyExistsException;
 import com.tournament.tournament_manager.exception.domain.InvalidException;
 import com.tournament.tournament_manager.exception.domain.NotFoundException;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Dispatche les requêtes JSON-RPC 2.0 vers le {@link JsonRpcMethodHandler} correspondant.

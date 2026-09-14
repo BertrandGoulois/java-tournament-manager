@@ -1,5 +1,8 @@
 package com.tournament.tournament_manager.application.match;
 
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
 import com.tournament.tournament_manager.domain.model.Match;
 import com.tournament.tournament_manager.domain.model.RecordMatchResultCommand;
@@ -7,11 +10,10 @@ import com.tournament.tournament_manager.domain.port.in.match.RecordMatchResultU
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchPort;
 import com.tournament.tournament_manager.domain.port.out.match.PublishMatchEventPort;
 import com.tournament.tournament_manager.domain.port.out.match.SaveMatchPort;
+
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Cas d'utilisation : enregistrement du résultat d'un match. Retourne un objet de domaine

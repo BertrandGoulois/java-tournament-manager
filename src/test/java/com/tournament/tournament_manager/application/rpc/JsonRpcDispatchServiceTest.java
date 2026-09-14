@@ -1,20 +1,22 @@
 package com.tournament.tournament_manager.application.rpc;
 
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.util.List;
+import java.util.Map;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import com.tournament.tournament_manager.domain.port.out.rpc.JsonRpcMethodHandler;
 import com.tournament.tournament_manager.dto.request.rpc.JsonRpcRequest;
 import com.tournament.tournament_manager.dto.response.rpc.JsonRpcError;
 import com.tournament.tournament_manager.dto.response.rpc.JsonRpcResponse;
 import com.tournament.tournament_manager.exception.domain.NotFoundException;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.*;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 class JsonRpcDispatchServiceTest {
 

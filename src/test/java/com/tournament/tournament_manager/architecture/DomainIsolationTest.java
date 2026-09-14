@@ -1,11 +1,12 @@
 package com.tournament.tournament_manager.architecture;
 
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+
+import org.junit.jupiter.api.Test;
+
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.lang.ArchRule;
-import org.junit.jupiter.api.Test;
-
-import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 /**
  * Vérifie en continu la règle d'isolation du domaine (points 21 et 22 de la revue) : un

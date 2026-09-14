@@ -1,8 +1,7 @@
 package com.tournament.tournament_manager.config.security;
 
-import com.tournament.tournament_manager.infrastructure.output.persistence.entity.UserEntity;
-import com.tournament.tournament_manager.infrastructure.output.persistence.repository.UserRepository;
-import lombok.extern.slf4j.Slf4j;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
@@ -10,7 +9,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.UserEntity;
+import com.tournament.tournament_manager.infrastructure.output.persistence.repository.UserRepository;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Fixe le mot de passe du compte {@code admin} a partir de l'environnement, au demarrage.

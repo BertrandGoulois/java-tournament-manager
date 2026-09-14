@@ -1,14 +1,10 @@
 package com.tournament.tournament_manager.application.tournament;
 
-import com.tournament.tournament_manager.domain.model.Tournament;
-import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
-import com.tournament.tournament_manager.domain.port.out.tournament.ExistsTournamentPort;
-import com.tournament.tournament_manager.domain.port.out.tournament.SaveTournamentPort;
-import com.tournament.tournament_manager.domain.model.CreateTournamentCommand;
-import com.tournament.tournament_manager.exception.domain.InvalidTournamentException;
-import com.tournament.tournament_manager.exception.domain.TournamentAlreadyExistsException;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,12 +12,18 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import com.tournament.tournament_manager.domain.model.CreateTournamentCommand;
+import com.tournament.tournament_manager.domain.model.Tournament;
+import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
 import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
+import com.tournament.tournament_manager.domain.port.out.tournament.ExistsTournamentPort;
+import com.tournament.tournament_manager.domain.port.out.tournament.SaveTournamentPort;
+import com.tournament.tournament_manager.exception.domain.InvalidTournamentException;
+import com.tournament.tournament_manager.exception.domain.TournamentAlreadyExistsException;
+
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 @ExtendWith(MockitoExtension.class)
 class CreateTournamentServiceTest {

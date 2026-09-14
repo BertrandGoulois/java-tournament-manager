@@ -1,5 +1,10 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.adapter;
 
+import java.util.List;
+
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Component;
+
 import com.tournament.tournament_manager.domain.model.PageRequest;
 import com.tournament.tournament_manager.domain.model.PageResult;
 import com.tournament.tournament_manager.domain.model.Registration;
@@ -14,10 +19,6 @@ import com.tournament.tournament_manager.infrastructure.output.persistence.mappe
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.PlayerRepository;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.RegistrationRepository;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.TournamentRepository;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 /**
  * Adapter JPA implémentant les ports de gestion des inscriptions.

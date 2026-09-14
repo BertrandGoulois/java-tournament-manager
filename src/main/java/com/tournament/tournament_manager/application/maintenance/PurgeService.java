@@ -1,16 +1,17 @@
 package com.tournament.tournament_manager.application.maintenance;
 
+import java.time.Duration;
+import java.time.Instant;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.tournament.tournament_manager.domain.model.PurgeResult;
 import com.tournament.tournament_manager.domain.port.in.maintenance.PurgeUseCase;
 import com.tournament.tournament_manager.domain.port.out.maintenance.PurgeOutboxEventsPort;
 import com.tournament.tournament_manager.domain.port.out.maintenance.PurgePlayersPort;
 import com.tournament.tournament_manager.domain.port.out.maintenance.PurgeRefreshTokensPort;
 import com.tournament.tournament_manager.domain.port.out.maintenance.PurgeTournamentsPort;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.Duration;
-import java.time.Instant;
 
 /**
  * Cas d'utilisation : purge périodique des entités soft-deleted, des refresh tokens

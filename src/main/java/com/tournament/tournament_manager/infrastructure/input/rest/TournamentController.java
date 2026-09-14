@@ -1,12 +1,21 @@
 package com.tournament.tournament_manager.infrastructure.input.rest;
 
+import jakarta.validation.Valid;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
 import com.tournament.tournament_manager.domain.port.in.tournament.*;
 import com.tournament.tournament_manager.dto.request.tournament.CreateTournamentRequest;
 import com.tournament.tournament_manager.dto.response.tournament.BracketResponse;
 import com.tournament.tournament_manager.dto.response.tournament.StandingsResponse;
 import com.tournament.tournament_manager.dto.response.tournament.TournamentResponse;
-import org.springframework.http.ProblemDetail;
 import com.tournament.tournament_manager.infrastructure.input.mapper.TournamentRestMapper;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -14,12 +23,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 
 /**
  * Point d'entrée HTTP pour la gestion des tournois.

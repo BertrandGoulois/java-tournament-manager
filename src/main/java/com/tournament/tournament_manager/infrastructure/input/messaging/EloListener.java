@@ -1,5 +1,10 @@
 package com.tournament.tournament_manager.infrastructure.input.messaging;
 
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.UnexpectedRollbackException;
+
 import com.tournament.tournament_manager.config.kafka.KafkaConfig;
 import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
 import com.tournament.tournament_manager.domain.model.Match;
@@ -7,11 +12,8 @@ import com.tournament.tournament_manager.domain.port.in.elo.UpdateEloUseCase;
 import com.tournament.tournament_manager.domain.port.out.elo.ExistsEloHistoryPort;
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchPort;
 import com.tournament.tournament_manager.exception.domain.MatchNotFoundException;
+
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.UnexpectedRollbackException;
 
 /**
  * Consomme les événements {@link MatchFinishedEvent} depuis le topic Kafka

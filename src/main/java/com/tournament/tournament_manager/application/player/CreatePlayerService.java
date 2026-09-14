@@ -1,16 +1,18 @@
 package com.tournament.tournament_manager.application.player;
 
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.tournament.tournament_manager.domain.model.CreatePlayerCommand;
 import com.tournament.tournament_manager.domain.model.Player;
 import com.tournament.tournament_manager.domain.port.in.player.CreatePlayerUseCase;
 import com.tournament.tournament_manager.domain.port.out.player.ExistsPlayerPort;
 import com.tournament.tournament_manager.domain.port.out.player.SavePlayerPort;
 import com.tournament.tournament_manager.exception.domain.PlayerAlreadyExistsException;
+
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Cas d'utilisation : création d'un joueur. Retourne un objet de domaine pur — voir la

@@ -1,41 +1,5 @@
 package com.tournament.tournament_manager.infrastructure.input.rest;
 
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
-import com.tournament.tournament_manager.config.security.JwtAuthenticationFilter;
-import com.tournament.tournament_manager.config.security.SecurityConfig;
-import com.tournament.tournament_manager.config.security.UserDetailsServiceImpl;
-import com.tournament.tournament_manager.domain.port.in.player.CreatePlayerUseCase;
-import com.tournament.tournament_manager.domain.port.in.player.DeletePlayerUseCase;
-import com.tournament.tournament_manager.domain.port.in.player.GetPlayerStatsUseCase;
-import com.tournament.tournament_manager.domain.port.in.player.GetPlayerUseCase;
-import com.tournament.tournament_manager.domain.model.Player;
-import com.tournament.tournament_manager.domain.model.PlayerStats;
-import com.tournament.tournament_manager.dto.request.player.CreatePlayerRequest;
-import com.tournament.tournament_manager.exception.domain.PlayerNotFoundException;
-import io.github.bucket4j.BucketConfiguration;
-import io.github.bucket4j.distributed.BucketProxy;
-import io.github.bucket4j.distributed.proxy.ProxyManager;
-import io.github.bucket4j.distributed.proxy.RemoteBucketBuilder;
-import io.micrometer.core.instrument.MeterRegistry;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentMatchers;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.cache.CacheManager;
-import com.tournament.tournament_manager.infrastructure.input.mapper.PlayerRestMapper;
-import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.Page;
-import com.tournament.tournament_manager.domain.model.PageResult;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
-
-import java.time.Instant;
-import java.util.List;
-import java.util.function.Supplier;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -43,6 +7,43 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.function.Supplier;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.cache.CacheManager;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+import com.tournament.tournament_manager.config.security.JwtAuthenticationFilter;
+import com.tournament.tournament_manager.config.security.SecurityConfig;
+import com.tournament.tournament_manager.config.security.UserDetailsServiceImpl;
+import com.tournament.tournament_manager.domain.model.PageResult;
+import com.tournament.tournament_manager.domain.model.Player;
+import com.tournament.tournament_manager.domain.model.PlayerStats;
+import com.tournament.tournament_manager.domain.port.in.player.CreatePlayerUseCase;
+import com.tournament.tournament_manager.domain.port.in.player.DeletePlayerUseCase;
+import com.tournament.tournament_manager.domain.port.in.player.GetPlayerStatsUseCase;
+import com.tournament.tournament_manager.domain.port.in.player.GetPlayerUseCase;
+import com.tournament.tournament_manager.dto.request.player.CreatePlayerRequest;
+import com.tournament.tournament_manager.exception.domain.PlayerNotFoundException;
+import com.tournament.tournament_manager.infrastructure.input.mapper.PlayerRestMapper;
+
+import io.github.bucket4j.BucketConfiguration;
+import io.github.bucket4j.distributed.BucketProxy;
+import io.github.bucket4j.distributed.proxy.ProxyManager;
+import io.github.bucket4j.distributed.proxy.RemoteBucketBuilder;
+import io.micrometer.core.instrument.MeterRegistry;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 @WebMvcTest(PlayerController.class)
 @Import({SecurityConfig.class, PlayerRestMapper.class})

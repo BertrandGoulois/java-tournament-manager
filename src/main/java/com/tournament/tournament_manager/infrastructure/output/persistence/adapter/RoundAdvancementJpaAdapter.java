@@ -1,19 +1,21 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.adapter;
 
-import com.tournament.tournament_manager.domain.model.enums.RoundAdvancementStatus;
-import com.tournament.tournament_manager.domain.port.out.tournament.ClaimRoundAdvancementPort;
-import com.tournament.tournament_manager.domain.port.out.tournament.ReleaseStaleRoundClaimsPort;
-import com.tournament.tournament_manager.infrastructure.output.persistence.entity.RoundAdvancementEntity;
-import com.tournament.tournament_manager.infrastructure.output.persistence.repository.RoundAdvancementRepository;
-import lombok.extern.slf4j.Slf4j;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
-import java.time.Duration;
-import java.time.Instant;
-import java.util.List;
+import com.tournament.tournament_manager.domain.model.enums.RoundAdvancementStatus;
+import com.tournament.tournament_manager.domain.port.out.tournament.ClaimRoundAdvancementPort;
+import com.tournament.tournament_manager.domain.port.out.tournament.ReleaseStaleRoundClaimsPort;
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.RoundAdvancementEntity;
+import com.tournament.tournament_manager.infrastructure.output.persistence.repository.RoundAdvancementRepository;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Adapter JPA implémentant {@link ClaimRoundAdvancementPort} et

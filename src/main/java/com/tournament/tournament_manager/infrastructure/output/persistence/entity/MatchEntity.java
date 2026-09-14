@@ -1,12 +1,14 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.entity;
 
-import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
+import java.time.Instant;
+
 import jakarta.persistence.*;
+
+import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.time.Instant;
 
 /**
  * Entité JPA pour la persistance d'un match.

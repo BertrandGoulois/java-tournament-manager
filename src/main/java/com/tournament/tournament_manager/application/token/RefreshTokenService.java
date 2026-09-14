@@ -1,25 +1,27 @@
 package com.tournament.tournament_manager.application.token;
 
-import com.tournament.tournament_manager.domain.port.out.auth.TokenProviderPort;
-import com.tournament.tournament_manager.domain.model.AuthResult;
-import com.tournament.tournament_manager.domain.model.RefreshToken;
-import com.tournament.tournament_manager.domain.port.in.auth.RefreshTokenUseCase;
-import com.tournament.tournament_manager.domain.port.out.auth.DeleteRefreshTokenPort;
-import com.tournament.tournament_manager.domain.port.out.auth.LoadRefreshTokenPort;
-import com.tournament.tournament_manager.domain.port.out.auth.SaveRefreshTokenPort;
-import com.tournament.tournament_manager.domain.port.out.auth.UserExistsPort;
-import com.tournament.tournament_manager.exception.domain.InvalidException;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.HexFormat;
 import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.tournament.tournament_manager.domain.model.AuthResult;
+import com.tournament.tournament_manager.domain.model.RefreshToken;
+import com.tournament.tournament_manager.domain.port.in.auth.RefreshTokenUseCase;
+import com.tournament.tournament_manager.domain.port.out.auth.DeleteRefreshTokenPort;
+import com.tournament.tournament_manager.domain.port.out.auth.LoadRefreshTokenPort;
+import com.tournament.tournament_manager.domain.port.out.auth.SaveRefreshTokenPort;
+import com.tournament.tournament_manager.domain.port.out.auth.TokenProviderPort;
+import com.tournament.tournament_manager.domain.port.out.auth.UserExistsPort;
+import com.tournament.tournament_manager.exception.domain.InvalidException;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Implémentation des cas d'utilisation liés au refresh token JWT.

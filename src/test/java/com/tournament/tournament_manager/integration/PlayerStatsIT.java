@@ -1,25 +1,26 @@
 package com.tournament.tournament_manager.integration;
 
-import com.tournament.tournament_manager.TestcontainersConfiguration;
-import com.tournament.tournament_manager.infrastructure.output.persistence.entity.MatchEntity;
-import com.tournament.tournament_manager.infrastructure.output.persistence.entity.PlayerEntity;
-import com.tournament.tournament_manager.infrastructure.output.persistence.entity.TournamentEntity;
-import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
-import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
-import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
-import com.tournament.tournament_manager.domain.port.out.player.CountMatchesByPlayerPort;
-import com.tournament.tournament_manager.infrastructure.output.persistence.repository.MatchRepository;
-import com.tournament.tournament_manager.infrastructure.output.persistence.repository.PlayerRepository;
-import com.tournament.tournament_manager.infrastructure.output.persistence.repository.TournamentRepository;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.time.Instant;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
 
-import java.time.Instant;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import com.tournament.tournament_manager.TestcontainersConfiguration;
+import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
+import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
+import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+import com.tournament.tournament_manager.domain.port.out.player.CountMatchesByPlayerPort;
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.MatchEntity;
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.PlayerEntity;
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.TournamentEntity;
+import com.tournament.tournament_manager.infrastructure.output.persistence.repository.MatchRepository;
+import com.tournament.tournament_manager.infrastructure.output.persistence.repository.PlayerRepository;
+import com.tournament.tournament_manager.infrastructure.output.persistence.repository.TournamentRepository;
 
 /**
  * Reproduit exactement le scénario décrit dans la revue : un joueur avec un bye et des

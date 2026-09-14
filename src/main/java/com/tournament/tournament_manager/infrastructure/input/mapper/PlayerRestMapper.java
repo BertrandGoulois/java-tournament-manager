@@ -1,5 +1,9 @@
 package com.tournament.tournament_manager.infrastructure.input.mapper;
 
+import java.util.List;
+
+import org.springframework.stereotype.Component;
+
 import com.tournament.tournament_manager.domain.model.CreatePlayerCommand;
 import com.tournament.tournament_manager.domain.model.EloHistory;
 import com.tournament.tournament_manager.domain.model.Player;
@@ -8,9 +12,6 @@ import com.tournament.tournament_manager.dto.request.player.CreatePlayerRequest;
 import com.tournament.tournament_manager.dto.response.player.EloHistoryResponse;
 import com.tournament.tournament_manager.dto.response.player.PlayerResponse;
 import com.tournament.tournament_manager.dto.response.player.PlayerStatsResponse;
-import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 /**
  * Convertit entre le domaine pur ({@link Player}, {@link PlayerStats}) et les DTO REST.

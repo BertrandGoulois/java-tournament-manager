@@ -1,13 +1,13 @@
 package com.tournament.tournament_manager.integration;
 
-import com.tournament.tournament_manager.TestcontainersConfiguration;
-import com.tournament.tournament_manager.infrastructure.output.persistence.entity.PlayerEntity;
-import com.tournament.tournament_manager.infrastructure.output.persistence.entity.TournamentEntity;
-import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
-import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
-import com.tournament.tournament_manager.infrastructure.output.persistence.repository.PlayerRepository;
-import com.tournament.tournament_manager.infrastructure.output.persistence.repository.TournamentRepository;
-import com.tournament.tournament_manager.domain.port.in.maintenance.PurgeUseCase;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.sql.Timestamp;
+import java.time.Duration;
+import java.time.Instant;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -15,13 +15,14 @@ import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 
-import java.sql.Timestamp;
-import java.time.Duration;
-import java.time.Instant;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import com.tournament.tournament_manager.TestcontainersConfiguration;
+import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
+import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+import com.tournament.tournament_manager.domain.port.in.maintenance.PurgeUseCase;
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.PlayerEntity;
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.TournamentEntity;
+import com.tournament.tournament_manager.infrastructure.output.persistence.repository.PlayerRepository;
+import com.tournament.tournament_manager.infrastructure.output.persistence.repository.TournamentRepository;
 
 /**
  * Teste la purge physique des entités soft-deleted.

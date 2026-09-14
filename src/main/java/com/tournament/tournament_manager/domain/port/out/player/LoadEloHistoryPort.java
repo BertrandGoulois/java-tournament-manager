@@ -1,8 +1,8 @@
 package com.tournament.tournament_manager.domain.port.out.player;
 
-import com.tournament.tournament_manager.domain.model.EloHistory;
-
 import java.util.List;
+
+import com.tournament.tournament_manager.domain.model.EloHistory;
 
 /**
  * Port sortant : chargement de l'historique ELO d'un joueur.

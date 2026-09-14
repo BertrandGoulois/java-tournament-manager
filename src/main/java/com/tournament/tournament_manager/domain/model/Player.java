@@ -1,9 +1,9 @@
 package com.tournament.tournament_manager.domain.model;
 
-import com.tournament.tournament_manager.domain.model.valueobjects.EloRating;
-
 import java.time.Instant;
 import java.util.Objects;
+
+import com.tournament.tournament_manager.domain.model.valueobjects.EloRating;
 
 /**
  * Un joueur, tel que le domaine métier le connaît.

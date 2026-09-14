@@ -1,8 +1,23 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.adapter;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.*;
+
+import java.util.List;
+import java.util.Optional;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import com.tournament.tournament_manager.domain.model.EloHistory;
 import com.tournament.tournament_manager.domain.model.Match;
 import com.tournament.tournament_manager.domain.model.Player;
+import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 import com.tournament.tournament_manager.exception.domain.PlayerNotFoundException;
 import com.tournament.tournament_manager.infrastructure.output.persistence.entity.MatchEntity;
 import com.tournament.tournament_manager.infrastructure.output.persistence.entity.PlayerEntity;
@@ -13,20 +28,6 @@ import com.tournament.tournament_manager.infrastructure.output.persistence.mappe
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.EloHistoryRepository;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.MatchRepository;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.PlayerRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.*;
-import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 
 @ExtendWith(MockitoExtension.class)
 class EloJpaAdapterTest {

@@ -1,13 +1,14 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.repository;
 
-import com.tournament.tournament_manager.infrastructure.output.persistence.entity.PlayerEntity;
+import java.time.Instant;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.time.Instant;
-import java.util.Optional;
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.PlayerEntity;
 
 @Repository
 public interface PlayerRepository extends JpaRepository<PlayerEntity, Long> {

@@ -1,16 +1,16 @@
 package com.tournament.tournament_manager.application.tournament;
 
-import com.tournament.tournament_manager.domain.model.Match;
-import com.tournament.tournament_manager.domain.model.Tournament;
-import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
-import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
-import com.tournament.tournament_manager.domain.port.in.tournament.CheckTournamentCompletionUseCase;
-import com.tournament.tournament_manager.domain.port.out.match.LoadMatchesByTournamentPort;
-import com.tournament.tournament_manager.domain.port.out.tournament.SaveTournamentPort;
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import com.tournament.tournament_manager.domain.model.Match;
+import com.tournament.tournament_manager.domain.model.Tournament;
+import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
+import com.tournament.tournament_manager.domain.port.in.tournament.CheckTournamentCompletionUseCase;
+import com.tournament.tournament_manager.domain.port.out.match.LoadMatchesByTournamentPort;
+import com.tournament.tournament_manager.domain.port.out.tournament.SaveTournamentPort;
 
 /**
  * Cas d'utilisation : détection de fin d'un tournoi round-robin.

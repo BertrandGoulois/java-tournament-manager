@@ -1,13 +1,15 @@
 package com.tournament.tournament_manager.infrastructure.input.messaging;
 
-import com.tournament.tournament_manager.config.kafka.KafkaConfig;
-import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
-import lombok.extern.slf4j.Slf4j;
+import static com.tournament.tournament_manager.config.kafka.KafkaConfig.MATCH_FINISHED_TOPIC;
+
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
 
-import static com.tournament.tournament_manager.config.kafka.KafkaConfig.MATCH_FINISHED_TOPIC;
+import com.tournament.tournament_manager.config.kafka.KafkaConfig;
+import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Consomme les événements {@link MatchFinishedEvent} depuis le topic Kafka

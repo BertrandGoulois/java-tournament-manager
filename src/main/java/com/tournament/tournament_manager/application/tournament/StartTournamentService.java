@@ -1,5 +1,12 @@
 package com.tournament.tournament_manager.application.tournament;
 
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.tournament.tournament_manager.domain.model.Player;
 import com.tournament.tournament_manager.domain.model.Registration;
 import com.tournament.tournament_manager.domain.model.Tournament;
@@ -11,15 +18,10 @@ import com.tournament.tournament_manager.domain.port.out.strategy.TournamentStar
 import com.tournament.tournament_manager.domain.port.out.tournament.LoadTournamentPort;
 import com.tournament.tournament_manager.domain.port.out.tournament.SaveTournamentPort;
 import com.tournament.tournament_manager.exception.domain.InvalidException;
+
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Cas d'utilisation : démarrage d'un tournoi.

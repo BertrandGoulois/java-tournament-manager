@@ -1,10 +1,12 @@
 package com.tournament.tournament_manager.application.maintenance;
 
-import com.tournament.tournament_manager.domain.model.PurgeResult;
-import com.tournament.tournament_manager.domain.port.out.maintenance.PurgeOutboxEventsPort;
-import com.tournament.tournament_manager.domain.port.out.maintenance.PurgePlayersPort;
-import com.tournament.tournament_manager.domain.port.out.maintenance.PurgeRefreshTokensPort;
-import com.tournament.tournament_manager.domain.port.out.maintenance.PurgeTournamentsPort;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.time.Instant;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -12,12 +14,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.Instant;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import com.tournament.tournament_manager.domain.model.PurgeResult;
+import com.tournament.tournament_manager.domain.port.out.maintenance.PurgeOutboxEventsPort;
+import com.tournament.tournament_manager.domain.port.out.maintenance.PurgePlayersPort;
+import com.tournament.tournament_manager.domain.port.out.maintenance.PurgeRefreshTokensPort;
+import com.tournament.tournament_manager.domain.port.out.maintenance.PurgeTournamentsPort;
 
 /**
  * Contrairement à sa version précédente (voir le git log), ce service ne dépend plus que

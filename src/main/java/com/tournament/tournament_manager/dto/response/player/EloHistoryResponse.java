@@ -1,8 +1,8 @@
 package com.tournament.tournament_manager.dto.response.player;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.time.Instant;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public record EloHistoryResponse(
         @Schema(example = "24") int eloChange,

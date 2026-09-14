@@ -1,11 +1,12 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.entity;
 
+import java.time.Instant;
+
 import jakarta.persistence.*;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.time.Instant;
 
 /**
  * Entité JPA pour la persistance d'une ligne outbox. Contrepartie technique du domaine pur

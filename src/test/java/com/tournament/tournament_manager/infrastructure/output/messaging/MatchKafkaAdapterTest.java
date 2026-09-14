@@ -1,21 +1,22 @@
 package com.tournament.tournament_manager.infrastructure.output.messaging;
 
-import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
-import com.tournament.tournament_manager.infrastructure.output.persistence.entity.OutboxEventEntity;
-import com.tournament.tournament_manager.infrastructure.output.persistence.repository.OutboxEventRepository;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import tools.jackson.databind.json.JsonMapper;
-
 import static com.tournament.tournament_manager.config.kafka.KafkaConfig.MATCH_FINISHED_TOPIC;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.OutboxEventEntity;
+import com.tournament.tournament_manager.infrastructure.output.persistence.repository.OutboxEventRepository;
+
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Vérifie que {@link MatchKafkaAdapter} écrit dans l'outbox (voir sa Javadoc) plutôt que

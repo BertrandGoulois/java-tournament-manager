@@ -1,8 +1,8 @@
 package com.tournament.tournament_manager.domain.port.out.match;
 
-import com.tournament.tournament_manager.domain.model.Match;
-
 import java.util.List;
+
+import com.tournament.tournament_manager.domain.model.Match;
 
 /**
  * Port sortant : chargement de tous les matchs d'un tournoi.

@@ -1,14 +1,15 @@
 package com.tournament.tournament_manager.application.strategy.start;
 
+import java.util.List;
+
+import org.springframework.stereotype.Component;
+
+import com.tournament.tournament_manager.application.shared.BracketUtils;
 import com.tournament.tournament_manager.domain.model.Player;
 import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 import com.tournament.tournament_manager.domain.port.out.match.SaveMatchPort;
 import com.tournament.tournament_manager.domain.port.out.strategy.TournamentStartStrategy;
-import com.tournament.tournament_manager.application.shared.BracketUtils;
-import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 /**
  * Stratégie de démarrage pour le format {@link TournamentFormat#SINGLE_ELIMINATION}.

@@ -1,12 +1,9 @@
 package com.tournament.tournament_manager.infrastructure.input.messaging;
 
-import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
-import com.tournament.tournament_manager.domain.model.Match;
-import com.tournament.tournament_manager.domain.model.Player;
-import com.tournament.tournament_manager.domain.model.valueobjects.EloRating;
-import com.tournament.tournament_manager.domain.port.out.match.GenerateCommentaryPort;
-import com.tournament.tournament_manager.domain.port.out.match.LoadMatchPort;
-import com.tournament.tournament_manager.domain.port.out.match.SaveCommentaryPort;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.*;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -14,10 +11,14 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.*;
+import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
+import com.tournament.tournament_manager.domain.model.Match;
+import com.tournament.tournament_manager.domain.model.Player;
 import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
+import com.tournament.tournament_manager.domain.model.valueobjects.EloRating;
+import com.tournament.tournament_manager.domain.port.out.match.GenerateCommentaryPort;
+import com.tournament.tournament_manager.domain.port.out.match.LoadMatchPort;
+import com.tournament.tournament_manager.domain.port.out.match.SaveCommentaryPort;
 
 @ExtendWith(MockitoExtension.class)
 class CommentaryListenerTest {

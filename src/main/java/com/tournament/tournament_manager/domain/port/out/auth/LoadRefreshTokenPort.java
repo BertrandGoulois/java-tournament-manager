@@ -1,8 +1,8 @@
 package com.tournament.tournament_manager.domain.port.out.auth;
 
-import com.tournament.tournament_manager.domain.model.RefreshToken;
-
 import java.util.Optional;
+
+import com.tournament.tournament_manager.domain.model.RefreshToken;
 
 /**
  * Port sortant : chargement d'un refresh token depuis la persistance.

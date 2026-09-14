@@ -1,13 +1,14 @@
 package com.tournament.tournament_manager.application.player;
 
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.tournament.tournament_manager.domain.model.PageRequest;
 import com.tournament.tournament_manager.domain.model.PageResult;
 import com.tournament.tournament_manager.domain.model.Player;
 import com.tournament.tournament_manager.domain.port.in.player.GetPlayerUseCase;
 import com.tournament.tournament_manager.domain.port.out.player.LoadAllPlayersPort;
 import com.tournament.tournament_manager.domain.port.out.player.LoadPlayerPort;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Cas d'utilisation : consultation d'un ou plusieurs joueurs.

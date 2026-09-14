@@ -1,10 +1,11 @@
 package com.tournament.tournament_manager.domain.event;
 
-import org.junit.jupiter.api.Test;
-import tools.jackson.databind.json.JsonMapper;
-
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.junit.jupiter.api.Test;
+
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Vérifie que la présence du constructeur de convenance à un seul argument

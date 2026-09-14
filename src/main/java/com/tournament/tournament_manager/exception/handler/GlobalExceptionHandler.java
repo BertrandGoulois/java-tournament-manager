@@ -1,10 +1,9 @@
 package com.tournament.tournament_manager.exception.handler;
 
-import com.tournament.tournament_manager.exception.domain.AlreadyExistsException;
-import com.tournament.tournament_manager.exception.domain.InvalidException;
-import com.tournament.tournament_manager.exception.domain.NotFoundException;
-import com.tournament.tournament_manager.exception.domain.OpenAiUnavailableException;
-import lombok.extern.slf4j.Slf4j;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -15,9 +14,12 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.time.Instant;
-import java.util.List;
-import java.util.Map;
+import com.tournament.tournament_manager.exception.domain.AlreadyExistsException;
+import com.tournament.tournament_manager.exception.domain.InvalidException;
+import com.tournament.tournament_manager.exception.domain.NotFoundException;
+import com.tournament.tournament_manager.exception.domain.OpenAiUnavailableException;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Intercepte toutes les exceptions et les traduit en réponses HTTP uniformes, au format

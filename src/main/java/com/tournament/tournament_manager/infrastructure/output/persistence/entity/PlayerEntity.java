@@ -1,14 +1,16 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.entity;
 
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.hibernate.annotations.SQLRestriction;
-
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+
+import jakarta.persistence.*;
+
+import org.hibernate.annotations.SQLRestriction;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * Entité JPA pour la persistance d'un joueur.

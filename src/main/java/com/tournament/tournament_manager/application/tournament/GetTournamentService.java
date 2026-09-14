@@ -1,13 +1,14 @@
 package com.tournament.tournament_manager.application.tournament;
 
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.tournament.tournament_manager.domain.model.PageRequest;
 import com.tournament.tournament_manager.domain.model.PageResult;
 import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.domain.port.in.tournament.GetTournamentUseCase;
 import com.tournament.tournament_manager.domain.port.out.tournament.LoadAllTournamentsPort;
 import com.tournament.tournament_manager.domain.port.out.tournament.LoadTournamentPort;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Cas d'utilisation : consultation d'un ou plusieurs tournois. Retourne des objets de

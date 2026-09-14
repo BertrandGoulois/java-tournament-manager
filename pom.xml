@@ -1,30 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>org.springframework.boot</groupId>
-		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.0.6</version>
-		<relativePath/>
-	</parent>
-	<groupId>com.tournament</groupId>
-	<artifactId>tournament-manager</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>4.0.6</version>
+    <relativePath/>
+  </parent>
+  <groupId>com.tournament</groupId>
+  <artifactId>tournament-manager</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
 
-	<properties>
-		<java.version>21</java.version>
+  <properties>
+    <java.version>21</java.version>
 
-		<!--
+    <!--
            Quarantaine ciblée des tests d'intégration instables (§6 de la revue). Vide par
            défaut : tout tourne, et le job CI est bloquant. Un test réellement flaky reçoit
            un @Tag("flaky") et cette propriété passe à "flaky" — ce qui rend la quarantaine
            nominative et visible dans le diff, au lieu du continue-on-error global qui
            désarmait les 9 tests d'intégration d'un coup.
         -->
-		<failsafe.excludedGroups></failsafe.excludedGroups>
+    <failsafe.excludedGroups/>
 
-		<!--
+    <!--
            Surcharges de sécurité sur les dépendances transitives du BOM Spring Boot, qui ne
            les remonte pas aussi vite que les correctifs sortent. Détectées par le scan Trivy
            de la CI (voir .github/workflows/docker-scan.yml).
@@ -34,190 +33,190 @@
            À retirer dès qu'une version du BOM embarque au moins ces versions : une surcharge
            oubliée finit par bloquer les montées de version au lieu de les précéder.
         -->
-		<tomcat.version>11.0.25</tomcat.version>
-		<netty.version>4.2.17.Final</netty.version>
-	</properties>
+    <tomcat.version>11.0.25</tomcat.version>
+    <netty.version>4.2.17.Final</netty.version>
+  </properties>
 
-	<dependencies>
-		<!-- Web -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-webmvc</artifactId>
-		</dependency>
+  <dependencies>
+    <!-- Web -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-webmvc</artifactId>
+    </dependency>
 
-		<!-- JPA -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-jpa</artifactId>
-		</dependency>
+    <!-- JPA -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
 
-		<!-- ShedLock : verrou distribué sur les jobs @Scheduled (voir PurgeScheduler) -->
-		<dependency>
-			<groupId>net.javacrumbs.shedlock</groupId>
-			<artifactId>shedlock-spring</artifactId>
-			<version>6.2.0</version>
-		</dependency>
-		<dependency>
-			<groupId>net.javacrumbs.shedlock</groupId>
-			<artifactId>shedlock-provider-jdbc-template</artifactId>
-			<version>6.2.0</version>
-		</dependency>
+    <!-- ShedLock : verrou distribué sur les jobs @Scheduled (voir PurgeScheduler) -->
+    <dependency>
+      <groupId>net.javacrumbs.shedlock</groupId>
+      <artifactId>shedlock-spring</artifactId>
+      <version>6.2.0</version>
+    </dependency>
+    <dependency>
+      <groupId>net.javacrumbs.shedlock</groupId>
+      <artifactId>shedlock-provider-jdbc-template</artifactId>
+      <version>6.2.0</version>
+    </dependency>
 
-		<!-- Security -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-security</artifactId>
-		</dependency>
+    <!-- Security -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-security</artifactId>
+    </dependency>
 
-		<!-- Validation -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-validation</artifactId>
-		</dependency>
+    <!-- Validation -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
 
-		<!-- Liquibase -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-liquibase</artifactId>
-		</dependency>
+    <!-- Liquibase -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-liquibase</artifactId>
+    </dependency>
 
-		<!-- PostgreSQL -->
-		<dependency>
-			<groupId>org.postgresql</groupId>
-			<artifactId>postgresql</artifactId>
-			<scope>runtime</scope>
-		</dependency>
+    <!-- PostgreSQL -->
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>runtime</scope>
+    </dependency>
 
-		<!-- Lombok -->
-		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-			<optional>true</optional>
-		</dependency>
+    <!-- Lombok -->
+    <dependency>
+      <groupId>org.projectlombok</groupId>
+      <artifactId>lombok</artifactId>
+      <optional>true</optional>
+    </dependency>
 
-		<!-- JWT -->
-		<dependency>
-			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt-api</artifactId>
-			<version>0.12.3</version>
-		</dependency>
-		<dependency>
-			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt-impl</artifactId>
-			<version>0.12.3</version>
-			<scope>runtime</scope>
-		</dependency>
-		<dependency>
-			<groupId>io.jsonwebtoken</groupId>
-			<artifactId>jjwt-jackson</artifactId>
-			<version>0.12.3</version>
-			<scope>runtime</scope>
-		</dependency>
+    <!-- JWT -->
+    <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-api</artifactId>
+      <version>0.12.3</version>
+    </dependency>
+    <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-impl</artifactId>
+      <version>0.12.3</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.jsonwebtoken</groupId>
+      <artifactId>jjwt-jackson</artifactId>
+      <version>0.12.3</version>
+      <scope>runtime</scope>
+    </dependency>
 
-		<!-- Swagger -->
-		<dependency>
-			<groupId>org.springdoc</groupId>
-			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-			<version>2.8.6</version>
-		</dependency>
+    <!-- Swagger -->
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+      <version>2.8.6</version>
+    </dependency>
 
-		<!-- Redis -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-redis</artifactId>
-		</dependency>
+    <!-- Redis -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-redis</artifactId>
+    </dependency>
 
-		<!-- Kafka -->
-		<dependency>
-			<groupId>org.springframework.kafka</groupId>
-			<artifactId>spring-kafka</artifactId>
-		</dependency>
+    <!-- Kafka -->
+    <dependency>
+      <groupId>org.springframework.kafka</groupId>
+      <artifactId>spring-kafka</artifactId>
+    </dependency>
 
-		<!-- WebSocket -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-websocket</artifactId>
-		</dependency>
+    <!-- WebSocket -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-websocket</artifactId>
+    </dependency>
 
-		<!-- Gatling -->
-		<dependency>
-			<groupId>io.gatling.highcharts</groupId>
-			<artifactId>gatling-charts-highcharts</artifactId>
-			<version>3.13.1</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>io.gatling</groupId>
-			<artifactId>gatling-app</artifactId>
-			<version>3.13.1</version>
-			<scope>test</scope>
-		</dependency>
+    <!-- Gatling -->
+    <dependency>
+      <groupId>io.gatling.highcharts</groupId>
+      <artifactId>gatling-charts-highcharts</artifactId>
+      <version>3.13.1</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.gatling</groupId>
+      <artifactId>gatling-app</artifactId>
+      <version>3.13.1</version>
+      <scope>test</scope>
+    </dependency>
 
-		<!-- Bucket4j rate limiting -->
-		<dependency>
-			<groupId>com.bucket4j</groupId>
-			<artifactId>bucket4j-core</artifactId>
-			<version>8.10.1</version>
-		</dependency>
+    <!-- Bucket4j rate limiting -->
+    <dependency>
+      <groupId>com.bucket4j</groupId>
+      <artifactId>bucket4j-core</artifactId>
+      <version>8.10.1</version>
+    </dependency>
 
-		<!-- Bucket4j Redis (rate limiting distribué) -->
-		<dependency>
-			<groupId>com.bucket4j</groupId>
-			<artifactId>bucket4j-redis</artifactId>
-			<version>8.10.1</version>
-		</dependency>
+    <!-- Bucket4j Redis (rate limiting distribué) -->
+    <dependency>
+      <groupId>com.bucket4j</groupId>
+      <artifactId>bucket4j-redis</artifactId>
+      <version>8.10.1</version>
+    </dependency>
 
-		<!-- OpenAI -->
-		<dependency>
-			<groupId>com.openai</groupId>
-			<artifactId>openai-java</artifactId>
-			<version>2.4.0</version>
-		</dependency>
+    <!-- OpenAI -->
+    <dependency>
+      <groupId>com.openai</groupId>
+      <artifactId>openai-java</artifactId>
+      <version>2.4.0</version>
+    </dependency>
 
-		<!-- Actuator -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-actuator</artifactId>
-		</dependency>
+    <!-- Actuator -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
 
-		<!-- Prometheus -->
-		<dependency>
-			<groupId>io.micrometer</groupId>
-			<artifactId>micrometer-registry-prometheus</artifactId>
-		</dependency>
+    <!-- Prometheus -->
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-registry-prometheus</artifactId>
+    </dependency>
 
-		<!-- Resilience4j -->
-		<dependency>
-			<groupId>io.github.resilience4j</groupId>
-			<artifactId>resilience4j-spring-boot4</artifactId>
-			<version>2.4.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-aspectj</artifactId>
-		</dependency>
+    <!-- Resilience4j -->
+    <dependency>
+      <groupId>io.github.resilience4j</groupId>
+      <artifactId>resilience4j-spring-boot4</artifactId>
+      <version>2.4.0</version>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-aspectj</artifactId>
+    </dependency>
 
-		<!-- OpenTelemetry -->
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-opentelemetry</artifactId>
-		</dependency>
+    <!-- OpenTelemetry -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-opentelemetry</artifactId>
+    </dependency>
 
-		<!-- Tests -->
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-testcontainers</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.testcontainers</groupId>
-			<artifactId>junit-jupiter</artifactId>
-			<!--
+    <!-- Tests -->
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-testcontainers</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <!--
 				Version explicite malgré le point 29 de la revue (qui recommandait de
 				laisser le parent gérer cette version) : la propriété testcontainers.version
 				exposée par spring-boot-starter-parent:4.0.5 pointe vers 2.0.4, une version
@@ -226,122 +225,122 @@
 				en faveur du second. À réessayer sans <version> lors d'une future mise à
 				jour du parent, si cette propriété est corrigée.
 			-->
-			<version>1.20.4</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.testcontainers</groupId>
-			<artifactId>postgresql</artifactId>
-			<version>1.20.4</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-webmvc-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.testcontainers</groupId>
-			<artifactId>kafka</artifactId>
-			<version>1.20.4</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.kafka</groupId>
-			<artifactId>spring-kafka-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>com.tngtech.archunit</groupId>
-			<artifactId>archunit-junit5</artifactId>
-			<version>1.3.0</version>
-			<scope>test</scope>
-		</dependency>
-	</dependencies>
+      <version>1.20.4</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>postgresql</artifactId>
+      <version>1.20.4</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-webmvc-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>kafka</artifactId>
+      <version>1.20.4</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.kafka</groupId>
+      <artifactId>spring-kafka-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.tngtech.archunit</groupId>
+      <artifactId>archunit-junit5</artifactId>
+      <version>1.3.0</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-maven-plugin</artifactId>
-				<configuration>
-					<excludes>
-						<exclude>
-							<groupId>org.projectlombok</groupId>
-							<artifactId>lombok</artifactId>
-						</exclude>
-					</excludes>
-					<!--
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+        <configuration>
+          <excludes>
+            <exclude>
+              <groupId>org.projectlombok</groupId>
+              <artifactId>lombok</artifactId>
+            </exclude>
+          </excludes>
+          <!--
 					  Point 2.4 de la revue : spring.profiles.active=local a ete retire de
 					  application.properties (il etait cuit dans le jar livre). Le confort de
 					  "./mvnw spring-boot:run" est preserve ici, cote outillage de build, ou il
 					  ne suit PAS l'artefact deploye.
 					-->
-					<profiles>
-						<profile>local</profile>
-					</profiles>
-				</configuration>
-			</plugin>
+          <profiles>
+            <profile>local</profile>
+          </profiles>
+        </configuration>
+      </plugin>
 
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>default-compile</id>
-						<phase>compile</phase>
-						<goals>
-							<goal>compile</goal>
-						</goals>
-						<configuration>
-							<annotationProcessorPaths>
-								<path>
-									<groupId>org.projectlombok</groupId>
-									<artifactId>lombok</artifactId>
-								</path>
-							</annotationProcessorPaths>
-						</configuration>
-					</execution>
-					<execution>
-						<id>default-testCompile</id>
-						<phase>test-compile</phase>
-						<goals>
-							<goal>testCompile</goal>
-						</goals>
-						<configuration>
-							<annotationProcessorPaths>
-								<path>
-									<groupId>org.projectlombok</groupId>
-									<artifactId>lombok</artifactId>
-								</path>
-							</annotationProcessorPaths>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>default-compile</id>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+            <phase>compile</phase>
+            <configuration>
+              <annotationProcessorPaths>
+                <path>
+                  <groupId>org.projectlombok</groupId>
+                  <artifactId>lombok</artifactId>
+                </path>
+              </annotationProcessorPaths>
+            </configuration>
+          </execution>
+          <execution>
+            <id>default-testCompile</id>
+            <goals>
+              <goal>testCompile</goal>
+            </goals>
+            <phase>test-compile</phase>
+            <configuration>
+              <annotationProcessorPaths>
+                <path>
+                  <groupId>org.projectlombok</groupId>
+                  <artifactId>lombok</artifactId>
+                </path>
+              </annotationProcessorPaths>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
 
-			<plugin>
-				<groupId>org.jacoco</groupId>
-				<artifactId>jacoco-maven-plugin</artifactId>
-				<version>0.8.12</version>
-				<executions>
-					<execution>
-						<goals>
-							<goal>prepare-agent</goal>
-						</goals>
-					</execution>
-					<execution>
-						<id>report</id>
-						<phase>test</phase>
-						<goals>
-							<goal>report</goal>
-						</goals>
-						<!--
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.12</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>report</id>
+            <goals>
+              <goal>report</goal>
+            </goals>
+            <phase>test</phase>
+            <!--
 							Pas d'<excludes> ici. Une ancienne version de ce plugin excluait
 							domain/model/entities/**, gonflant le pourcentage affiché sans rien
 							améliorer réellement (les entités portaient la config du soft delete,
@@ -350,27 +349,27 @@
 							le README, section "Architecture hexagonale") : la couverture reflète
 							désormais tout le code, y compris infrastructure/output/persistence/entity/.
 						-->
-					</execution>
-				</executions>
-			</plugin>
+          </execution>
+        </executions>
+      </plugin>
 
-			<!-- Javadoc -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>3.6.3</version>
-				<configuration>
-					<source>21</source>
-					<doclint>none</doclint>
-					<quiet>true</quiet>
-					<windowtitle>Tournament Manager API</windowtitle>
-					<doctitle>Tournament Manager API</doctitle>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<!--
+      <!-- Javadoc -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.6.3</version>
+        <configuration>
+          <source>21</source>
+          <doclint>none</doclint>
+          <quiet>true</quiet>
+          <windowtitle>Tournament Manager API</windowtitle>
+          <doctitle>Tournament Manager API</doctitle>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <!--
 					Plus d'<excludes> littéraux ici : surefire ignore par défaut tout ce qui
 					suit la convention *IT (voir maven-failsafe-plugin ci-dessous), donc les
 					9 tests lents/Testcontainers (suffixe IT) ne tournent jamais ici. Avant,
@@ -379,27 +378,19 @@
 					cours de route ont tourné dans le mauvais job faute d'avoir pensé à les y
 					ajouter) — la convention de nommage rend cette classe d'erreur impossible.
 				-->
-				<configuration>
-					<environmentVariables>
-						<JWT_SECRET>dGVzdC1vbmx5LWR1bW15LWp3dC1zZWNyZXQtbm90LWZvci1wcm9k</JWT_SECRET>
-						<ADMIN_INITIAL_PASSWORD>test-only-admin-password</ADMIN_INITIAL_PASSWORD>
-					</environmentVariables>
-				</configuration>
-			</plugin>
+        <configuration>
+          <environmentVariables>
+            <JWT_SECRET>dGVzdC1vbmx5LWR1bW15LWp3dC1zZWNyZXQtbm90LWZvci1wcm9k</JWT_SECRET>
+            <ADMIN_INITIAL_PASSWORD>test-only-admin-password</ADMIN_INITIAL_PASSWORD>
+          </environmentVariables>
+        </configuration>
+      </plugin>
 
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-failsafe-plugin</artifactId>
-				<executions>
-					<execution>
-						<goals>
-							<goal>integration-test</goal>
-							<goal>verify</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<!--
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <configuration>
+          <!--
 						Ces tests (Testcontainers Postgres/Kafka/Redis, ou contexte Spring
 						complet) sont historiquement flaky en CI. Le job qui les exécute était
 						pour cette raison marqué continue-on-error dans ci.yml : les 9 tests
@@ -418,11 +409,11 @@
 						Pour exécuter aussi les tests en quarantaine :
 						  ./mvnw verify -DexcludedGroups=
 					-->
-					<excludedGroups>${failsafe.excludedGroups}</excludedGroups>
-					<rerunFailingTestsCount>2</rerunFailingTestsCount>
-					<forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
-					<reuseForks>false</reuseForks>
-					<!--
+          <excludedGroups>${failsafe.excludedGroups}</excludedGroups>
+          <rerunFailingTestsCount>2</rerunFailingTestsCount>
+          <forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
+          <reuseForks>false</reuseForks>
+          <!--
 						Valeurs de test injectées par le build, jamais commitées comme défaut
 						de l'application. Spring Boot les mappe automatiquement vers
 						jwt.secret et admin.initial-password (relaxed binding), ce qui évite
@@ -438,45 +429,46 @@
 						d'être syntaxiquement présent pour que le bean OpenAiConfig se
 						construise (le circuit breaker mocke l'appel réel).
 					-->
-					<environmentVariables>
-						<JWT_SECRET>dGVzdC1vbmx5LWR1bW15LWp3dC1zZWNyZXQtbm90LWZvci1wcm9k</JWT_SECRET>
-						<POSTGRES_PASSWORD>test-only-unused-password</POSTGRES_PASSWORD>
-						<OPENAI_API_KEY>test-only-dummy-key-not-real</OPENAI_API_KEY>
-						<ADMIN_INITIAL_PASSWORD>test-only-admin-password</ADMIN_INITIAL_PASSWORD>
-					</environmentVariables>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>io.gatling</groupId>
-				<artifactId>gatling-maven-plugin</artifactId>
-				<version>4.9.2</version>
-				<configuration>
-					<simulationClass>simulations.TournamentSimulation</simulationClass>
-					<jvmArgs>
-						<jvmArg>--add-opens=java.base/java.lang=ALL-UNNAMED</jvmArg>
-						<jvmArg>--add-opens=java.base/java.util=ALL-UNNAMED</jvmArg>
-					</jvmArgs>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.pitest</groupId>
-				<artifactId>pitest-maven</artifactId>
-				<version>1.18.2</version>
-				<dependencies>
-					<dependency>
-						<groupId>org.pitest</groupId>
-						<artifactId>pitest-junit5-plugin</artifactId>
-						<version>1.2.3</version>
-					</dependency>
-				</dependencies>
-				<configuration>
-					<targetClasses>
-						<param>com.tournament.tournament_manager.application.*</param>
-					</targetClasses>
-					<targetTests>
-						<param>com.tournament.tournament_manager.application.*</param>
-					</targetTests>
-					<!--
+          <environmentVariables>
+            <JWT_SECRET>dGVzdC1vbmx5LWR1bW15LWp3dC1zZWNyZXQtbm90LWZvci1wcm9k</JWT_SECRET>
+            <POSTGRES_PASSWORD>test-only-unused-password</POSTGRES_PASSWORD>
+            <OPENAI_API_KEY>test-only-dummy-key-not-real</OPENAI_API_KEY>
+            <ADMIN_INITIAL_PASSWORD>test-only-admin-password</ADMIN_INITIAL_PASSWORD>
+          </environmentVariables>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>io.gatling</groupId>
+        <artifactId>gatling-maven-plugin</artifactId>
+        <version>4.9.2</version>
+        <configuration>
+          <simulationClass>simulations.TournamentSimulation</simulationClass>
+          <jvmArgs>
+            <jvmArg>--add-opens=java.base/java.lang=ALL-UNNAMED</jvmArg>
+            <jvmArg>--add-opens=java.base/java.util=ALL-UNNAMED</jvmArg>
+          </jvmArgs>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.pitest</groupId>
+        <artifactId>pitest-maven</artifactId>
+        <version>1.18.2</version>
+        <configuration>
+          <targetClasses>
+            <param>com.tournament.tournament_manager.application.*</param>
+          </targetClasses>
+          <targetTests>
+            <param>com.tournament.tournament_manager.application.*</param>
+          </targetTests>
+          <!--
 						§7 de la revue : application.shared.* était exclu du mutation testing.
 						C'est précisément le package qui contient BracketUtils et
 						RoundRobinUtils — le seeding de bracket et la méthode du cercle, soit
@@ -489,17 +481,24 @@
 						long à produire, réduire plutôt le périmètre par targetClasses que par
 						excludedClasses, pour que le retrait reste lisible.
 					-->
-					<mutators>
-						<mutator>DEFAULTS</mutator>
-					</mutators>
-					<outputFormats>
-						<outputFormat>HTML</outputFormat>
-					</outputFormats>
-					<timestampedReports>false</timestampedReports>
-				</configuration>
-			</plugin>
+          <mutators>
+            <mutator>DEFAULTS</mutator>
+          </mutators>
+          <outputFormats>
+            <outputFormat>HTML</outputFormat>
+          </outputFormats>
+          <timestampedReports>false</timestampedReports>
+        </configuration>
+        <dependencies>
+          <dependency>
+            <groupId>org.pitest</groupId>
+            <artifactId>pitest-junit5-plugin</artifactId>
+            <version>1.2.3</version>
+          </dependency>
+        </dependencies>
+      </plugin>
 
-			<!--
+      <!--
 				§6 de la revue : aucun outil de mise en forme n'existait, d'ou les fins de
 				ligne melangees CRLF/LF fichier par fichier (53 CRLF pour 147 LF sur un
 				echantillon de 200 sources).
@@ -519,64 +518,64 @@
 				  ./mvnw spotless:check    verifie sans modifier
 				  ./mvnw spotless:apply    corrige
 			-->
-			<plugin>
-				<groupId>com.diffplug.spotless</groupId>
-				<artifactId>spotless-maven-plugin</artifactId>
-				<version>2.44.0</version>
-				<configuration>
-					<java>
-						<removeUnusedImports/>
-						<trimTrailingWhitespace/>
-						<endWithNewline/>
-						<importOrder>
-							<order>java,javax,jakarta,org,com,</order>
-						</importOrder>
-					</java>
-					<pom>
-						<sortPom>
-							<expandEmptyElements>false</expandEmptyElements>
-						</sortPom>
-					</pom>
-					<formats>
-						<format>
-							<includes>
-								<include>src/main/resources/**/*.properties</include>
-								<include>src/main/resources/**/*.sql</include>
-								<include>*.yml</include>
-								<include>docker/**/*.yml</include>
-								<include>.github/**/*.yml</include>
-							</includes>
-							<trimTrailingWhitespace/>
-							<endWithNewline/>
-						</format>
-					</formats>
-					<!--
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+        <version>2.44.0</version>
+        <configuration>
+          <java>
+            <removeUnusedImports/>
+            <trimTrailingWhitespace/>
+            <endWithNewline/>
+            <importOrder>
+              <order>java,javax,jakarta,org,com,</order>
+            </importOrder>
+          </java>
+          <pom>
+            <sortPom>
+              <expandEmptyElements>false</expandEmptyElements>
+            </sortPom>
+          </pom>
+          <formats>
+            <format>
+              <includes>
+                <include>src/main/resources/**/*.properties</include>
+                <include>src/main/resources/**/*.sql</include>
+                <include>*.yml</include>
+                <include>docker/**/*.yml</include>
+                <include>.github/**/*.yml</include>
+              </includes>
+              <trimTrailingWhitespace/>
+              <endWithNewline/>
+            </format>
+          </formats>
+          <!--
 						LF partout, en accord avec le `* text=auto eol=lf` de .gitattributes.
 						Les deux doivent rester coherents, sinon chaque developpeur reecrit
 						les fins de ligne de l'autre a chaque commit.
 					-->
-					<lineEndings>UNIX</lineEndings>
-				</configuration>
-			</plugin>
+          <lineEndings>UNIX</lineEndings>
+        </configuration>
+      </plugin>
 
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-enforcer-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>enforce</id>
-						<goals>
-							<goal>enforce</goal>
-						</goals>
-						<configuration>
-							<rules>
-								<!--
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>enforce</id>
+            <goals>
+              <goal>enforce</goal>
+            </goals>
+            <configuration>
+              <rules>
+                <!--
 									Bloque exactement le genre de doublon qu'on vient de retirer
 									(spring-boot-starter-test-classic + spring-boot-starter-test) :
 									deux versions différentes de la même dépendance transitive dans
 									l'arbre est presque toujours un signe d'oubli, jamais volontaire.
 								-->
-								<!--
+                <!--
 									dependencyConvergence retiree apres un premier essai : elle
 									revele deux conflits transitifs preexistants et sans rapport
 									avec ce qu'on vient de corriger (okio via openai-java vs
@@ -587,25 +586,25 @@
 									a ce stade ; a reconsiderer si le nombre de dependances tierces
 									grossit significativement.
 								-->
-								<requireJavaVersion>
-									<version>[21,)</version>
-								</requireJavaVersion>
-								<requireMavenVersion>
-									<version>[3.9,)</version>
-								</requireMavenVersion>
-							</rules>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
+                <requireJavaVersion>
+                  <version>[21,)</version>
+                </requireJavaVersion>
+                <requireMavenVersion>
+                  <version>[3.9,)</version>
+                </requireMavenVersion>
+              </rules>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
 
-			<!--
+      <!--
 				Point 29 de la revue : pas de Checkstyle, Spotless ou SpotBugs pour l'instant.
 				Les ajouter correctement (choix des règles, correction de l'existant pour
 				passer sans erreur dès le premier run) est un chantier à part entière -
 				décision volontairement différée, pas oubliée.
 			-->
-		</plugins>
-	</build>
+    </plugins>
+  </build>
 
 </project>

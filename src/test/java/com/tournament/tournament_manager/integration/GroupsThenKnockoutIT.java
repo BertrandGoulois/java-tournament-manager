@@ -1,18 +1,17 @@
 package com.tournament.tournament_manager.integration;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.List;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.annotation.DirtiesContext;
+
 import com.tournament.tournament_manager.TestcontainersConfiguration;
-import com.tournament.tournament_manager.infrastructure.output.persistence.entity.MatchEntity;
-import com.tournament.tournament_manager.infrastructure.output.persistence.mapper.TournamentMapper;
-import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
-import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
-import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
-import com.tournament.tournament_manager.domain.model.CreatePlayerCommand;
-import com.tournament.tournament_manager.domain.model.CreateTournamentCommand;
-import com.tournament.tournament_manager.domain.model.Player;
-import com.tournament.tournament_manager.domain.model.RecordMatchResultCommand;
-import com.tournament.tournament_manager.domain.model.RegisterPlayerCommand;
-import com.tournament.tournament_manager.domain.model.Tournament;
-import com.tournament.tournament_manager.infrastructure.output.persistence.repository.MatchRepository;
 import com.tournament.tournament_manager.application.match.RecordMatchResultService;
 import com.tournament.tournament_manager.application.player.CreatePlayerService;
 import com.tournament.tournament_manager.application.registration.RegisterPlayerService;
@@ -20,16 +19,18 @@ import com.tournament.tournament_manager.application.tournament.CreateTournament
 import com.tournament.tournament_manager.application.tournament.GenerateKnockoutBracketFromGroupsService;
 import com.tournament.tournament_manager.application.tournament.GetTournamentService;
 import com.tournament.tournament_manager.application.tournament.StartTournamentService;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
-import org.springframework.test.annotation.DirtiesContext;
-
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import com.tournament.tournament_manager.domain.model.CreatePlayerCommand;
+import com.tournament.tournament_manager.domain.model.CreateTournamentCommand;
+import com.tournament.tournament_manager.domain.model.Player;
+import com.tournament.tournament_manager.domain.model.RecordMatchResultCommand;
+import com.tournament.tournament_manager.domain.model.RegisterPlayerCommand;
+import com.tournament.tournament_manager.domain.model.Tournament;
+import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
+import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
+import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.MatchEntity;
+import com.tournament.tournament_manager.infrastructure.output.persistence.mapper.TournamentMapper;
+import com.tournament.tournament_manager.infrastructure.output.persistence.repository.MatchRepository;
 
 /**
  * Teste le flux complet d'un tournoi {@code GROUPS_THEN_KNOCKOUT} : création

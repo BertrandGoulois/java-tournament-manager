@@ -1,6 +1,7 @@
 package com.tournament.tournament_manager.dto.response.tournament;
 
 import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public record BracketMatchResponse(

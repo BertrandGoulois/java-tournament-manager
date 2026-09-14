@@ -1,9 +1,10 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.mapper;
 
+import org.springframework.stereotype.Component;
+
 import com.tournament.tournament_manager.domain.model.RoundAdvancement;
 import com.tournament.tournament_manager.domain.model.enums.RoundAdvancementStatus;
 import com.tournament.tournament_manager.infrastructure.output.persistence.entity.RoundAdvancementEntity;
-import org.springframework.stereotype.Component;
 
 @Component
 public class RoundAdvancementMapper {

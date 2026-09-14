@@ -1,8 +1,8 @@
 package com.tournament.tournament_manager.domain.model;
 
-import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
-
 import java.util.List;
+
+import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
 
 /**
  * Bracket complet d'un tournoi, organisé par round. Vue agrégée, pas une entité —

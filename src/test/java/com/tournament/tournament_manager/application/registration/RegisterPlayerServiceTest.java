@@ -1,18 +1,10 @@
 package com.tournament.tournament_manager.application.registration;
 
-import com.tournament.tournament_manager.domain.model.Player;
-import com.tournament.tournament_manager.domain.model.Registration;
-import com.tournament.tournament_manager.domain.model.Tournament;
-import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
-import com.tournament.tournament_manager.domain.port.out.player.LoadPlayerPort;
-import com.tournament.tournament_manager.domain.port.out.registration.CountRegistrationPort;
-import com.tournament.tournament_manager.domain.port.out.registration.ExistsRegistrationPort;
-import com.tournament.tournament_manager.domain.port.out.registration.SaveRegistrationPort;
-import com.tournament.tournament_manager.domain.port.out.tournament.LoadTournamentPort;
-import com.tournament.tournament_manager.domain.model.RegisterPlayerCommand;
-import com.tournament.tournament_manager.exception.domain.InvalidException;
-import com.tournament.tournament_manager.exception.domain.PlayerNotFoundException;
-import com.tournament.tournament_manager.exception.domain.TournamentNotFoundException;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -20,12 +12,21 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
+import com.tournament.tournament_manager.domain.model.Player;
+import com.tournament.tournament_manager.domain.model.RegisterPlayerCommand;
+import com.tournament.tournament_manager.domain.model.Registration;
+import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
+import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
+import com.tournament.tournament_manager.domain.port.out.player.LoadPlayerPort;
+import com.tournament.tournament_manager.domain.port.out.registration.CountRegistrationPort;
+import com.tournament.tournament_manager.domain.port.out.registration.ExistsRegistrationPort;
+import com.tournament.tournament_manager.domain.port.out.registration.SaveRegistrationPort;
+import com.tournament.tournament_manager.domain.port.out.tournament.LoadTournamentPort;
+import com.tournament.tournament_manager.exception.domain.InvalidException;
+import com.tournament.tournament_manager.exception.domain.PlayerNotFoundException;
+import com.tournament.tournament_manager.exception.domain.TournamentNotFoundException;
 
 @ExtendWith(MockitoExtension.class)
 class RegisterPlayerServiceTest {

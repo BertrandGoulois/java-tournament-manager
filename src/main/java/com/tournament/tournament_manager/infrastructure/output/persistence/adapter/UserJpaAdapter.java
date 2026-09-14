@@ -1,8 +1,9 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.adapter;
 
+import org.springframework.stereotype.Component;
+
 import com.tournament.tournament_manager.domain.port.out.auth.UserExistsPort;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.UserRepository;
-import org.springframework.stereotype.Component;
 
 /**
  * Adapter JPA implémentant les ports de domaine relatifs aux utilisateurs.

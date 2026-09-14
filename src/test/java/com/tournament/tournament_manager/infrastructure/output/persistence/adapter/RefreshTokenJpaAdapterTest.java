@@ -1,20 +1,21 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.adapter;
 
-import com.tournament.tournament_manager.domain.model.RefreshToken;
-import com.tournament.tournament_manager.infrastructure.output.persistence.entity.RefreshTokenEntity;
-import com.tournament.tournament_manager.infrastructure.output.persistence.mapper.RefreshTokenMapper;
-import com.tournament.tournament_manager.infrastructure.output.persistence.repository.RefreshTokenRepository;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.*;
+
+import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.*;
+import com.tournament.tournament_manager.domain.model.RefreshToken;
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.RefreshTokenEntity;
+import com.tournament.tournament_manager.infrastructure.output.persistence.mapper.RefreshTokenMapper;
+import com.tournament.tournament_manager.infrastructure.output.persistence.repository.RefreshTokenRepository;
 
 @ExtendWith(MockitoExtension.class)
 class RefreshTokenJpaAdapterTest {

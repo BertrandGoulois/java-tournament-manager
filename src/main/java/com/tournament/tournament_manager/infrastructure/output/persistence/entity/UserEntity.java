@@ -1,13 +1,15 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.entity;
 
-import com.tournament.tournament_manager.domain.model.enums.Role;
+import java.time.Instant;
+
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+
+import com.tournament.tournament_manager.domain.model.enums.Role;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.time.Instant;
 
 /**
  * Entité JPA pour la persistance d'un utilisateur. Contrepartie technique du domaine pur

@@ -1,12 +1,14 @@
 package com.tournament.tournament_manager.infrastructure.input.rpc;
 
-import tools.jackson.databind.ObjectMapper;
-import com.tournament.tournament_manager.domain.port.out.rpc.JsonRpcMethodHandler;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 
-import java.util.Set;
-import java.util.stream.Collectors;
+import com.tournament.tournament_manager.domain.port.out.rpc.JsonRpcMethodHandler;
+
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Classe de base pour les handlers JSON-RPC, fournissant un utilitaire de conversion

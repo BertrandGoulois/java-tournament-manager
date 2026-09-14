@@ -1,15 +1,16 @@
 package com.tournament.tournament_manager.infrastructure.input.scheduler;
 
-import com.tournament.tournament_manager.domain.model.PurgeResult;
-import com.tournament.tournament_manager.domain.port.in.maintenance.PurgeUseCase;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import com.tournament.tournament_manager.domain.model.PurgeResult;
+import com.tournament.tournament_manager.domain.port.in.maintenance.PurgeUseCase;
 
 /**
  * Vérifie que {@code PurgeScheduler} ne fait que déclencher le use case, sans porter la

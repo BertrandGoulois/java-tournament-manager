@@ -1,8 +1,9 @@
 package com.tournament.tournament_manager.infrastructure.output.security;
 
+import org.springframework.stereotype.Component;
+
 import com.tournament.tournament_manager.config.security.JwtService;
 import com.tournament.tournament_manager.domain.port.out.auth.TokenProviderPort;
-import org.springframework.stereotype.Component;
 
 /**
  * Adaptateur sortant reliant {@link TokenProviderPort} à l'implémentation JWT concrète.

@@ -1,14 +1,16 @@
 package com.tournament.tournament_manager.infrastructure.input.messaging;
 
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.stereotype.Component;
+
 import com.tournament.tournament_manager.config.kafka.KafkaConfig;
 import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
 import com.tournament.tournament_manager.domain.model.Match;
 import com.tournament.tournament_manager.domain.port.out.match.GenerateCommentaryPort;
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchPort;
 import com.tournament.tournament_manager.domain.port.out.match.SaveCommentaryPort;
+
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.stereotype.Component;
 
 /**
  * Consomme les événements {@link MatchFinishedEvent} depuis le topic Kafka

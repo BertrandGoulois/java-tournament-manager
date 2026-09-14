@@ -1,10 +1,11 @@
 package com.tournament.tournament_manager.dto.response.tournament;
 
+import java.time.Instant;
+
 import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
-import io.swagger.v3.oas.annotations.media.Schema;
 
-import java.time.Instant;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public record TournamentResponse(
         @Schema(example = "1") Long id,

@@ -1,30 +1,31 @@
 package com.tournament.tournament_manager.infrastructure.input.messaging;
 
-import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
-import com.tournament.tournament_manager.domain.model.Match;
-import com.tournament.tournament_manager.domain.model.Tournament;
-import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
-import com.tournament.tournament_manager.domain.port.in.tournament.AdvanceBracketUseCase;
-import com.tournament.tournament_manager.domain.port.in.tournament.CheckTournamentCompletionUseCase;
-import com.tournament.tournament_manager.domain.port.in.tournament.GenerateKnockoutBracketFromGroupsUseCase;
-import com.tournament.tournament_manager.domain.port.out.match.LoadMatchPort;
-import com.tournament.tournament_manager.exception.domain.MatchNotFoundException;
-import com.tournament.tournament_manager.application.strategy.progression.GroupsThenKnockoutProgressionStrategy;
-import com.tournament.tournament_manager.application.strategy.progression.RoundRobinProgressionStrategy;
-import com.tournament.tournament_manager.application.strategy.progression.SingleEliminationProgressionStrategy;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.*;
+
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.*;
-import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
-import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+import com.tournament.tournament_manager.application.strategy.progression.GroupsThenKnockoutProgressionStrategy;
+import com.tournament.tournament_manager.application.strategy.progression.RoundRobinProgressionStrategy;
+import com.tournament.tournament_manager.application.strategy.progression.SingleEliminationProgressionStrategy;
+import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
+import com.tournament.tournament_manager.domain.model.Match;
+import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
+import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
+import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
+import com.tournament.tournament_manager.domain.port.in.tournament.AdvanceBracketUseCase;
+import com.tournament.tournament_manager.domain.port.in.tournament.CheckTournamentCompletionUseCase;
+import com.tournament.tournament_manager.domain.port.in.tournament.GenerateKnockoutBracketFromGroupsUseCase;
+import com.tournament.tournament_manager.domain.port.out.match.LoadMatchPort;
+import com.tournament.tournament_manager.exception.domain.MatchNotFoundException;
 
 @ExtendWith(MockitoExtension.class)
 class BracketListenerTest {

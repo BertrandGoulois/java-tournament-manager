@@ -1,5 +1,11 @@
 package com.tournament.tournament_manager.application.player;
 
+import java.util.List;
+
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.tournament.tournament_manager.domain.model.EloHistory;
 import com.tournament.tournament_manager.domain.model.Player;
 import com.tournament.tournament_manager.domain.model.PlayerStats;
@@ -7,11 +13,6 @@ import com.tournament.tournament_manager.domain.port.in.player.GetPlayerStatsUse
 import com.tournament.tournament_manager.domain.port.out.player.CountMatchesByPlayerPort;
 import com.tournament.tournament_manager.domain.port.out.player.LoadEloHistoryPort;
 import com.tournament.tournament_manager.domain.port.out.player.LoadPlayerPort;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 /**
  * Cas d'utilisation : consultation des statistiques d'un joueur. Retourne un objet de

@@ -1,13 +1,13 @@
 package com.tournament.tournament_manager.application.shared;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import com.tournament.tournament_manager.domain.model.Match;
 import com.tournament.tournament_manager.domain.model.Player;
 import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.domain.port.out.match.SaveMatchPort;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * Génération de matchs round-robin via la méthode du cercle, réutilisable

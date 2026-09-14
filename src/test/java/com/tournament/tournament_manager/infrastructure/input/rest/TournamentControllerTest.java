@@ -1,35 +1,5 @@
 package com.tournament.tournament_manager.infrastructure.input.rest;
 
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
-import com.tournament.tournament_manager.config.security.JwtAuthenticationFilter;
-import com.tournament.tournament_manager.config.security.SecurityConfig;
-import com.tournament.tournament_manager.config.security.UserDetailsServiceImpl;
-import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
-import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
-import com.tournament.tournament_manager.domain.port.in.tournament.*;
-import com.tournament.tournament_manager.dto.request.tournament.CreateTournamentRequest;
-import com.tournament.tournament_manager.domain.model.Bracket;
-import com.tournament.tournament_manager.domain.model.Standings;
-import com.tournament.tournament_manager.domain.model.Tournament;
-import com.tournament.tournament_manager.exception.domain.InvalidException;
-import io.github.bucket4j.distributed.proxy.ProxyManager;
-import io.micrometer.core.instrument.MeterRegistry;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.cache.CacheManager;
-import com.tournament.tournament_manager.infrastructure.input.mapper.TournamentRestMapper;
-import org.springframework.context.annotation.Import;
-import org.springframework.data.domain.Page;
-import com.tournament.tournament_manager.domain.model.PageResult;
-import org.springframework.http.MediaType;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
-
-import java.util.List;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
@@ -38,7 +8,38 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.util.List;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.cache.CacheManager;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+import com.tournament.tournament_manager.config.security.JwtAuthenticationFilter;
+import com.tournament.tournament_manager.config.security.SecurityConfig;
+import com.tournament.tournament_manager.config.security.UserDetailsServiceImpl;
+import com.tournament.tournament_manager.domain.model.Bracket;
+import com.tournament.tournament_manager.domain.model.PageResult;
+import com.tournament.tournament_manager.domain.model.Standings;
+import com.tournament.tournament_manager.domain.model.Tournament;
+import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
+import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
 import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
+import com.tournament.tournament_manager.domain.port.in.tournament.*;
+import com.tournament.tournament_manager.dto.request.tournament.CreateTournamentRequest;
+import com.tournament.tournament_manager.exception.domain.InvalidException;
+import com.tournament.tournament_manager.infrastructure.input.mapper.TournamentRestMapper;
+
+import io.github.bucket4j.distributed.proxy.ProxyManager;
+import io.micrometer.core.instrument.MeterRegistry;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 @WebMvcTest(TournamentController.class)
 @Import({SecurityConfig.class, TournamentRestMapper.class})

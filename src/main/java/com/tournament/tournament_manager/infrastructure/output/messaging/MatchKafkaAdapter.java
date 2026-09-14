@@ -1,12 +1,14 @@
 package com.tournament.tournament_manager.infrastructure.output.messaging;
 
+import org.springframework.stereotype.Component;
+
 import com.tournament.tournament_manager.config.kafka.KafkaConfig;
 import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
 import com.tournament.tournament_manager.domain.port.out.match.PublishMatchEventPort;
 import com.tournament.tournament_manager.infrastructure.output.persistence.entity.OutboxEventEntity;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.OutboxEventRepository;
+
 import tools.jackson.databind.ObjectMapper;
-import org.springframework.stereotype.Component;
 
 /**
  * Adapter implémentant la publication des événements de fin de match via le pattern

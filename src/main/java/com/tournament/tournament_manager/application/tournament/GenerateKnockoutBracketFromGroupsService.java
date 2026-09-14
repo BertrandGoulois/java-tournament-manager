@@ -1,5 +1,12 @@
 package com.tournament.tournament_manager.application.tournament;
 
+import java.util.*;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.tournament.tournament_manager.application.shared.BracketUtils;
 import com.tournament.tournament_manager.domain.model.Match;
 import com.tournament.tournament_manager.domain.model.Player;
 import com.tournament.tournament_manager.domain.model.Tournament;
@@ -7,12 +14,6 @@ import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 import com.tournament.tournament_manager.domain.port.in.tournament.GenerateKnockoutBracketFromGroupsUseCase;
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchesByTournamentPort;
 import com.tournament.tournament_manager.domain.port.out.match.SaveMatchPort;
-import com.tournament.tournament_manager.application.shared.BracketUtils;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Cas d'utilisation : transition entre la phase de groupes et la phase de

@@ -1,8 +1,8 @@
 package com.tournament.tournament_manager.exception.handler;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-
 import java.time.Instant;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * Corps de réponse standard pour toutes les erreurs de l'API.

@@ -1,7 +1,5 @@
 package com.tournament.tournament_manager.config.websocket;
 
-import com.tournament.tournament_manager.config.security.JwtService;
-import com.tournament.tournament_manager.config.security.UserDetailsServiceImpl;
 import org.jspecify.annotations.NonNull;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -14,6 +12,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+
+import com.tournament.tournament_manager.config.security.JwtService;
+import com.tournament.tournament_manager.config.security.UserDetailsServiceImpl;
 
 /**
  * Intercepteur du canal d'entrée STOMP : authentifie chaque trame {@code CONNECT}

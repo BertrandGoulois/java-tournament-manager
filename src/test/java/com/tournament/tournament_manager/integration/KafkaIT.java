@@ -1,8 +1,9 @@
 package com.tournament.tournament_manager.integration;
 
-import com.tournament.tournament_manager.TestcontainersConfiguration;
-import com.tournament.tournament_manager.config.kafka.KafkaConfig;
-import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.concurrent.TimeUnit;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -10,9 +11,9 @@ import org.springframework.context.annotation.Import;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 
-import java.util.concurrent.TimeUnit;
-
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import com.tournament.tournament_manager.TestcontainersConfiguration;
+import com.tournament.tournament_manager.config.kafka.KafkaConfig;
+import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
 
 /*
  * Le container Kafka est desormais fourni par TestcontainersConfiguration

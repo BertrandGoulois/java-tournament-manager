@@ -1,11 +1,12 @@
 package com.tournament.tournament_manager.integration;
 
-import com.tournament.tournament_manager.config.kafka.KafkaConfig;
-import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
+import java.util.concurrent.CountDownLatch;
+
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.CountDownLatch;
+import com.tournament.tournament_manager.config.kafka.KafkaConfig;
+import com.tournament.tournament_manager.domain.event.MatchFinishedEvent;
 
 @Component
 public class TestKafkaConsumer {

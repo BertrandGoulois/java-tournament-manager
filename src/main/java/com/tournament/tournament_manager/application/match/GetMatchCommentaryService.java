@@ -1,11 +1,12 @@
 package com.tournament.tournament_manager.application.match;
 
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.tournament.tournament_manager.domain.model.Match;
 import com.tournament.tournament_manager.domain.model.MatchCommentary;
 import com.tournament.tournament_manager.domain.port.in.match.GetMatchCommentaryUseCase;
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchPort;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Cas d'utilisation : consultation du commentaire d'un match. Retourne un objet de domaine

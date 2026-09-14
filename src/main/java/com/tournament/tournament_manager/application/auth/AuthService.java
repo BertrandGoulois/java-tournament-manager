@@ -1,12 +1,13 @@
 package com.tournament.tournament_manager.application.auth;
 
-import com.tournament.tournament_manager.application.token.RefreshTokenService;
-import com.tournament.tournament_manager.domain.port.out.auth.TokenProviderPort;
-import com.tournament.tournament_manager.domain.model.AuthResult;
-import com.tournament.tournament_manager.domain.port.in.auth.LoginUseCase;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
+
+import com.tournament.tournament_manager.application.token.RefreshTokenService;
+import com.tournament.tournament_manager.domain.model.AuthResult;
+import com.tournament.tournament_manager.domain.port.in.auth.LoginUseCase;
+import com.tournament.tournament_manager.domain.port.out.auth.TokenProviderPort;
 
 /**
  * Cas d'utilisation : authentification par mot de passe. Retourne un objet de domaine pur

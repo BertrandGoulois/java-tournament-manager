@@ -1,5 +1,14 @@
 package com.tournament.tournament_manager.application.tournament;
 
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.tournament.tournament_manager.domain.model.Match;
 import com.tournament.tournament_manager.domain.model.Player;
 import com.tournament.tournament_manager.domain.model.StandingEntry;
@@ -9,14 +18,6 @@ import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
 import com.tournament.tournament_manager.domain.port.in.tournament.GetStandingsUseCase;
 import com.tournament.tournament_manager.domain.port.out.match.LoadMatchesByTournamentPort;
 import com.tournament.tournament_manager.domain.port.out.tournament.LoadTournamentPort;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Cas d'utilisation : calcul du classement d'un tournoi round-robin.

@@ -1,10 +1,10 @@
 package com.tournament.tournament_manager.domain.model;
 
-import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
-import com.tournament.tournament_manager.exception.domain.InvalidException;
-
 import java.time.Instant;
 import java.util.Objects;
+
+import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
+import com.tournament.tournament_manager.exception.domain.InvalidException;
 
 /**
  * Un match, tel que le domaine métier le connaît.

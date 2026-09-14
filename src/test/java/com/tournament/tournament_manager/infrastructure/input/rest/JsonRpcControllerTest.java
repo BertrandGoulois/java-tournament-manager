@@ -1,27 +1,5 @@
 package com.tournament.tournament_manager.infrastructure.input.rest;
 
-import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.json.JsonMapper;
-import com.tournament.tournament_manager.application.rpc.JsonRpcDispatchService;
-import com.tournament.tournament_manager.config.security.JwtAuthenticationFilter;
-import com.tournament.tournament_manager.config.security.SecurityConfig;
-import com.tournament.tournament_manager.config.security.UserDetailsServiceImpl;
-import com.tournament.tournament_manager.dto.response.rpc.JsonRpcError;
-import com.tournament.tournament_manager.dto.response.rpc.JsonRpcResponse;
-import io.github.bucket4j.distributed.proxy.ProxyManager;
-import io.micrometer.core.instrument.MeterRegistry;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
-import org.springframework.cache.CacheManager;
-import org.springframework.context.annotation.Import;
-import org.springframework.http.MediaType;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
-
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doAnswer;
@@ -31,6 +9,28 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.cache.CacheManager;
+import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
+
+import com.tournament.tournament_manager.application.rpc.JsonRpcDispatchService;
+import com.tournament.tournament_manager.config.security.JwtAuthenticationFilter;
+import com.tournament.tournament_manager.config.security.SecurityConfig;
+import com.tournament.tournament_manager.config.security.UserDetailsServiceImpl;
+import com.tournament.tournament_manager.dto.response.rpc.JsonRpcError;
+import com.tournament.tournament_manager.dto.response.rpc.JsonRpcResponse;
+
+import io.github.bucket4j.distributed.proxy.ProxyManager;
+import io.micrometer.core.instrument.MeterRegistry;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Teste le contrôleur en isolation (dispatch mocké) : la responsabilité vérifiée ici est le

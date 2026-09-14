@@ -1,13 +1,16 @@
 package com.tournament.tournament_manager.infrastructure.input.rpc.match;
 
-import tools.jackson.databind.ObjectMapper;
 import jakarta.validation.Validator;
+
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Component;
+
 import com.tournament.tournament_manager.domain.model.RecordMatchResultCommand;
 import com.tournament.tournament_manager.domain.port.in.match.RecordMatchResultUseCase;
 import com.tournament.tournament_manager.infrastructure.input.mapper.MatchRestMapper;
 import com.tournament.tournament_manager.infrastructure.input.rpc.AbstractJsonRpcHandler;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.stereotype.Component;
+
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Handler JSON-RPC de la méthode {@code match.recordResult}.

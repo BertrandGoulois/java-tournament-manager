@@ -1,10 +1,11 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.mapper;
 
+import org.springframework.stereotype.Component;
+
 import com.tournament.tournament_manager.domain.model.EloHistory;
 import com.tournament.tournament_manager.infrastructure.output.persistence.entity.EloHistoryEntity;
 import com.tournament.tournament_manager.infrastructure.output.persistence.entity.MatchEntity;
 import com.tournament.tournament_manager.infrastructure.output.persistence.entity.PlayerEntity;
-import org.springframework.stereotype.Component;
 
 /**
  * Convertit entre le domaine pur {@link EloHistory} et sa contrepartie JPA

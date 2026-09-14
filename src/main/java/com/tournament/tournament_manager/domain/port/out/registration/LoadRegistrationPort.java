@@ -1,10 +1,10 @@
 package com.tournament.tournament_manager.domain.port.out.registration;
 
+import java.util.List;
+
 import com.tournament.tournament_manager.domain.model.PageRequest;
 import com.tournament.tournament_manager.domain.model.PageResult;
 import com.tournament.tournament_manager.domain.model.Registration;
-
-import java.util.List;
 
 /**
  * Port sortant : chargement des inscriptions d'un tournoi.

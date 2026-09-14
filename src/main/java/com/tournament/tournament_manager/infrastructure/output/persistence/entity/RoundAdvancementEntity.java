@@ -1,12 +1,14 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.entity;
 
-import com.tournament.tournament_manager.domain.model.enums.RoundAdvancementStatus;
+import java.time.Instant;
+
 import jakarta.persistence.*;
+
+import com.tournament.tournament_manager.domain.model.enums.RoundAdvancementStatus;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.time.Instant;
 
 /**
  * Entité JPA pour la persistance du marqueur d'avancement de round. Contrepartie technique

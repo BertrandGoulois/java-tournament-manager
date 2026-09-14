@@ -1,16 +1,18 @@
 package com.tournament.tournament_manager.infrastructure.input.scheduler;
 
-import com.tournament.tournament_manager.domain.port.out.tournament.ReleaseStaleRoundClaimsPort;
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.MeterRegistry;
-import lombok.extern.slf4j.Slf4j;
-import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
+import java.time.Duration;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.time.Duration;
-import java.util.List;
+import com.tournament.tournament_manager.domain.port.out.tournament.ReleaseStaleRoundClaimsPort;
+
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 
 /**
  * Libère périodiquement les claims de round restés non confirmés (point 2.2 de la revue).

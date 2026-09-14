@@ -1,10 +1,11 @@
 package com.tournament.tournament_manager.infrastructure.input.mapper;
 
+import org.springframework.stereotype.Component;
+
 import com.tournament.tournament_manager.domain.model.RegisterPlayerCommand;
 import com.tournament.tournament_manager.domain.model.Registration;
 import com.tournament.tournament_manager.dto.request.registration.CreateRegistrationRequest;
 import com.tournament.tournament_manager.dto.response.registration.RegistrationResponse;
-import org.springframework.stereotype.Component;
 
 /**
  * Convertit entre le domaine pur ({@link Registration}) et les DTO REST. Voir la Javadoc

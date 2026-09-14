@@ -1,13 +1,15 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.adapter;
 
-import com.tournament.tournament_manager.infrastructure.output.persistence.entity.RoundAdvancementEntity;
-import com.tournament.tournament_manager.infrastructure.output.persistence.mapper.RoundAdvancementMapper;
-import com.tournament.tournament_manager.infrastructure.output.persistence.repository.RoundAdvancementRepository;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.RoundAdvancementEntity;
+import com.tournament.tournament_manager.infrastructure.output.persistence.mapper.RoundAdvancementMapper;
+import com.tournament.tournament_manager.infrastructure.output.persistence.repository.RoundAdvancementRepository;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Écritures de claim devant s'exécuter dans leur <b>propre</b> transaction, indépendamment

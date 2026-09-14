@@ -1,11 +1,13 @@
 package com.tournament.tournament_manager.dto.request.tournament;
 
-import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
-import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+
+import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public record CreateTournamentRequest(
         @NotBlank(message = "Le nom du tournoi est obligatoire")

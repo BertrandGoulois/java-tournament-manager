@@ -1,11 +1,12 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.adapter;
 
-import com.tournament.tournament_manager.domain.model.PageResult;
-import com.tournament.tournament_manager.domain.model.Tournament;
-import com.tournament.tournament_manager.exception.domain.TournamentNotFoundException;
-import com.tournament.tournament_manager.infrastructure.output.persistence.entity.TournamentEntity;
-import com.tournament.tournament_manager.infrastructure.output.persistence.mapper.TournamentMapper;
-import com.tournament.tournament_manager.infrastructure.output.persistence.repository.TournamentRepository;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+import java.util.List;
+import java.util.Optional;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,15 +16,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+import com.tournament.tournament_manager.domain.model.PageResult;
+import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
+import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
 import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
+import com.tournament.tournament_manager.exception.domain.TournamentNotFoundException;
+import com.tournament.tournament_manager.infrastructure.output.persistence.entity.TournamentEntity;
+import com.tournament.tournament_manager.infrastructure.output.persistence.mapper.TournamentMapper;
+import com.tournament.tournament_manager.infrastructure.output.persistence.repository.TournamentRepository;
 
 @ExtendWith(MockitoExtension.class)
 class TournamentJpaAdapterTest {

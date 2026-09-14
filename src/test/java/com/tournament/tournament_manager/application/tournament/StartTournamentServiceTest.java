@@ -1,10 +1,23 @@
 package com.tournament.tournament_manager.application.tournament;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.*;
+
+import java.util.List;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
 import com.tournament.tournament_manager.domain.model.Player;
 import com.tournament.tournament_manager.domain.model.Registration;
 import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
 import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
+import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
 import com.tournament.tournament_manager.domain.port.out.registration.LoadRegistrationPort;
 import com.tournament.tournament_manager.domain.port.out.strategy.TournamentStartStrategy;
 import com.tournament.tournament_manager.domain.port.out.tournament.LoadTournamentPort;
@@ -12,20 +25,9 @@ import com.tournament.tournament_manager.domain.port.out.tournament.SaveTourname
 import com.tournament.tournament_manager.exception.domain.InvalidException;
 import com.tournament.tournament_manager.exception.domain.NotFoundException;
 import com.tournament.tournament_manager.exception.domain.TournamentNotFoundException;
+
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.*;
-import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
 
 @ExtendWith(MockitoExtension.class)
 class StartTournamentServiceTest {

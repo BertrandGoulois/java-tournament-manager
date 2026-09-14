@@ -1,10 +1,11 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.adapter;
 
-import com.tournament.tournament_manager.domain.port.out.maintenance.PurgeOutboxEventsPort;
-import com.tournament.tournament_manager.infrastructure.output.persistence.repository.OutboxEventRepository;
+import java.time.Instant;
+
 import org.springframework.stereotype.Component;
 
-import java.time.Instant;
+import com.tournament.tournament_manager.domain.port.out.maintenance.PurgeOutboxEventsPort;
+import com.tournament.tournament_manager.infrastructure.output.persistence.repository.OutboxEventRepository;
 
 /**
  * Adapter JPA implémentant la purge des événements outbox déjà publiés.

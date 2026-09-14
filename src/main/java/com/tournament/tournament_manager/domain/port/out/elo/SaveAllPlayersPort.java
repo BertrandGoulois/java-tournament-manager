@@ -1,8 +1,8 @@
 package com.tournament.tournament_manager.domain.port.out.elo;
 
-import com.tournament.tournament_manager.domain.model.Player;
-
 import java.util.List;
+
+import com.tournament.tournament_manager.domain.model.Player;
 
 /**
  * Port sortant : sauvegarde de plusieurs joueurs en persistance.

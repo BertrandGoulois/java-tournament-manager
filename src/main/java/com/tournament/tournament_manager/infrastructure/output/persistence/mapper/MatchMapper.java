@@ -1,10 +1,11 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.mapper;
 
+import org.springframework.stereotype.Component;
+
 import com.tournament.tournament_manager.domain.model.Match;
 import com.tournament.tournament_manager.infrastructure.output.persistence.entity.MatchEntity;
 import com.tournament.tournament_manager.infrastructure.output.persistence.entity.PlayerEntity;
 import com.tournament.tournament_manager.infrastructure.output.persistence.entity.TournamentEntity;
-import org.springframework.stereotype.Component;
 
 /**
  * Convertit entre le domaine pur {@link Match} et sa contrepartie JPA {@link MatchEntity}.

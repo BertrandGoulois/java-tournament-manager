@@ -15,4 +15,3 @@ public interface SaveTournamentPort {
      */
     Tournament saveTournament(Tournament tournament);
 }
-

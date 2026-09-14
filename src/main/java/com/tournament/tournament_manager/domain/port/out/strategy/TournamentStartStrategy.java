@@ -1,10 +1,10 @@
 package com.tournament.tournament_manager.domain.port.out.strategy;
 
+import java.util.List;
+
 import com.tournament.tournament_manager.domain.model.Player;
 import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
-
-import java.util.List;
 
 /**
  * Stratégie de génération des matchs initiaux d'un tournoi, propre à un format donné.

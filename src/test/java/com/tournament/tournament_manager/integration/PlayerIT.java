@@ -1,19 +1,20 @@
 package com.tournament.tournament_manager.integration;
 
-import com.tournament.tournament_manager.TestcontainersConfiguration;
-import com.tournament.tournament_manager.domain.model.CreatePlayerCommand;
-import com.tournament.tournament_manager.domain.model.Player;
-import com.tournament.tournament_manager.exception.domain.PlayerNotFoundException;
-import com.tournament.tournament_manager.infrastructure.output.persistence.repository.PlayerRepository;
-import com.tournament.tournament_manager.application.player.CreatePlayerService;
-import com.tournament.tournament_manager.application.player.GetPlayerService;
+import static org.junit.jupiter.api.Assertions.*;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.annotation.DirtiesContext;
 
-import static org.junit.jupiter.api.Assertions.*;
+import com.tournament.tournament_manager.TestcontainersConfiguration;
+import com.tournament.tournament_manager.application.player.CreatePlayerService;
+import com.tournament.tournament_manager.application.player.GetPlayerService;
+import com.tournament.tournament_manager.domain.model.CreatePlayerCommand;
+import com.tournament.tournament_manager.domain.model.Player;
+import com.tournament.tournament_manager.exception.domain.PlayerNotFoundException;
+import com.tournament.tournament_manager.infrastructure.output.persistence.repository.PlayerRepository;
 
 @SpringBootTest
 @Import(TestcontainersConfiguration.class)

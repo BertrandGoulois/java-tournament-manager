@@ -1,5 +1,10 @@
 package com.tournament.tournament_manager.infrastructure.output.persistence.adapter;
 
+import java.time.Instant;
+import java.util.Optional;
+
+import org.springframework.stereotype.Component;
+
 import com.tournament.tournament_manager.domain.model.RefreshToken;
 import com.tournament.tournament_manager.domain.port.out.auth.DeleteRefreshTokenPort;
 import com.tournament.tournament_manager.domain.port.out.auth.LoadRefreshTokenPort;
@@ -8,10 +13,6 @@ import com.tournament.tournament_manager.domain.port.out.maintenance.PurgeRefres
 import com.tournament.tournament_manager.infrastructure.output.persistence.entity.RefreshTokenEntity;
 import com.tournament.tournament_manager.infrastructure.output.persistence.mapper.RefreshTokenMapper;
 import com.tournament.tournament_manager.infrastructure.output.persistence.repository.RefreshTokenRepository;
-import org.springframework.stereotype.Component;
-
-import java.time.Instant;
-import java.util.Optional;
 
 /**
  * Adapter JPA implémentant les ports de gestion des refresh tokens.

@@ -1,12 +1,13 @@
 package com.tournament.tournament_manager.infrastructure.input.mapper;
 
+import org.springframework.stereotype.Component;
+
 import com.tournament.tournament_manager.domain.model.Match;
 import com.tournament.tournament_manager.domain.model.MatchCommentary;
 import com.tournament.tournament_manager.domain.model.RecordMatchResultCommand;
 import com.tournament.tournament_manager.dto.request.match.RecordMatchResultRequest;
 import com.tournament.tournament_manager.dto.response.match.MatchCommentaryResponse;
 import com.tournament.tournament_manager.dto.response.match.MatchResponse;
-import org.springframework.stereotype.Component;
 
 /**
  * Convertit entre le domaine pur ({@link Match}, {@link MatchCommentary}) et les DTO REST.

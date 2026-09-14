@@ -1,12 +1,14 @@
 package com.tournament.tournament_manager.application.tournament;
 
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.tournament.tournament_manager.domain.model.Tournament;
 import com.tournament.tournament_manager.domain.port.in.tournament.DeleteTournamentUseCase;
 import com.tournament.tournament_manager.domain.port.out.tournament.LoadTournamentPort;
 import com.tournament.tournament_manager.domain.port.out.tournament.SoftDeleteTournamentPort;
+
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Cas d'utilisation : suppression (soft delete) d'un tournoi.
