@@ -412,7 +412,7 @@
           <excludedGroups>${failsafe.excludedGroups}</excludedGroups>
           <rerunFailingTestsCount>2</rerunFailingTestsCount>
           <forkedProcessTimeoutInSeconds>600</forkedProcessTimeoutInSeconds>
-          <reuseForks>false</reuseForks>
+          <reuseForks>true</reuseForks>
           <!--
 						Valeurs de test injectées par le build, jamais commitées comme défaut
 						de l'application. Spring Boot les mappe automatiquement vers
