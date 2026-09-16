@@ -1,0 +1,239 @@
+--- a/src/test/java/com/tournament/tournament_manager/integration/RoundClaimIT.java
++++ b/src/test/java/com/tournament/tournament_manager/integration/RoundClaimIT.java
+@@ -0,0 +1,236 @@
++package com.tournament.tournament_manager.integration;
++
++import com.tournament.tournament_manager.TestcontainersConfiguration;
++import com.tournament.tournament_manager.application.bracket.AdvanceBracketService;
++import com.tournament.tournament_manager.domain.model.Tournament;
++import com.tournament.tournament_manager.domain.model.enums.MatchStatus;
++import com.tournament.tournament_manager.domain.model.enums.RoundAdvancementStatus;
++import com.tournament.tournament_manager.domain.model.enums.TournamentFormat;
++import com.tournament.tournament_manager.domain.model.enums.TournamentStatus;
++import com.tournament.tournament_manager.domain.model.valueobjects.TournamentName;
++import com.tournament.tournament_manager.domain.port.out.tournament.ReleaseStaleRoundClaimsPort;
++import com.tournament.tournament_manager.infrastructure.output.persistence.entity.MatchEntity;
++import com.tournament.tournament_manager.infrastructure.output.persistence.entity.PlayerEntity;
++import com.tournament.tournament_manager.infrastructure.output.persistence.entity.RoundAdvancementEntity;
++import com.tournament.tournament_manager.infrastructure.output.persistence.entity.TournamentEntity;
++import com.tournament.tournament_manager.infrastructure.output.persistence.repository.MatchRepository;
++import com.tournament.tournament_manager.infrastructure.output.persistence.repository.PlayerRepository;
++import com.tournament.tournament_manager.infrastructure.output.persistence.repository.RoundAdvancementRepository;
++import com.tournament.tournament_manager.infrastructure.output.persistence.repository.TournamentRepository;
++import org.junit.jupiter.api.Test;
++import org.springframework.beans.factory.annotation.Autowired;
++import org.springframework.boot.test.context.SpringBootTest;
++import org.springframework.context.annotation.Import;
++import org.springframework.test.annotation.DirtiesContext;
++import org.springframework.transaction.PlatformTransactionManager;
++import org.springframework.transaction.support.TransactionTemplate;
++
++import java.time.Duration;
++import java.time.Instant;
++import java.util.List;
++
++import static org.junit.jupiter.api.Assertions.assertEquals;
++import static org.junit.jupiter.api.Assertions.assertThrows;
++import static org.junit.jupiter.api.Assertions.assertTrue;
++
++/**
++ * Vérifie le cycle de vie du claim de round contre une vraie base (point 2.2 de la revue).
++ *
++ * <p><b>Pourquoi ce test existe.</b> {@code AdvanceBracketServiceTest} couvre le même sujet
++ * en unitaire, mais à travers un mock de {@code ClaimRoundAdvancementPort} — il vérifie donc
++ * que le service <i>appelle</i> {@code markCompleted}, et rien de plus. Le mécanisme réel, à
++ * savoir la libération du claim quand la transaction appelante est annulée, repose sur une
++ * {@link org.springframework.transaction.support.TransactionSynchronization}, une propagation
++ * {@code REQUIRES_NEW} et une contrainte d'unicité en base. Aucun de ces trois éléments
++ * n'existe dans un test à mocks : ils ne peuvent être vérifiés qu'ici.
++ *
++ * <p>C'est précisément le genre d'angle mort qui a produit le bug d'origine — le
++ * {@code catch (DataIntegrityViolationException)} du point 2.1 passait au vert en unitaire
++ * pour la même raison : sans transaction réelle, rien ne pouvait le contredire.
++ */
++@SpringBootTest
++@Import(TestcontainersConfiguration.class)
++@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
++class RoundClaimIT {
++
++    @Autowired
++    private AdvanceBracketService advanceBracketService;
++
++    @Autowired
++    private RoundAdvancementRepository roundAdvancementRepository;
++
++    @Autowired
++    private ReleaseStaleRoundClaimsPort releaseStaleRoundClaimsPort;
++
++    @Autowired
++    private TournamentRepository tournamentRepository;
++
++    @Autowired
++    private PlayerRepository playerRepository;
++
++    @Autowired
++    private MatchRepository matchRepository;
++
++    @Autowired
++    private PlatformTransactionManager transactionManager;
++
++    /**
++     * Le round 4 d'un bracket, entièrement joué : deux matchs terminés, deux vainqueurs.
++     * {@code advanceToNextRound(tournament, 4)} doit donc créer le round 2.
++     */
++    private Tournament givenFinishedRound(TournamentEntity entity) {
++        PlayerEntity w1 = newPlayer("claim_w1");
++        PlayerEntity w2 = newPlayer("claim_w2");
++        PlayerEntity l1 = newPlayer("claim_l1");
++        PlayerEntity l2 = newPlayer("claim_l2");
++
++        matchRepository.save(finishedMatch(entity, 4, 0, w1, l1, w1));
++        matchRepository.save(finishedMatch(entity, 4, 1, w2, l2, w2));
++
++        return Tournament.reconstitute(entity.getId(), new TournamentName(entity.getName()),
++                TournamentStatus.IN_PROGRESS, TournamentFormat.SINGLE_ELIMINATION,
++                null, null, entity.getMaxPlayers(), Instant.now(), false, null);
++    }
++
++    private MatchEntity finishedMatch(TournamentEntity tournament, int round, int position,
++                                      PlayerEntity p1, PlayerEntity p2, PlayerEntity winner) {
++        MatchEntity match = new MatchEntity();
++        match.setTournament(tournament);
++        match.setRound(round);
++        match.setPosition(position);
++        match.setPlayer1(p1);
++        match.setPlayer2(p2);
++        match.setWinner(winner);
++        match.setStatus(MatchStatus.FINISHED);
++        match.setPlayedAt(Instant.now());
++        return match;
++    }
++
++    private TournamentEntity newTournament() {
++        TournamentEntity tournament = new TournamentEntity();
++        tournament.setName("tournoi-claim-test-" + System.nanoTime());
++        tournament.setMaxPlayers(8);
++        tournament.setStatus(TournamentStatus.IN_PROGRESS);
++        tournament.setFormat(TournamentFormat.SINGLE_ELIMINATION);
++        return tournamentRepository.save(tournament);
++    }
++
++    private PlayerEntity newPlayer(String prefix) {
++        PlayerEntity player = new PlayerEntity();
++        player.setUsername(prefix + "_" + System.nanoTime());
++        player.setEmail(prefix + "_" + System.nanoTime() + "@mail.com");
++        return playerRepository.save(player);
++    }
++
++    private List<RoundAdvancementEntity> claimsFor(Long tournamentId) {
++        return roundAdvancementRepository.findAll().stream()
++                .filter(c -> c.getTournamentId().equals(tournamentId))
++                .toList();
++    }
++
++    /**
++     * Le chemin nominal : le claim survit à la transaction et porte l'état DONE. Un claim
++     * confirmé fait foi — c'est lui qui empêchera une redelivery Kafka de recréer le round.
++     */
++    @Test
++    void advanceToNextRound_shouldLeaveConfirmedClaim_whenTransactionCommits() {
++        TournamentEntity entity = newTournament();
++        Tournament tournament = givenFinishedRound(entity);
++
++        new TransactionTemplate(transactionManager).executeWithoutResult(status ->
++                advanceBracketService.advanceToNextRound(tournament, 4));
++
++        List<RoundAdvancementEntity> claims = claimsFor(entity.getId());
++        assertEquals(1, claims.size(), "Le round suivant doit avoir été réclamé");
++        assertEquals(2, claims.get(0).getRound());
++        assertEquals(RoundAdvancementStatus.DONE, claims.get(0).getStatus(),
++                "Un claim dont les matchs ont bien été créés doit être confirmé");
++        assertEquals(1, matchRepository.findByTournamentIdAndRound(entity.getId(), 2).size(),
++                "Le round 2 doit contenir le match opposant les deux vainqueurs");
++    }
++
++    /**
++     * Le test qui compte, et que rien ne couvrait jusqu'ici.
++     *
++     * <p>Le claim est commité dans une transaction indépendante ({@code REQUIRES_NEW}) : il
++     * survit donc à l'annulation de la transaction métier. Sans libération explicite, il
++     * resterait en base à désigner un round réservé pour des matchs qui n'existent pas — et
++     * la redelivery Kafka tomberait sur « round déjà réclamé », journaliserait un warn puis
++     * <b>sortirait en succès</b>. Le tournoi serait bloqué pour toujours, sans qu'aucune
++     * erreur ne remonte nulle part.
++     *
++     * <p>Noter que l'exception est levée <i>après</i> le retour de
++     * {@code advanceToNextRound} : elle simule un échec survenant plus loin dans la même
++     * transaction, ce qu'un {@code try/catch} placé dans le service ne pourrait pas
++     * intercepter. C'est exactement pourquoi la libération passe par un
++     * {@code afterCompletion}.
++     */
++    @Test
++    void advanceToNextRound_shouldReleaseClaim_whenTransactionRollsBack() {
++        TournamentEntity entity = newTournament();
++        Tournament tournament = givenFinishedRound(entity);
++
++        assertThrows(IllegalStateException.class, () ->
++                new TransactionTemplate(transactionManager).executeWithoutResult(status -> {
++                    advanceBracketService.advanceToNextRound(tournament, 4);
++                    throw new IllegalStateException("echec simule apres la reclamation du round");
++                }));
++
++        assertTrue(claimsFor(entity.getId()).isEmpty(),
++                "Le claim doit avoir été libéré : sans ça, le round resterait à jamais "
++                        + "irréclamable et le tournoi bloqué sans erreur visible");
++        assertTrue(matchRepository.findByTournamentIdAndRound(entity.getId(), 2).isEmpty(),
++                "La transaction ayant été annulée, aucun match du round suivant ne subsiste");
++    }
++
++    /**
++     * Le filet de dernier recours, pour le cas qu'une synchronisation de transaction ne peut
++     * pas voir : un processus tué entre le commit du claim et la fin de la transaction
++     * métier. On simule l'état résultant — un claim PENDING orphelin — et on vérifie que la
++     * réconciliation le libère.
++     *
++     * <p>Le seuil passé est négatif, ce qui rend tout claim existant immédiatement éligible :
++     * attendre réellement dix minutes en test n'aurait aucun intérêt.
++     */
++    @Test
++    void releaseStaleClaims_shouldFreeOrphanedPendingClaim() {
++        TournamentEntity entity = newTournament();
++
++        RoundAdvancementEntity orphan = new RoundAdvancementEntity();
++        orphan.setTournamentId(entity.getId());
++        orphan.setRound(2);
++        orphan.setStatus(RoundAdvancementStatus.PENDING);
++        orphan.setCreatedAt(Instant.now().minus(Duration.ofHours(1)));
++        roundAdvancementRepository.save(orphan);
++
++        List<ReleaseStaleRoundClaimsPort.StaleClaim> released =
++                releaseStaleRoundClaimsPort.releaseStaleClaims(Duration.ofMinutes(-1));
++
++        assertTrue(released.stream().anyMatch(c -> c.tournamentId().equals(entity.getId())),
++                "Le claim orphelin doit figurer parmi les claims libérés");
++        assertTrue(claimsFor(entity.getId()).isEmpty());
++    }
++
++    /**
++     * Pendant indispensable du précédent : la réconciliation ne doit JAMAIS toucher un claim
++     * confirmé. Le libérer autoriserait la recréation d'un round déjà joué, avec un
++     * appariement différent — soit exactement le dédoublement que le claim existe pour
++     * empêcher. C'est le risque que fait courir un job de réparation trop zélé.
++     */
++    @Test
++    void releaseStaleClaims_shouldNeverTouchConfirmedClaims() {
++        TournamentEntity entity = newTournament();
++
++        RoundAdvancementEntity done = new RoundAdvancementEntity();
++        done.setTournamentId(entity.getId());
++        done.setRound(2);
++        done.setStatus(RoundAdvancementStatus.DONE);
++        done.setCreatedAt(Instant.now().minus(Duration.ofDays(30)));
++        roundAdvancementRepository.save(done);
++
++        releaseStaleRoundClaimsPort.releaseStaleClaims(Duration.ofMinutes(-1));
++
++        assertEquals(1, claimsFor(entity.getId()).size(),
++                "Un claim confirmé reste en base quel que soit son age");
++    }
++}
